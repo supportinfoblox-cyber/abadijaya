@@ -10,9 +10,10 @@ MSG="${1:-Checkpoint Otomatis $(date '+%Y-%m-%d %H:%M:%S')}"
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 TAG_NAME="checkpoint_${TIMESTAMP}"
 
-# Pastikan berada di root directory project
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$DIR"
+# Pastikan berada di root directory project (resolve symlink dengan aman)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT_DIR="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+cd "$ROOT_DIR"
 
 # Cek apakah ada perubahan
 if [ -z "$(git status --porcelain)" ]; then
