@@ -53,13 +53,18 @@ Saat pertama kali membuka web, Anda akan disambut oleh halaman **Home Login**:
 
 ## 4. Panduan Fitur Utama
 
-### A. Tarik Data iCare OTRS (> 3 Bulan & Antrean Aktif)
+### A. Tarik Data iCare OTRS (Pilihan 1 Tahun, 6 Bulan, & Antrean Aktif)
 1. Buka menu **Ticket Management** di Sidebar.
 2. Klik tombol ungu **"Tarik Data iCare"** di pojok kanan atas tabel.
-3. Pilih mode:
-   - **Riwayat Lengkap (> 3 Bulan)**: Menarik arsip tiket masa lalu (hingga ribuan tiket).
-   - **Antrean Aktif**: Menarik tiket terkini yang sedang berjalan.
-4. Tentukan batas jumlah tiket (50, 100, 150, 250, 500 tiket).
+3. Pilih mode penarikan:
+   - **Riwayat Arsip & Filter Waktu**: Menarik arsip tiket masa lalu dengan filter rentang waktu:
+     - 📅 **1 Tahun Terakhir (Populer)**: Menarik arsip tiket 12 bulan terakhir (~898 tiket terdaftar di OP0899 & OP0968).
+     - 📅 **6 Bulan Terakhir**
+     - 📅 **3 Bulan Terakhir**
+     - 📅 **1 Bulan Terakhir**
+     - 📂 **Semua Riwayat (Tanpa Batas Tanggal)**
+   - **Antrean Aktif Saat Ini**: Menarik tiket terkini yang sedang berjalan di iCare.
+4. Tentukan batas kuota tiket: **100, 250, 500, 1.000, atau 1.500 tiket** *(pilih 1.000 untuk menarik seluruh riwayat 1 tahun)*.
 5. Klik **"Mulai Tarik Data"**.
 6. Sistem secara otomatis mengklasifikasikan seluruh tiket ke dalam 4 kriteria:
    - 🏢 **IPAM**: Jika mengandung kata IPAM.

@@ -334,12 +334,13 @@ def fetch_active_queues(session):
             
     return all_tickets
 
-def fetch_historical_tickets(session, max_tickets=250):
+def fetch_historical_tickets(session, max_tickets=250, time_range="1-year"):
     """
     Performs comprehensive AgentTicketSearch across Queue 72 and 121 using View=Medium.
-    Paginates through search results to retrieve historical tickets (> 3 months) with exact WIB times.
+    Supports time range filtering: 1-year, 6-months, 3-months, 1-month, all.
+    Paginates through search results to retrieve historical tickets with exact WIB times.
     """
-    sys.stderr.write("Initiating OTRS Search for OP0899 & OP0968 (View=Medium)...\n")
+    sys.stderr.write(f"Initiating OTRS Search for OP0899 & OP0968 (View=Medium, time_range={time_range})...\n")
     
     # 1. Fetch search dialog token
     r_form = session.get(f"{BASE_URL}?Action=AgentTicketSearch;Subaction=AJAX", headers=DEFAULT_HEADERS, timeout=15)
@@ -350,7 +351,7 @@ def fetch_historical_tickets(session, max_tickets=250):
         
     token = token_m.group(1)
     
-    # 2. Execute initial search
+    # 2. Execute initial search with optional time range filtering
     payload = [
         ('Action', 'AgentTicketSearch'),
         ('Subaction', 'Search'),
@@ -359,6 +360,36 @@ def fetch_historical_tickets(session, max_tickets=250):
         ('QueueIDs', '121'),
         ('ResultForm', 'Normal'),
     ]
+
+    if time_range == "1-year":
+        payload.extend([
+            ('TimeSearchType', 'TimePoint'),
+            ('TicketCreateTimePointStart', 'Last'),
+            ('TicketCreateTimePoint', '1'),
+            ('TicketCreateTimePointFormat', 'year'),
+        ])
+    elif time_range == "6-months":
+        payload.extend([
+            ('TimeSearchType', 'TimePoint'),
+            ('TicketCreateTimePointStart', 'Last'),
+            ('TicketCreateTimePoint', '6'),
+            ('TicketCreateTimePointFormat', 'month'),
+        ])
+    elif time_range == "3-months":
+        payload.extend([
+            ('TimeSearchType', 'TimePoint'),
+            ('TicketCreateTimePointStart', 'Last'),
+            ('TicketCreateTimePoint', '3'),
+            ('TicketCreateTimePointFormat', 'month'),
+        ])
+    elif time_range == "1-month":
+        payload.extend([
+            ('TimeSearchType', 'TimePoint'),
+            ('TicketCreateTimePointStart', 'Last'),
+            ('TicketCreateTimePoint', '1'),
+            ('TicketCreateTimePointFormat', 'month'),
+        ])
+    # time_range == "all": no TimeSearchType added, searches full queue history
     
     res = session.post(BASE_URL, data=payload, headers=DEFAULT_HEADERS, timeout=20)
     if res.status_code != 200:
@@ -402,14 +433,15 @@ def fetch_historical_tickets(session, max_tickets=250):
                 
         start_hit += num_found_on_page
         page_num += 1
-        time.sleep(0.4) # Gentle rate limit
+        time.sleep(0.3) # Gentle rate limit
         
     return all_tickets
 
 def main():
     parser = argparse.ArgumentParser(description="OTRS Ticket History Fetcher")
     parser.add_argument("--mode", choices=["all", "active", "historical"], default="historical", help="Sync mode")
-    parser.add_argument("--limit", type=int, default=200, help="Max tickets to fetch")
+    parser.add_argument("--time-range", choices=["1-year", "6-months", "3-months", "1-month", "all"], default="1-year", help="Time range filter for historical search")
+    parser.add_argument("--limit", type=int, default=250, help="Max tickets to fetch")
     parser.add_argument("--save-cache", action="store_true", help="Save result to cache file")
     args = parser.parse_args()
     
@@ -422,7 +454,7 @@ def main():
     if args.mode == "active":
         tickets = fetch_active_queues(session)
     else:
-        tickets = fetch_historical_tickets(session, max_tickets=args.limit)
+        tickets = fetch_historical_tickets(session, max_tickets=args.limit, time_range=args.time_range)
         
     # Criteria summary breakdown
     breakdown = {}
@@ -433,6 +465,7 @@ def main():
     result = {
         "success": True,
         "mode": args.mode,
+        "timeRange": args.time_range,
         "totalFetched": len(tickets),
         "breakdown": breakdown,
         "tickets": tickets,

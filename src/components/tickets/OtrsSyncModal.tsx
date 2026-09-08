@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Shield,
   Server,
+  Calendar,
 } from 'lucide-react';
 
 interface OtrsSyncModalProps {
@@ -21,10 +22,13 @@ interface OtrsSyncModalProps {
   onClose: () => void;
 }
 
+type TimeRange = '1-year' | '6-months' | '3-months' | '1-month' | 'all';
+
 export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
   const { importSyncedTickets } = useTicketOps();
   const [mode, setMode] = useState<'historical' | 'active'>('historical');
-  const [limit, setLimit] = useState<number>(150);
+  const [timeRange, setTimeRange] = useState<TimeRange>('1-year');
+  const [limit, setLimit] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<{
@@ -42,8 +46,12 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     setSyncResult(null);
 
     try {
-      // First check if cached data can be used or fetch live from OTRS bridge
-      const res = await fetch(`/api/otrs/fetch-history?mode=${mode}&limit=${limit}`, {
+      // Fetch live from OTRS bridge with mode, limit, and timeRange
+      const queryParams = mode === 'active'
+        ? 'mode=active'
+        : `mode=historical&limit=${limit}&timeRange=${timeRange}`;
+
+      const res = await fetch(`/api/otrs/fetch-history?${queryParams}`, {
         method: 'GET',
       });
       const data = await res.json();
@@ -292,10 +300,10 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '0.85rem', color: mode === 'historical' ? '#818cf8' : 'var(--text-primary)' }}>
-                      Riwayat Lengkap (&gt; 3 Bulan)
+                      Riwayat Arsip &amp; Filter Waktu
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      Cari semua tiket arsip & tertutup dari bulan-bulan lalu
+                      Cari tiket arsip masa lalu (hingga 1 tahun / semua riwayat)
                     </div>
                   </div>
 
@@ -319,19 +327,106 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                 </div>
               </div>
 
+              {/* Time Range Selector */}
+              {mode === 'historical' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                      Rentang Waktu Tiket:
+                    </label>
+                    <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>
+                      {timeRange === '1-year' ? '1 Tahun Terakhir (~898 Tiket)' : timeRange === 'all' ? 'Seluruh Arsip' : `${timeRange.replace('-months', ' Bulan').replace('-month', ' Bulan')}`}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+                    {[
+                      { id: '1-year' as TimeRange, label: '1 Tahun', badge: 'Populer' },
+                      { id: '6-months' as TimeRange, label: '6 Bulan' },
+                      { id: '3-months' as TimeRange, label: '3 Bulan' },
+                      { id: '1-month' as TimeRange, label: '1 Bulan' },
+                      { id: 'all' as TimeRange, label: 'Semua' },
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setTimeRange(item.id);
+                          if (item.id === '1-year' && limit < 500) {
+                            setLimit(1000);
+                          }
+                        }}
+                        style={{
+                          position: 'relative',
+                          padding: '8px 4px',
+                          borderRadius: '6px',
+                          backgroundColor: timeRange === item.id ? 'rgba(99, 102, 241, 0.25)' : 'var(--bg-input)',
+                          border: timeRange === item.id ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                          color: timeRange === item.id ? '#818cf8' : 'var(--text-secondary)',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '2px',
+                        }}
+                      >
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <span style={{
+                            fontSize: '0.58rem',
+                            padding: '1px 4px',
+                            borderRadius: '4px',
+                            background: '#10b981',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                          }}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Informative Banner */}
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.73rem',
+                    color: 'var(--text-secondary)',
+                  }}>
+                    <Calendar size={13} color="#818cf8" style={{ flexShrink: 0 }} />
+                    <span>
+                      {timeRange === '1-year'
+                        ? 'Tersedia ~898 tiket OP0899 & OP0968 dalam 1 tahun terakhir. Pilih batas 1.000 untuk menarik seluruhnya.'
+                        : timeRange === 'all'
+                        ? 'Memindai seluruh riwayat tiket antrean tanpa batasan tanggal dibuat.'
+                        : `Memindai tiket yang dibuat dalam rentang ${timeRange === '6-months' ? '6 bulan' : timeRange === '3-months' ? '3 bulan' : '1 bulan'} terakhir.`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Limit selector */}
               {mode === 'historical' && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                      Batas Jumlah Tiket yang Ditarik:
+                      Batas Kuota Jumlah Tiket:
                     </label>
                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#818cf8' }}>
-                      {limit} Tiket
+                      Maksimal {limit} Tiket
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    {[50, 100, 150, 250, 500].map(val => (
+                    {[100, 250, 500, 1000, 1500].map(val => (
                       <button
                         key={val}
                         type="button"

@@ -67,12 +67,14 @@ function otrsBridgePlugin() {
       server.middlewares.use('/api/otrs/fetch-history', (req: any, res: any) => {
         const urlObj = new URL(req.url, 'http://localhost');
         const mode = urlObj.searchParams.get('mode') || 'historical';
-        const limit = urlObj.searchParams.get('limit') || '150';
+        const limit = urlObj.searchParams.get('limit') || '250';
+        const timeRange = urlObj.searchParams.get('timeRange') || urlObj.searchParams.get('range') || '1-year';
 
         const py = spawn('python3', [
           path.resolve(__dirname, 'scripts/otrs_history_fetcher.py'),
           '--mode', mode,
           '--limit', limit,
+          '--time-range', timeRange,
           '--save-cache'
         ]);
 
