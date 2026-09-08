@@ -107,3 +107,18 @@ Saat pertama kali membuka web, Anda akan disambut oleh halaman **Home Login**:
 
 ## 5. Keluar dari Akun (Logout)
 - Klik tombol merah **"Keluar"** di pojok kanan atas Navbar untuk mengakhiri sesi login dan kembali ke halaman Home Login.
+
+---
+
+## 6. Prosedur Rollback Cepat (Membatalkan Perubahan)
+
+Jika sewaktu-waktu ada perubahan kode atau fitur yang ingin dibatalkan secara instan:
+- Jalankan di terminal:
+  ```bash
+  ./rollback.sh
+  ```
+- Atau langsung kembali ke versi stabil awal:
+  ```bash
+  npm run rollback:stable
+  ```
+- Untuk panduan lengkap sistem checkpoint dan rollback, silakan baca [PANDUAN_ROLLBACK.md](file:///home/ismail/Downloads/Project%20Lainnya/Project%20Lain%201/PANDUAN_ROLLBACK.md).
