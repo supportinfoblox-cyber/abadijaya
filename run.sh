@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script Menjalankan TicketOps - BSI Infoblox & iCare OTRS Management System
+# Script Menjalankan Portal Abadi Jaya - BSI Infoblox & iCare OTRS Management System
 # ==============================================================================
 
 set -e
@@ -8,7 +8,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
 echo "========================================================"
-echo "🚀 Memulai TicketOps Portal (BSI Infoblox & iCare OTRS)"
+echo "🚀 Memulai Portal Abadi Jaya (BSI Infoblox & iCare OTRS)"
 echo "========================================================"
 echo "📁 Direktori: $PROJECT_DIR"
 

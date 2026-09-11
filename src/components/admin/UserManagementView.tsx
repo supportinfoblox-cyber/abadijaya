@@ -15,6 +15,7 @@ import {
   Lock,
   Trash2,
 } from 'lucide-react';
+import UserAvatar from '@/components/common/UserAvatar';
 
 export default function UserManagementView() {
   const { users, addUser, updateUser, toggleUserActive, deleteUser, can, currentUser } = useTicketOps();
@@ -56,7 +57,7 @@ export default function UserManagementView() {
       department: department.trim() || 'IT Operations',
       password: password.trim() || 'user1234',
       isActive: true,
-      avatarUrl: `https://images.unsplash.com/photo-${Math.floor(1500000000000 + Math.random() * 90000000000)}?w=100&auto=format&fit=crop&q=80`,
+      avatarUrl: '',
     });
 
     if (!res.success) {
@@ -117,11 +118,11 @@ export default function UserManagementView() {
               width: '44px',
               height: '44px',
               borderRadius: '10px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              backgroundColor: 'var(--color-purple-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
             }}>
               <Users size={24} />
             </div>
@@ -149,8 +150,8 @@ export default function UserManagementView() {
             marginTop: '16px',
             padding: '10px 14px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            color: '#34d399',
+            backgroundColor: 'var(--color-success-bg)',
+            color: 'var(--color-success)',
             fontSize: '0.825rem',
             display: 'flex',
             alignItems: 'center',
@@ -167,7 +168,7 @@ export default function UserManagementView() {
             padding: '10px 14px',
             borderRadius: 'var(--radius-md)',
             backgroundColor: 'rgba(244, 63, 94, 0.15)',
-            color: '#fb7185',
+            color: 'var(--color-danger)',
             fontSize: '0.825rem',
             display: 'flex',
             alignItems: 'center',
@@ -299,11 +300,7 @@ export default function UserManagementView() {
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img
-                        src={u.avatarUrl}
-                        alt={u.name}
-                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
-                      />
+                      <UserAvatar name={u.name} avatarUrl={u.avatarUrl} size={34} />
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
                           {u.name}
@@ -330,12 +327,12 @@ export default function UserManagementView() {
                           : 'rgba(148, 163, 184, 0.2)',
                       color:
                         u.role === 'admin'
-                          ? '#818cf8'
+                          ? 'var(--color-purple)'
                           : u.role === 'supervisor'
-                          ? '#22d3ee'
+                          ? 'var(--color-info)'
                           : u.role === 'engineer'
-                          ? '#34d399'
-                          : '#94a3b8',
+                          ? 'var(--color-success)'
+                          : 'var(--text-muted)',
                       textTransform: 'uppercase',
                     }}>
                       {u.role}
@@ -351,7 +348,7 @@ export default function UserManagementView() {
                       padding: '2px 8px',
                       borderRadius: '4px',
                       backgroundColor: u.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-                      color: u.isActive ? '#10b981' : '#f43f5e',
+                      color: u.isActive ? 'var(--color-success)' : 'var(--color-danger)',
                     }}>
                       {u.isActive ? 'ACTIVE' : 'DISABLED'}
                     </span>
@@ -385,7 +382,7 @@ export default function UserManagementView() {
                           style={{
                             padding: '3px 8px',
                             fontSize: '0.72rem',
-                            color: '#f43f5e',
+                            color: 'var(--color-danger)',
                             borderColor: 'rgba(244, 63, 94, 0.3)',
                             backgroundColor: 'rgba(244, 63, 94, 0.08)',
                           }}
@@ -429,28 +426,28 @@ export default function UserManagementView() {
                 <tr key={row.module}>
                   <td style={{ fontWeight: 600 }}>{row.module}</td>
                   <td style={{ textAlign: 'center' }}>
-                    {row.admin ? <Check size={18} color="#10b981" style={{ margin: '0 auto' }} /> : <X size={18} color="#f43f5e" style={{ margin: '0 auto' }} />}
+                    {row.admin ? <Check size={18} color="var(--color-success)" style={{ margin: '0 auto' }} /> : <X size={18} color="var(--color-danger)" style={{ margin: '0 auto' }} />}
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     {row.supervisor === 'Limited' ? (
-                      <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 700 }}>Limited</span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--color-warning)', fontWeight: 700 }}>Limited</span>
                     ) : row.supervisor ? (
-                      <Check size={18} color="#10b981" style={{ margin: '0 auto' }} />
+                      <Check size={18} color="var(--color-success)" style={{ margin: '0 auto' }} />
                     ) : (
-                      <X size={18} color="#f43f5e" style={{ margin: '0 auto' }} />
+                      <X size={18} color="var(--color-danger)" style={{ margin: '0 auto' }} />
                     )}
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     {row.engineer === 'Configurable' ? (
-                      <span style={{ fontSize: '0.72rem', color: '#818cf8', fontWeight: 700 }}>Configurable</span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--color-purple)', fontWeight: 700 }}>Configurable</span>
                     ) : row.engineer ? (
-                      <Check size={18} color="#10b981" style={{ margin: '0 auto' }} />
+                      <Check size={18} color="var(--color-success)" style={{ margin: '0 auto' }} />
                     ) : (
-                      <X size={18} color="#f43f5e" style={{ margin: '0 auto' }} />
+                      <X size={18} color="var(--color-danger)" style={{ margin: '0 auto' }} />
                     )}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    {row.viewer ? <Check size={18} color="#10b981" style={{ margin: '0 auto' }} /> : <X size={18} color="#f43f5e" style={{ margin: '0 auto' }} />}
+                    {row.viewer ? <Check size={18} color="var(--color-success)" style={{ margin: '0 auto' }} /> : <X size={18} color="var(--color-danger)" style={{ margin: '0 auto' }} />}
                   </td>
                 </tr>
               ))}

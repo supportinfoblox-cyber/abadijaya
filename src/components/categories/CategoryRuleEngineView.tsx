@@ -52,7 +52,7 @@ export default function CategoryRuleEngineView() {
       {/* Interactive Rule Engine Playground */}
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(99, 102, 241, 0.2)', color: '#818cf8' }}>
+          <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
             <Sparkles size={20} />
           </div>
           <div>
@@ -110,8 +110,8 @@ export default function CategoryRuleEngineView() {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
+                  backgroundColor: 'var(--color-success-bg)',
+                  color: 'var(--color-success)',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}>
                   {testResult.confidence}% Confidence
@@ -121,19 +121,19 @@ export default function CategoryRuleEngineView() {
               <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Main Category</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#818cf8' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-purple)' }}>
                     {testResult.mainCategory}
                   </div>
                 </div>
                 <div style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '12px', marginLeft: '4px' }}>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Domain</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#34d399' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-success)' }}>
                     {testResult.technicalCategory}
                   </div>
                 </div>
                 <div style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '12px', marginLeft: '4px' }}>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Priority</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: testResult.priority === 'CRITICAL' ? '#f43f5e' : '#fbbf24' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: testResult.priority === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-warning)' }}>
                     {testResult.priority}
                   </div>
                 </div>
@@ -155,8 +155,8 @@ export default function CategoryRuleEngineView() {
                       fontSize: '0.7rem',
                       padding: '2px 8px',
                       borderRadius: '4px',
-                      backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                      color: '#818cf8',
+                      backgroundColor: 'var(--color-purple-bg)',
+                      color: 'var(--color-purple)',
                     }}>
                       #{kw}
                     </span>
@@ -223,7 +223,7 @@ export default function CategoryRuleEngineView() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                  <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
+                  <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
                     <Icon size={16} />
                   </div>
                   <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>

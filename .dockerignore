@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.agent
+.agents
+.claude
+.env.local
+*.log
+__pycache__
+*.pyc
+.DS_Store

@@ -53,67 +53,52 @@ export default function WorklogModuleView() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Metrics Row */}
       <div className="grid-cols-4">
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Total Engineering Hours
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '8px' }}>
-            {totalHours} hrs
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#10b981', marginTop: '4px' }}>
-            Across {worklogs.length} logged sessions
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Active Logging Engineers
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#818cf8', marginTop: '8px' }}>
-            {new Set(worklogs.map(w => w.userId)).size} Engineers
-          </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            IT Operations & Engineering
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Avg Duration Per Session
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#06b6d4', marginTop: '8px' }}>
-            {worklogs.length > 0 ? Math.round(totalMinutes / worklogs.length) : 0} mins
-          </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Mean investigation & fix time
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          {can('updateTicket') ? (
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="btn btn-primary"
-              style={{ width: '100%' }}
-            >
-              <Plus size={16} />
-              {showAddForm ? 'Hide Log Form' : 'Record New Worklog'}
-            </button>
-          ) : (
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-              Viewer mode: Worklog entry restricted
+        {[
+          { label: 'Engineering Hours', value: `${totalHours}h`, sub: `${worklogs.length} logged sessions`, color: 'var(--accent-primary)' },
+          { label: 'Active Engineers', value: `${new Set(worklogs.map(w => w.userId)).size}`, sub: 'IT Ops & Engineering', color: 'var(--color-purple)' },
+          { label: 'Avg Session Duration', value: `${worklogs.length > 0 ? Math.round(totalMinutes / worklogs.length) : 0}m`, sub: 'Mean remediation time', color: 'var(--color-info)' },
+          { label: 'Total Sessions', value: String(worklogs.length), sub: 'Work entries logged', color: 'var(--color-success)' },
+        ].map(m => (
+          <div key={m.label} className="glass-panel" style={{ padding: '20px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              height: '3px',
+              background: `linear-gradient(90deg, transparent, ${m.color}, transparent)`,
+            }} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {m.label}
             </div>
-          )}
-        </div>
+            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: m.color, marginTop: '8px', fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
+              {m.value}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+              {m.sub}
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* Action Row */}
+      {can('updateTicket') && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn btn-primary"
+          >
+            <Plus size={16} />
+            {showAddForm ? 'Hide Log Form' : 'Record New Worklog'}
+          </button>
+        </div>
+      )}
 
       {feedback && (
         <div style={{
           padding: '12px 16px',
           borderRadius: 'var(--radius-md)',
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
-          border: '1px solid rgba(16, 185, 129, 0.4)',
-          color: '#34d399',
+          backgroundColor: 'var(--color-success-bg)',
+          border: '1px solid var(--color-success-border)',
+          color: 'var(--color-success)',
           fontSize: '0.825rem',
           display: 'flex',
           alignItems: 'center',
@@ -292,17 +277,14 @@ export default function WorklogModuleView() {
                       </div>
                     </td>
                     <td>
-                      <span style={{
-                        fontSize: '0.825rem',
-                        fontWeight: 700,
-                        color: '#818cf8',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => {
-                        if (targetTkt) {
-                          setSelectedTicket(targetTkt);
-                        }
-                      }}
+                      <span
+                        className="ticket-number-chip"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          if (targetTkt) {
+                            setSelectedTicket(targetTkt);
+                          }
+                        }}
                       >
                         {wl.ticketNumber}
                       </span>
@@ -313,10 +295,12 @@ export default function WorklogModuleView() {
                         fontWeight: 700,
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                        color: '#818cf8',
+                        backgroundColor: 'var(--color-purple-bg)',
+                        color: 'var(--color-purple)',
+                        fontFamily: 'var(--font-mono)',
+                        border: '1px solid var(--color-purple-border)',
                       }}>
-                        {wl.durationMinutes} mins
+                        {wl.durationMinutes}m
                       </span>
                     </td>
                     <td style={{ maxWidth: '420px', fontSize: '0.825rem', color: 'var(--text-secondary)' }}>

@@ -47,9 +47,9 @@ export default function NotificationsView() {
   const getNotifMeta = (type: string) => {
     if (type.includes('BREACHED')) {
       return {
-        bg: 'rgba(244, 63, 94, 0.12)',
-        border: 'rgba(244, 63, 94, 0.3)',
-        accent: '#f43f5e',
+        bg: 'var(--color-danger-bg)',
+        border: 'var(--color-danger-border)',
+        accent: 'var(--color-danger)',
         glow: 'rgba(244, 63, 94, 0.25)',
         icon: <AlertOctagon size={18} />,
         label: 'SLA BREACHED',
@@ -57,9 +57,9 @@ export default function NotificationsView() {
     }
     if (type.includes('CRITICAL') || type.includes('WARNING')) {
       return {
-        bg: 'rgba(245, 158, 11, 0.12)',
-        border: 'rgba(245, 158, 11, 0.3)',
-        accent: '#fbbf24',
+        bg: 'var(--color-warning-bg)',
+        border: 'var(--color-warning-border)',
+        accent: 'var(--color-warning)',
         glow: 'rgba(245, 158, 11, 0.25)',
         icon: <AlertTriangle size={18} />,
         label: 'SLA RISK',
@@ -67,18 +67,18 @@ export default function NotificationsView() {
     }
     if (type.includes('RESOLVED') || type.includes('CLOSED')) {
       return {
-        bg: 'rgba(16, 185, 129, 0.12)',
-        border: 'rgba(16, 185, 129, 0.3)',
-        accent: '#10b981',
+        bg: 'var(--color-success-bg)',
+        border: 'var(--color-success-border)',
+        accent: 'var(--color-success)',
         glow: 'rgba(16, 185, 129, 0.25)',
         icon: <CheckCircle2 size={18} />,
         label: 'COMPLETED',
       };
     }
     return {
-      bg: 'rgba(99, 102, 241, 0.12)',
-      border: 'rgba(99, 102, 241, 0.3)',
-      accent: '#818cf8',
+      bg: 'var(--color-purple-bg)',
+      border: 'var(--color-purple-border)',
+      accent: 'var(--color-purple)',
       glow: 'rgba(99, 102, 241, 0.25)',
       icon: <Bell size={18} />,
       label: 'SYSTEM DISPATCH',
@@ -100,7 +100,7 @@ export default function NotificationsView() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
               boxShadow: '0 4px 16px rgba(99, 102, 241, 0.2)',
             }}>
               <Bell size={24} />
@@ -116,7 +116,7 @@ export default function NotificationsView() {
                     fontWeight: 700,
                     padding: '3px 10px',
                     borderRadius: '12px',
-                    backgroundColor: '#6366f1',
+                    backgroundColor: 'var(--accent-primary)',
                     color: '#ffffff',
                     boxShadow: '0 2px 8px rgba(99, 102, 241, 0.4)',
                   }}>
@@ -176,7 +176,7 @@ export default function NotificationsView() {
                     fontWeight: isActive ? 700 : 500,
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    border: isActive ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                    border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                     backgroundColor: isActive ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
                     color: isActive ? '#ffffff' : 'var(--text-secondary)',
                     display: 'flex',
@@ -189,7 +189,7 @@ export default function NotificationsView() {
                     fontSize: '0.68rem',
                     padding: '1px 6px',
                     borderRadius: '8px',
-                    backgroundColor: isActive ? '#6366f1' : 'var(--bg-elevated)',
+                    backgroundColor: isActive ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                     color: '#ffffff',
                     fontWeight: 700,
                   }}>
@@ -211,12 +211,12 @@ export default function NotificationsView() {
               width: '56px',
               height: '56px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              backgroundColor: 'var(--color-purple-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px auto',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
             }}>
               <Inbox size={26} />
             </div>
@@ -239,7 +239,7 @@ export default function NotificationsView() {
                   style={{
                     padding: '18px 20px',
                     borderRadius: 'var(--radius-md)',
-                    backgroundColor: notif.read ? 'rgba(15, 23, 42, 0.4)' : 'rgba(99, 102, 241, 0.08)',
+                    backgroundColor: notif.read ? 'var(--bg-card)' : 'var(--accent-primary-light)',
                     border: notif.read ? '1px solid var(--border-subtle)' : `1px solid ${meta.border}`,
                     display: 'flex',
                     alignItems: 'center',
@@ -301,7 +301,7 @@ export default function NotificationsView() {
                             fontWeight: 800,
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            backgroundColor: '#6366f1',
+                            backgroundColor: 'var(--accent-primary)',
                             color: '#ffffff',
                           }}>
                             NEW
@@ -325,7 +325,7 @@ export default function NotificationsView() {
                           })}
                         </span>
                         {targetTicket && (
-                          <span>&bull; Ticket: <strong style={{ color: '#818cf8' }}>{targetTicket.ticketNumber}</strong></span>
+                          <span>&bull; Ticket: <strong style={{ color: 'var(--color-purple)' }}>{targetTicket.ticketNumber}</strong></span>
                         )}
                       </div>
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from 'react';
 import {
   Ticket,
   User,
@@ -28,6 +28,27 @@ import {
 import { analyzeTicketWithRuleEngine } from '@/services/ruleEngine';
 import { defaultTicketProvider, syncCloseToOtrs } from '@/services/providerIntegration';
 import { normalizeTicket } from '@/services/ticketClassifier';
+import { FullBackupPayload } from '@/services/backupJson';
+import {
+  fetchTickets,
+  upsertTicket,
+  upsertTickets,
+  subscribeToTickets,
+  fetchWorklogs,
+  insertWorklog,
+  upsertWorklogs,
+  fetchAuditLogs,
+  insertAuditLog,
+  upsertAuditLogs,
+  fetchUsers,
+  upsertUser,
+  upsertUsers,
+  deleteUserById,
+  fetchNotifications,
+  insertNotification,
+  markNotificationReadInDB,
+  deleteAllNotificationsFromDB,
+} from '@/services/supabaseService';
 
 const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   admin: {
@@ -114,6 +135,7 @@ interface TicketOpsContextType {
     newStateId?: string
   ) => Promise<{ success: boolean; total: number; closed: number; failed: number; results: any[] }>;
   importSyncedTickets: (newTickets: Ticket[]) => { added: number; updated: number; total: number };
+  restoreFullBackup: (backupData: FullBackupPayload) => { success: boolean; message?: string; error?: string };
   
   worklogs: Worklog[];
   addWorklog: (entry: Omit<Worklog, 'id' | 'createdAt' | 'userName' | 'userRole'>) => { success: boolean; error?: string };
@@ -155,6 +177,11 @@ interface TicketOpsContextType {
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (collapsed: boolean | ((prev: boolean) => boolean)) => void;
   toggleSidebar: () => void;
+
+  // Cloud Database (Supabase) Sync Status
+  cloudSyncStatus: 'synced' | 'syncing' | 'offline' | 'error';
+  lastCloudSync: string | null;
+  syncWithCloudNow: () => Promise<{ success: boolean; count?: number; error?: string }>;
 }
 
 const TicketOpsContext = createContext<TicketOpsContextType | undefined>(undefined);
@@ -177,23 +204,31 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   const [slaPolicy, setSlaPolicy] = useState<SLAPolicyConfig>(DEFAULT_SLA_POLICY);
   
   const [isSyncing, setIsSyncing] = useState(false);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
+  const [lastCloudSync, setLastCloudSync] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [activeFilterStatus, setActiveFilterStatus] = useState('ALL');
   const [activeKriteria, setActiveKriteria] = useState('ALL');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
-  // Sidebar collapse/hide state (saved to localStorage)
+  // Sidebar collapse/hide state (default collapsed on mobile)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      if (window.innerWidth <= 1024) {
+        return true;
+      }
       return localStorage.getItem('ticketops_sidebar_collapsed') === 'true';
     }
     return false;
   });
 
+  // Ref to track the latest tickets state for use in async functions (avoids stale closures)
+  const ticketsRef = useRef<Ticket[]>(SEED_TICKETS);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => {
       const next = !prev;
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.innerWidth > 1024) {
         localStorage.setItem('ticketops_sidebar_collapsed', String(next));
       }
       return next;
@@ -206,14 +241,24 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   // Load state from localStorage on client mount
   useEffect(() => {
     setIsClient(true);
+
+    // These will hold the locally-loaded snapshots to pass to cloud sync (avoiding async race)
+    let localTicketsSnapshot: Ticket[] = SEED_TICKETS.map(normalizeTicket);
+    let localWorklogsSnapshot: Worklog[] = SEED_WORKLOGS;
+
     try {
-      // Check auth session
-      const savedAuth = localStorage.getItem('ticketops_auth_session');
-      if (savedAuth) {
-        const parsedAuth = JSON.parse(savedAuth);
-        if (parsedAuth && parsedAuth.id) {
-          setCurrentUser(parsedAuth);
-          setIsAuthenticated(true);
+      // Check auth session: only restore if rememberMe was explicitly enabled
+      const isRemembered = typeof localStorage !== 'undefined' ? localStorage.getItem('ticketops_remember') === 'true' : false;
+      const sessionAuth = isRemembered && typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('ticketops_auth_session') : null;
+      if (sessionAuth) {
+        try {
+          const parsedAuth = JSON.parse(sessionAuth);
+          if (parsedAuth && parsedAuth.id) {
+            setCurrentUser(parsedAuth);
+            setIsAuthenticated(true);
+          }
+        } catch {
+          sessionStorage.removeItem('ticketops_auth_session');
         }
       }
 
@@ -269,9 +314,13 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
             });
           });
 
-          setTickets(sanitized.length > 0 ? sanitized : SEED_TICKETS.map(normalizeTicket));
+          const localLoaded = sanitized.length > 0 ? sanitized : SEED_TICKETS.map(normalizeTicket);
+          setTickets(localLoaded);
+          ticketsRef.current = localLoaded;
+          localTicketsSnapshot = localLoaded; // capture for cloud sync
         } else {
           setTickets(SEED_TICKETS);
+          ticketsRef.current = SEED_TICKETS;
         }
 
         if (parsed.worklogs && Array.isArray(parsed.worklogs)) {
@@ -286,6 +335,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
               ticketNumber: String(w.ticketNumber || '').replace(/^TKT-/, '').replace(/^OTRS-/, ''),
             }));
           setWorklogs(cleanedWorklogs);
+          localWorklogsSnapshot = cleanedWorklogs; // capture for cloud sync
         }
 
         if (parsed.auditLogs && Array.isArray(parsed.auditLogs)) {
@@ -316,7 +366,146 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('Failed to load TicketOps state from localStorage', e);
     }
+
+    // ── Supabase Cloud Sync (Cloud-First Merge) ──
+    // NOTE: We pass the locally-loaded tickets as a parameter to avoid the race
+    // condition where localStorage.getItem() inside an async function reads stale data.
+    async function performCloudSync(localTicketsSnapshot: Ticket[], localWorklogsSnapshot: Worklog[]): Promise<{ success: boolean; count?: number; error?: string }> {
+      setCloudSyncStatus('syncing');
+      try {
+        const [cloudTickets, cloudWorklogs, cloudAuditLogs, cloudUsers, cloudNotifs] = await Promise.all([
+          fetchTickets(),
+          fetchWorklogs(),
+          fetchAuditLogs(),
+          fetchUsers(),
+          fetchNotifications(),
+        ]);
+
+        // 1. CLOUD-FIRST MERGE TICKETS
+        // Start with all cloud tickets as source of truth
+        const ticketMap = new Map<string, Ticket>();
+        for (const ct of cloudTickets) {
+          ticketMap.set(ct.ticketNumber, ct);
+        }
+
+        // Add local tickets that are missing in cloud or newer than cloud version
+        const missingInCloud: Ticket[] = [];
+        for (const lt of localTicketsSnapshot) {
+          const norm = normalizeTicket(lt);
+          // Skip dummy/EXT tickets that shouldn't go to cloud
+          if (
+            norm.ticketNumber.startsWith('EXT-') ||
+            norm.id.startsWith('EXT-') ||
+            norm.id.startsWith('tkt-inbound-')
+          ) continue;
+
+          if (!ticketMap.has(norm.ticketNumber)) {
+            ticketMap.set(norm.ticketNumber, norm);
+            missingInCloud.push(norm);
+          } else {
+            // If local ticket was updated more recently, keep local and push to cloud
+            const cloudT = ticketMap.get(norm.ticketNumber)!;
+            const localUpdated = new Date(norm.updatedAt || 0).getTime();
+            const cloudUpdated = new Date(cloudT.updatedAt || 0).getTime();
+            if (localUpdated > cloudUpdated) {
+              ticketMap.set(norm.ticketNumber, norm);
+              missingInCloud.push(norm);
+            }
+          }
+        }
+
+        const mergedTickets = Array.from(ticketMap.values());
+        mergedTickets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setTickets(mergedTickets);
+        ticketsRef.current = mergedTickets;
+
+        // Upload any tickets that were missing in cloud
+        if (missingInCloud.length > 0) {
+          console.log(`[Supabase] Pushing ${missingInCloud.length} local-only tickets to cloud`);
+          upsertTickets(missingInCloud).catch(err => console.warn('[Supabase] Initial push missing tickets failed:', err));
+        }
+
+        // 2. SMART MERGE WORKLOGS (cloud-first)
+        const worklogMap = new Map<string, Worklog>();
+        for (const cw of cloudWorklogs) {
+          worklogMap.set(cw.id, cw);
+        }
+        const missingWorklogs: Worklog[] = [];
+        for (const lw of localWorklogsSnapshot) {
+          if (!worklogMap.has(lw.id)) {
+            worklogMap.set(lw.id, lw);
+            missingWorklogs.push(lw);
+          }
+        }
+        const mergedWorklogs = Array.from(worklogMap.values());
+        mergedWorklogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setWorklogs(mergedWorklogs);
+        if (missingWorklogs.length > 0) {
+          upsertWorklogs(missingWorklogs).catch(err => console.warn('[Supabase] Initial push missing worklogs failed:', err));
+        }
+
+        // 3. AUDIT LOGS (cloud wins)
+        if (cloudAuditLogs.length > 0) {
+          setAuditLogs(cloudAuditLogs);
+        }
+
+        // 4. USERS (cloud wins, ensure ismailak always present)
+        if (cloudUsers.length > 0) {
+          const hasIsmail = cloudUsers.some(u => u.username === 'ismailak' || u.id === 'usr-ismailak');
+          if (!hasIsmail) {
+            cloudUsers.unshift(SEED_USERS[0]);
+            upsertUser(SEED_USERS[0]).catch(err => console.warn('[Supabase] Push Ismail user failed:', err));
+          }
+          setUsers(cloudUsers);
+        } else {
+          upsertUsers(SEED_USERS).catch(err => console.warn('[Supabase] Initial seed users failed:', err));
+        }
+
+        // 5. NOTIFICATIONS (cloud wins)
+        if (cloudNotifs.length > 0) {
+          setNotifications(cloudNotifs);
+        }
+
+        setCloudSyncStatus('synced');
+        setLastCloudSync(new Date().toISOString());
+        console.log(`[Supabase] Cloud sync complete: ${mergedTickets.length} tickets, ${mergedWorklogs.length} worklogs`);
+        return { success: true, count: mergedTickets.length };
+      } catch (err: any) {
+        console.warn('[Supabase] Cloud sync error (using local state fallback):', err);
+        setCloudSyncStatus('offline');
+        return { success: false, error: err?.message || 'Gagal sinkronisasi cloud' };
+      }
+    }
+
+    // Realtime subscription: updates are instantly reflected across multiple browsers/users
+    const channel = subscribeToTickets(
+      (updatedTicket) => {
+        setTickets(prev => {
+          const next = prev.map(t => (t.id === updatedTicket.id || t.ticketNumber === updatedTicket.ticketNumber ? updatedTicket : t));
+          ticketsRef.current = next;
+          return next;
+        });
+        setSelectedTicket(prev => (prev?.id === updatedTicket.id || prev?.ticketNumber === updatedTicket.ticketNumber ? updatedTicket : prev));
+      },
+      (newTicket) => {
+        setTickets(prev => {
+          if (prev.some(t => t.id === newTicket.id || t.ticketNumber === newTicket.ticketNumber)) return prev;
+          const next = [newTicket, ...prev];
+          ticketsRef.current = next;
+          return next;
+        });
+      }
+    );
+
+    // NOTE: performCloudSync is called at end of the localStorage loading block (see below)
+    // so it can receive the already-loaded local tickets as a parameter.
+    performCloudSync(localTicketsSnapshot, localWorklogsSnapshot);
+
+    return () => {
+      channel?.unsubscribe();
+    };
   }, []);
+
 
   // Save state to localStorage
   useEffect(() => {
@@ -419,6 +608,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       ipAddress: '10.200.4.101',
     };
     setAuditLogs(prev => [newLog, ...prev]);
+    insertAuditLog(newLog).catch(err => console.warn('[Supabase] insertAuditLog failed:', err));
   };
 
   // Helper to add notification
@@ -433,6 +623,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       read: false,
     };
     setNotifications(prev => [notif, ...prev]);
+    insertNotification(notif).catch(err => console.warn('[Supabase] insertNotification failed:', err));
   };
 
   // Create Ticket
@@ -483,6 +674,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     });
 
     setTickets(prev => [newTicket, ...prev]);
+    upsertTicket(newTicket).catch(err => console.warn('[Supabase] createTicket upsert failed:', err));
 
     addAuditLogEntry({
       action: 'CREATE_TICKET',
@@ -523,6 +715,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       return next;
     });
 
+    upsertTicket(updated).catch(err => console.warn('[Supabase] updateTicket upsert failed:', err));
+
     if (selectedTicket?.id === ticketId) {
       setSelectedTicket(updated);
     }
@@ -537,6 +731,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
 
     return { success: true };
   };
+
 
   // Transition Ticket Status with PRD Section 12 validation
   const transitionStatus = (
@@ -773,6 +968,15 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     }
 
     const nowIso = new Date().toISOString();
+    const toClose = tickets
+      .filter(t => idSet.has(t.id))
+      .map(t => ({
+        ...t,
+        status: 'CLOSED' as TicketStatus,
+        closedAt: nowIso,
+        resolutionNote,
+        updatedAt: nowIso,
+      }));
 
     setTickets(prev =>
       prev.map(t => {
@@ -788,6 +992,10 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         return t;
       })
     );
+
+    if (toClose.length > 0) {
+      upsertTickets(toClose).catch(err => console.warn('[Supabase] bulkClose upsert failed:', err));
+    }
 
     if (selectedTicket && idSet.has(selectedTicket.id)) {
       setSelectedTicket(prev => prev ? {
@@ -851,6 +1059,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     };
 
     setWorklogs(prev => [newWorklog, ...prev]);
+    insertWorklog(newWorklog).catch(err => console.warn('[Supabase] insertWorklog failed:', err));
 
     addAuditLogEntry({
       action: 'ADD_WORKLOG',
@@ -858,6 +1067,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       entityId: entry.ticketNumber,
       newValue: `${entry.durationMinutes} mins: ${entry.description}`,
     });
+
 
     // Simulate outbound sync of worklog
     defaultTicketProvider.pushOutboundWorklog(integrationConfig, newWorklog);
@@ -1024,6 +1234,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       avatarUrl: userData.avatarUrl || `https://images.unsplash.com/photo-${Math.floor(1500000000000 + Math.random() * 90000000000)}?w=100&auto=format&fit=crop&q=80`,
     };
     setUsers(prev => [...prev, newUser]);
+    upsertUser(newUser).catch(err => console.warn('[Supabase] addUser upsert failed:', err));
+
     addAuditLogEntry({
       action: 'CREATE_USER',
       module: 'User',
@@ -1044,6 +1256,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     }
 
     setUsers(prev => prev.filter(u => u.id !== id));
+    deleteUserById(id).catch(err => console.warn('[Supabase] deleteUserById failed:', err));
+
     addAuditLogEntry({
       action: 'DELETE_USER',
       module: 'User',
@@ -1055,7 +1269,15 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
 
   const updateUser = (id: string, updates: Partial<User>) => {
     if (!can('userManagement')) return;
-    setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates } : u)));
+    setUsers(prev => {
+      const next = prev.map(u => (u.id === id ? { ...u, ...updates } : u));
+      const target = next.find(u => u.id === id);
+      if (target) {
+        upsertUser(target).catch(err => console.warn('[Supabase] updateUser upsert failed:', err));
+      }
+      return next;
+    });
+
     // Also sync currentUser if editing themselves
     if (id === currentUser.id) {
       setCurrentUser(prev => {
@@ -1077,7 +1299,15 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   // Self-profile update — no RBAC needed, any logged-in user can update their own avatar/name
   const updateMyProfile = (updates: Partial<Pick<User, 'avatarUrl' | 'name' | 'department'>>) => {
     const id = currentUser.id;
-    setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates } : u)));
+    setUsers(prev => {
+      const next = prev.map(u => (u.id === id ? { ...u, ...updates } : u));
+      const target = next.find(u => u.id === id);
+      if (target) {
+        upsertUser(target).catch(err => console.warn('[Supabase] updateMyProfile upsert failed:', err));
+      }
+      return next;
+    });
+
     setCurrentUser(prev => {
       const updated = { ...prev, ...updates };
       try {
@@ -1120,7 +1350,12 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         const defaultAdmin = SEED_USERS[0];
         setCurrentUser(defaultAdmin);
         setIsAuthenticated(true);
-        localStorage.setItem('ticketops_auth_session', JSON.stringify(defaultAdmin));
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('ticketops_auth_session', JSON.stringify(defaultAdmin));
+        }
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('ticketops_auth_session');
+        }
         return { success: true };
       }
       return { success: false, error: 'Username/Email atau Password salah.' };
@@ -1133,23 +1368,35 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     const updatedUser = { ...found, lastLoginAt: new Date().toISOString() };
     setCurrentUser(updatedUser);
     setIsAuthenticated(true);
-    localStorage.setItem('ticketops_auth_session', JSON.stringify(updatedUser));
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('ticketops_auth_session', JSON.stringify(updatedUser));
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('ticketops_auth_session');
+    }
     return { success: true };
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('ticketops_auth_session');
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('ticketops_auth_session');
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('ticketops_auth_session');
+      localStorage.removeItem('ticketops_remember');
+    }
   };
 
   // Bulk import / historical sync merge helper
   const importSyncedTickets = (newTickets: Ticket[]) => {
     let added = 0;
     let updated = 0;
+    const normalizedNew = newTickets.map(normalizeTicket);
+
     setTickets(prev => {
       const map = new Map(prev.map(t => [t.ticketNumber, t]));
-      newTickets.forEach(rawTicket => {
-        const t = normalizeTicket(rawTicket);
+      normalizedNew.forEach(t => {
         if (map.has(t.ticketNumber)) {
           const existing = map.get(t.ticketNumber)!;
           // Merge keeping local resolution status if user already closed it locally
@@ -1169,6 +1416,10 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       return merged;
     });
 
+    if (normalizedNew.length > 0) {
+      upsertTickets(normalizedNew).catch(err => console.warn('[Supabase] importSyncedTickets upsert failed:', err));
+    }
+
     addAuditLogEntry({
       action: 'OTRS_HISTORICAL_SYNC',
       module: 'Integration',
@@ -1177,6 +1428,154 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     });
 
     return { added, updated, total: added + updated };
+  };
+
+  // Restore full backup from JSON
+  const restoreFullBackup = (backupData: FullBackupPayload) => {
+    try {
+      if (!backupData || !backupData.tickets || !Array.isArray(backupData.tickets)) {
+        return { success: false, error: 'Data backup tidak memiliki daftar tiket yang valid.' };
+      }
+
+      const normalizedNew = backupData.tickets.map(normalizeTicket);
+      normalizedNew.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setTickets(normalizedNew);
+
+      let restoredWorklogs = worklogs;
+      if (Array.isArray(backupData.worklogs) && backupData.worklogs.length > 0) {
+        restoredWorklogs = backupData.worklogs;
+        setWorklogs(backupData.worklogs);
+      }
+
+      let restoredAuditLogs = auditLogs;
+      if (Array.isArray(backupData.auditLogs) && backupData.auditLogs.length > 0) {
+        restoredAuditLogs = backupData.auditLogs;
+        setAuditLogs(backupData.auditLogs);
+      }
+
+      let restoredConfig = integrationConfig;
+      if (backupData.integrationConfig && typeof backupData.integrationConfig === 'object') {
+        restoredConfig = { ...integrationConfig, ...backupData.integrationConfig };
+        setIntegrationConfig(restoredConfig);
+      }
+
+      let restoredUsers = users;
+      if (Array.isArray(backupData.users) && backupData.users.length > 0) {
+        restoredUsers = backupData.users;
+        setUsers(backupData.users);
+      }
+
+      // Immediate persist to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            tickets: normalizedNew,
+            worklogs: restoredWorklogs,
+            auditLogs: restoredAuditLogs,
+            notifications: backupData.notifications || notifications,
+            integrationConfig: restoredConfig,
+            users: restoredUsers,
+          })
+        );
+      }
+
+      // Sync to Supabase in background if configured
+      if (normalizedNew.length > 0) {
+        upsertTickets(normalizedNew).catch(err => console.warn('[Supabase] restore backup upsert failed:', err));
+      }
+
+      addAuditLogEntry({
+        action: 'RESTORE_BACKUP_JSON',
+        module: 'System',
+        entityId: 'JSON Backup Restore',
+        newValue: `Dipulihkan: ${normalizedNew.length} tiket, ${restoredWorklogs.length} worklog`,
+      });
+
+      return {
+        success: true,
+        message: `Berhasil memulihkan ${normalizedNew.length} tiket & sistem dari file backup JSON.`,
+      };
+    } catch (err: any) {
+      console.error('Failed to restore backup:', err);
+      return { success: false, error: err.message || 'Gagal memulihkan backup JSON.' };
+    }
+  };
+
+  // Manual trigger for Supabase cloud sync
+  const syncWithCloudNow = async () => {
+    setCloudSyncStatus('syncing');
+    try {
+      const [cloudTickets, cloudWorklogs, cloudAuditLogs, cloudUsers, cloudNotifs] = await Promise.all([
+        fetchTickets(),
+        fetchWorklogs(),
+        fetchAuditLogs(),
+        fetchUsers(),
+        fetchNotifications(),
+      ]);
+
+      // Use ticketsRef to get the most current tickets (avoids stale closure)
+      const currentTickets = ticketsRef.current;
+
+      const ticketMap = new Map<string, Ticket>();
+      for (const ct of cloudTickets) {
+        ticketMap.set(ct.ticketNumber, ct);
+      }
+
+      const missingInCloud: Ticket[] = [];
+      for (const lt of currentTickets) {
+        const norm = normalizeTicket(lt);
+        // Skip dummy/EXT tickets that shouldn't go to cloud
+        if (
+          norm.ticketNumber.startsWith('EXT-') ||
+          norm.id.startsWith('EXT-') ||
+          norm.id.startsWith('tkt-inbound-')
+        ) continue;
+
+        if (!ticketMap.has(norm.ticketNumber)) {
+          ticketMap.set(norm.ticketNumber, norm);
+          missingInCloud.push(norm);
+        } else {
+          const cloudT = ticketMap.get(norm.ticketNumber)!;
+          const localUpdated = new Date(norm.updatedAt || 0).getTime();
+          const cloudUpdated = new Date(cloudT.updatedAt || 0).getTime();
+          if (localUpdated > cloudUpdated) {
+            ticketMap.set(norm.ticketNumber, norm);
+            missingInCloud.push(norm);
+          }
+        }
+      }
+
+      const merged = Array.from(ticketMap.values());
+      merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setTickets(merged);
+      ticketsRef.current = merged;
+
+      if (missingInCloud.length > 0) {
+        await upsertTickets(missingInCloud);
+      }
+
+      if (cloudWorklogs.length > 0) setWorklogs(cloudWorklogs);
+      if (cloudAuditLogs.length > 0) setAuditLogs(cloudAuditLogs);
+      if (cloudUsers.length > 0) setUsers(cloudUsers);
+      if (cloudNotifs.length > 0) setNotifications(cloudNotifs);
+
+      setCloudSyncStatus('synced');
+      setLastCloudSync(new Date().toISOString());
+
+      addAuditLogEntry({
+        action: 'CLOUD_DATABASE_SYNC',
+        module: 'Database',
+        entityId: 'Supabase',
+        newValue: `Synced ${merged.length} tickets with Supabase cloud database`,
+      });
+
+      return { success: true, count: merged.length };
+    } catch (err: any) {
+      console.warn('[Supabase] Manual sync failed:', err);
+      setCloudSyncStatus('error');
+      return { success: false, error: err?.message || 'Gagal sinkronisasi dengan cloud database' };
+    }
   };
 
   const updateSLAPolicy = (policy: SLAPolicyConfig) => {
@@ -1191,11 +1590,14 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
 
   const markNotificationAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+    markNotificationReadInDB(id).catch(err => console.warn('[Supabase] markNotificationRead failed:', err));
   };
 
   const clearAllNotifications = () => {
     setNotifications([]);
+    deleteAllNotificationsFromDB().catch(err => console.warn('[Supabase] clearNotifications failed:', err));
   };
+
 
   return (
     <TicketOpsContext.Provider
@@ -1203,6 +1605,9 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         currentUser,
         setCurrentUserRole,
         can,
+        cloudSyncStatus,
+        lastCloudSync,
+        syncWithCloudNow,
         tickets,
         selectedTicket,
         setSelectedTicket,
@@ -1234,6 +1639,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         importSyncedTickets,
+        restoreFullBackup,
         slaPolicy,
         updateSLAPolicy,
         currentView,

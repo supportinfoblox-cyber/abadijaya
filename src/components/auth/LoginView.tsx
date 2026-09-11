@@ -18,10 +18,10 @@ import {
 
 export default function LoginView() {
   const { login } = useTicketOps();
-  const [username, setUsername] = useState('ismailak');
-  const [password, setPassword] = useState('ismailak1234');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,6 +29,14 @@ export default function LoginView() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    if (typeof localStorage !== 'undefined') {
+      if (rememberMe) {
+        localStorage.setItem('ticketops_remember', 'true');
+      } else {
+        localStorage.removeItem('ticketops_remember');
+      }
+    }
 
     setTimeout(() => {
       const res = login(username, password);
@@ -39,19 +47,15 @@ export default function LoginView() {
     }, 400);
   };
 
-  const handleQuickFill = () => {
-    setUsername('ismailak');
-    setPassword('ismailak1234');
-    setError(null);
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'radial-gradient(ellipse at 50% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%), var(--bg-primary)',
+      backgroundImage: 'radial-gradient(var(--grid-dot-color) 1px, transparent 1px), radial-gradient(ellipse at 50% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%)',
+      backgroundSize: '28px 28px, 100% 100%, 100% 100%',
+      backgroundColor: 'var(--bg-primary)',
       padding: '24px',
       position: 'relative',
       overflow: 'hidden',
@@ -86,34 +90,22 @@ export default function LoginView() {
         zIndex: 10,
       }}>
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 30px rgba(99, 102, 241, 0.45)',
-            marginBottom: '16px',
-          }}>
-            <Ticket size={32} color="#ffffff" />
-          </div>
-
-          <h1 style={{
-            fontSize: '1.75rem',
-            fontWeight: 800,
-            letterSpacing: '-0.03em',
-            color: 'var(--text-primary)',
-            margin: '0 0 6px 0',
-          }}>
-            TicketOps <span style={{ color: '#818cf8', fontWeight: 600, fontSize: '1.1rem' }}>Portal</span>
-          </h1>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img
+            src="/logo.png"
+            alt="Portal Abadi Jaya"
+            style={{
+              height: '150px',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              marginBottom: '10px',
+              filter: 'drop-shadow(0 8px 25px rgba(99, 102, 241, 0.45))',
+            }}
+          />
           <p style={{
             fontSize: '0.875rem',
             color: 'var(--text-secondary)',
-            margin: 0,
+            margin: '2px 0 0 0',
           }}>
             Sistem Manajemen Operasional Tiket BSI Infoblox & iCare OTRS
           </p>
@@ -133,11 +125,12 @@ export default function LoginView() {
               gap: '5px',
               padding: '3px 10px',
               borderRadius: '20px',
-              backgroundColor: 'rgba(99, 102, 241, 0.12)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              color: '#818cf8',
+              backgroundColor: 'var(--accent-glow)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--accent-primary)',
               fontSize: '0.72rem',
               fontWeight: 600,
+              fontFamily: 'var(--font-mono)',
             }}>
               <Server size={12} /> OP0899 & OP0968
             </span>
@@ -147,9 +140,9 @@ export default function LoginView() {
               gap: '5px',
               padding: '3px 10px',
               borderRadius: '20px',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              color: '#34d399',
+              backgroundColor: 'var(--color-success-bg)',
+              border: '1px solid var(--color-success-border)',
+              color: 'var(--color-success)',
               fontSize: '0.72rem',
               fontWeight: 600,
             }}>
@@ -161,8 +154,7 @@ export default function LoginView() {
         {/* Login Card */}
         <div className="glass-panel" style={{
           padding: '32px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.45)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 'var(--radius-xl)',
         }}>
           <div style={{
             display: 'flex',
@@ -177,14 +169,15 @@ export default function LoginView() {
                 Masuk ke Akun
               </h2>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                Gunakan kredensial Administrator Anda
+                Silakan masukkan kredensial akun Anda
               </p>
             </div>
             <div style={{
-              padding: '6px',
+              padding: '8px',
               borderRadius: '8px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
-              color: '#818cf8',
+              backgroundColor: 'var(--accent-glow)',
+              color: 'var(--accent-primary)',
+              border: '1px solid var(--border-subtle)',
             }}>
               <Shield size={18} />
             </div>
@@ -194,9 +187,9 @@ export default function LoginView() {
             <div style={{
               padding: '10px 14px',
               borderRadius: '8px',
-              backgroundColor: 'rgba(244, 63, 94, 0.15)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              color: '#fb7185',
+              backgroundColor: 'var(--color-danger-bg)',
+              border: '1px solid var(--color-danger-border)',
+              color: 'var(--color-danger)',
               fontSize: '0.82rem',
               display: 'flex',
               alignItems: 'center',
@@ -208,7 +201,7 @@ export default function LoginView() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <form onSubmit={handleSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             {/* Username / Email Field */}
             <div>
               <label style={{
@@ -233,9 +226,14 @@ export default function LoginView() {
                 </div>
                 <input
                   type="text"
+                  name="auth_usr_input"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder="ismailak"
+                  placeholder="Username atau email"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   required
                   style={{
                     width: '100%',
@@ -248,7 +246,7 @@ export default function LoginView() {
                     outline: 'none',
                     transition: 'border-color var(--transition-fast)',
                   }}
-                  onFocus={e => (e.target.style.borderColor = '#6366f1')}
+                  onFocus={e => (e.target.style.borderColor = 'var(--accent-primary)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--border-subtle)')}
                 />
               </div>
@@ -263,7 +261,7 @@ export default function LoginView() {
                 color: 'var(--text-secondary)',
                 marginBottom: '6px',
               }}>
-                Password
+                Kata Sandi
               </label>
               <div style={{ position: 'relative' }}>
                 <div style={{
@@ -278,9 +276,11 @@ export default function LoginView() {
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="auth_pwd_input"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Masukkan kata sandi"
+                  autoComplete="new-password"
                   required
                   style={{
                     width: '100%',
@@ -293,7 +293,7 @@ export default function LoginView() {
                     outline: 'none',
                     transition: 'border-color var(--transition-fast)',
                   }}
-                  onFocus={e => (e.target.style.borderColor = '#6366f1')}
+                  onFocus={e => (e.target.style.borderColor = 'var(--accent-primary)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--border-subtle)')}
                 />
                 <button
@@ -322,7 +322,7 @@ export default function LoginView() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
               }}>
@@ -330,28 +330,10 @@ export default function LoginView() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
-                  style={{ accentColor: '#6366f1', cursor: 'pointer' }}
+                  style={{ accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
                 />
-                Ingat sesi login ini
+                Ingat sesi di perangkat ini
               </label>
-
-              <button
-                type="button"
-                onClick={handleQuickFill}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#818cf8',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <Zap size={12} /> Auto-Fill Ismail
-              </button>
             </div>
 
             {/* Submit Button */}
@@ -366,7 +348,7 @@ export default function LoginView() {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%)',
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '0.92rem',
@@ -388,21 +370,22 @@ export default function LoginView() {
             </button>
           </form>
 
-          {/* Admin Info Banner */}
+          {/* Security Notice */}
           <div style={{
             marginTop: '22px',
-            padding: '12px',
+            padding: '12px 14px',
             borderRadius: '8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+            backgroundColor: 'var(--bg-elevated)',
             border: '1px solid var(--border-subtle)',
-            fontSize: '0.75rem',
+            fontSize: '0.74rem',
             color: 'var(--text-muted)',
-            lineHeight: 1.4,
+            lineHeight: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}>
-            <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Shield size={13} color="#818cf8" /> Hak Akses Administrator:
-            </div>
-            Role Administrator dipegang oleh <strong>Ismail Akbar</strong> (<code style={{ color: '#818cf8' }}>ismailak</code>). Pengguna baru hanya dapat didaftarkan melalui modul Manajemen Pengguna setelah Anda masuk.
+            <Shield size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+            <span>Akses sistem terbatas untuk personel terotorisasi. Aktivitas sesi dicatat untuk audit keamanan.</span>
           </div>
         </div>
       </div>

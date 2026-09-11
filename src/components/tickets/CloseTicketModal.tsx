@@ -203,9 +203,9 @@ export default function CloseTicketModal({
         style={{
           maxWidth: '820px',
           maxHeight: '90vh',
-          backgroundColor: '#0f172a',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.75)',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-medium)',
+          boxShadow: 'var(--shadow-lg)',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -213,7 +213,7 @@ export default function CloseTicketModal({
         <div
           className="modal-header"
           style={{
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: '1px solid var(--border-subtle)',
             padding: '16px 20px',
           }}
         >
@@ -228,18 +228,18 @@ export default function CloseTicketModal({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#34d399',
+                color: 'var(--color-success)',
               }}
             >
               <CheckCircle2 size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                 {isSingle ? 'Tutup Tiket (Close Ticket)' : `Tutup ${activeTickets.length} Tiket Sekaligus (Bulk Close)`}
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
                 {isSingle
-                  ? `Tiket #${ticketsToClose[0].ticketNumber} &bull; ${ticketsToClose[0].kriteria || 'General'}`
+                  ? `Tiket #${ticketsToClose[0].ticketNumber} • ${ticketsToClose[0].kriteria || 'General'}`
                   : `Tutup dan sinkronkan status ${activeTickets.length} tiket langsung ke Portal iCare OTRS.`}
               </p>
             </div>
@@ -307,7 +307,7 @@ export default function CloseTicketModal({
                   <Check size={18} strokeWidth={3} />
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#34d399' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-success)' }}>
                     Penutupan Tiket Berhasil Diselesaikan!
                   </h4>
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -322,14 +322,14 @@ export default function CloseTicketModal({
                 style={{
                   maxHeight: '260px',
                   overflowY: 'auto',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: '8px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                  backgroundColor: 'var(--bg-card)',
                 }}
               >
                 <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
                       <th style={{ padding: '8px 12px', textAlign: 'left' }}>No. Tiket</th>
                       <th style={{ padding: '8px 12px', textAlign: 'left' }}>Status Baru</th>
                       <th style={{ padding: '8px 12px', textAlign: 'left' }}>Keterangan / OTRS Response</th>
@@ -340,11 +340,11 @@ export default function CloseTicketModal({
                       <tr
                         key={idx}
                         style={{
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                          backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+                          borderBottom: '1px solid var(--border-subtle)',
+                          backgroundColor: idx % 2 === 0 ? 'transparent' : 'var(--bg-card-hover)',
                         }}
                       >
-                        <td style={{ padding: '8px 12px', fontWeight: 700, color: '#818cf8' }}>
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-accent)' }}>
                           {log.ticketNumber}
                         </td>
                         <td style={{ padding: '8px 12px' }}>
@@ -355,7 +355,7 @@ export default function CloseTicketModal({
                               fontSize: '0.72rem',
                               fontWeight: 700,
                               backgroundColor: log.success ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                              color: log.success ? '#34d399' : '#f87171',
+                              color: log.success ? 'var(--color-success)' : 'var(--color-danger)',
                             }}
                           >
                             {log.state || (log.success ? 'CLOSED' : 'FAILED')}
@@ -369,7 +369,7 @@ export default function CloseTicketModal({
                                 href={log.otrsUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{ color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                style={{ color: 'var(--color-info)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                               >
                                 <span>OTRS</span>
                                 <ExternalLink size={12} />
@@ -400,17 +400,17 @@ export default function CloseTicketModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
-                    <Layers size={14} color="#818cf8" />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase' }}>
+                    <Layers size={14} color="var(--color-purple)" />
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-purple)', textTransform: 'uppercase' }}>
                       Distribusi Kriteria:
                     </span>
                   </div>
                   {Object.entries(kriteriaBreakdown).map(([k, count]) => {
                     const color =
-                      k === 'DNS Request' ? '#60a5fa' :
-                      k === 'Reserve IP' ? '#fbbf24' :
-                      k === 'DRP' ? '#c084fc' :
-                      k === 'IPAM' ? '#34d399' : '#94a3b8';
+                      k === 'DNS Request' ? 'var(--color-info)' :
+                      k === 'Reserve IP' ? 'var(--color-warning)' :
+                      k === 'DRP' ? 'var(--color-purple)' :
+                      k === 'IPAM' ? 'var(--color-success)' : 'var(--text-muted)';
                     return (
                       <span
                         key={k}
@@ -419,8 +419,8 @@ export default function CloseTicketModal({
                           fontWeight: 600,
                           padding: '3px 8px',
                           borderRadius: '6px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                          border: `1px solid ${color}40`,
+                          backgroundColor: 'var(--bg-elevated)',
+                          border: '1px solid var(--border-subtle)',
                           color,
                         }}
                       >
@@ -463,17 +463,17 @@ export default function CloseTicketModal({
                   </button>
 
                   {showTicketList && (
-                    <div
-                      style={{
-                        maxHeight: '180px',
-                        overflowY: 'auto',
-                        backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                        padding: '6px 10px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px',
-                      }}
-                    >
+                      <div
+                        style={{
+                          maxHeight: '180px',
+                          overflowY: 'auto',
+                          backgroundColor: 'var(--bg-elevated)',
+                          padding: '6px 10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                        }}
+                      >
                       {ticketsToClose.map(ticket => {
                         const isChecked = selectedIds.has(ticket.id);
                         return (
@@ -499,7 +499,7 @@ export default function CloseTicketModal({
                                 onChange={() => {}}
                                 style={{ accentColor: '#6366f1', cursor: 'pointer' }}
                               />
-                              <span style={{ fontWeight: 700, color: '#818cf8', flexShrink: 0 }}>
+                              <span style={{ fontWeight: 700, color: 'var(--color-purple)', flexShrink: 0 }}>
                                 {ticket.ticketNumber}
                               </span>
                               <span
@@ -537,7 +537,7 @@ export default function CloseTicketModal({
 
               {/* Close State Option (StateID) */}
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', display: 'block', marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '8px' }}>
                   Kondisi Penutupan (OTRS NewStateID):
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -547,9 +547,9 @@ export default function CloseTicketModal({
                     style={{
                       padding: '10px 14px',
                       borderRadius: '8px',
-                      border: newStateId === '2' ? '2px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
-                      backgroundColor: newStateId === '2' ? 'rgba(16, 185, 129, 0.18)' : 'rgba(255, 255, 255, 0.03)',
-                      color: newStateId === '2' ? '#34d399' : 'var(--text-secondary)',
+                      border: newStateId === '2' ? '2px solid var(--color-success)' : '1px solid var(--border-medium)',
+                      backgroundColor: newStateId === '2' ? 'var(--color-success-bg)' : 'var(--bg-card)',
+                      color: newStateId === '2' ? 'var(--color-success)' : 'var(--text-secondary)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       display: 'flex',
@@ -565,14 +565,14 @@ export default function CloseTicketModal({
                         height: '14px',
                         borderRadius: '50%',
                         border: '2px solid',
-                        borderColor: newStateId === '2' ? '#10b981' : 'rgba(255, 255, 255, 0.3)',
+                        borderColor: newStateId === '2' ? 'var(--color-success)' : 'var(--border-medium)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
                       {newStateId === '2' && (
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} />
                       )}
                     </span>
                     <div>
@@ -587,9 +587,9 @@ export default function CloseTicketModal({
                     style={{
                       padding: '10px 14px',
                       borderRadius: '8px',
-                      border: newStateId === '3' ? '2px solid #f87171' : '1px solid rgba(255, 255, 255, 0.1)',
-                      backgroundColor: newStateId === '3' ? 'rgba(239, 68, 68, 0.18)' : 'rgba(255, 255, 255, 0.03)',
-                      color: newStateId === '3' ? '#f87171' : 'var(--text-secondary)',
+                      border: newStateId === '3' ? '2px solid var(--color-danger)' : '1px solid var(--border-medium)',
+                      backgroundColor: newStateId === '3' ? 'var(--color-danger-bg)' : 'var(--bg-card)',
+                      color: newStateId === '3' ? 'var(--color-danger)' : 'var(--text-secondary)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       display: 'flex',
@@ -605,14 +605,14 @@ export default function CloseTicketModal({
                         height: '14px',
                         borderRadius: '50%',
                         border: '2px solid',
-                        borderColor: newStateId === '3' ? '#f87171' : 'rgba(255, 255, 255, 0.3)',
+                        borderColor: newStateId === '3' ? 'var(--color-danger)' : 'var(--border-medium)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
                       {newStateId === '3' && (
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f87171' }} />
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-danger)' }} />
                       )}
                     </span>
                     <div>
@@ -626,8 +626,8 @@ export default function CloseTicketModal({
               {/* Resolution Note Textarea & Quick Template Buttons */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>
-                    Catatan Resolusi / Penutupan <span style={{ color: '#f87171' }}>*</span>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Catatan Resolusi / Penutupan <span style={{ color: 'var(--color-danger)' }}>*</span>
                   </label>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     Masuk ke riwayat artikel OTRS iCare
@@ -643,7 +643,7 @@ export default function CloseTicketModal({
                     type="button"
                     onClick={() => handleApplyTemplate('Penambahan konfigurasi DNS (A Record / CNAME) telah berhasil diimplementasikan pada Infoblox BSI. Tiket diselesaikan.')}
                     className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#3b82f6', color: '#60a5fa' }}
+                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#3b82f6', color: 'var(--color-info)' }}
                   >
                     DNS Request
                   </button>
@@ -651,7 +651,7 @@ export default function CloseTicketModal({
                     type="button"
                     onClick={() => handleApplyTemplate('Reservasi IP Address / Fixed Address telah sukses dialokasikan pada subnet Infoblox Grid Manager BSI. Tiket ditutup.')}
                     className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#f59e0b', color: '#fbbf24' }}
+                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#f59e0b', color: 'var(--color-warning)' }}
                   >
                     Reserve IP
                   </button>
@@ -659,7 +659,7 @@ export default function CloseTicketModal({
                     type="button"
                     onClick={() => handleApplyTemplate('Standby dan pendampingan engineer selama aktivitas DRP BSI telah selesai dilaksanakan dengan lancar. Tiket ditutup.')}
                     className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#a855f7', color: '#c084fc' }}
+                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#a855f7', color: 'var(--color-purple)' }}
                   >
                     DRP Standby
                   </button>
@@ -667,7 +667,7 @@ export default function CloseTicketModal({
                     type="button"
                     onClick={() => handleApplyTemplate('Pembaruan data IPAM dan alokasi subnet telah selesai dikonfigurasi pada Infoblox. Tiket diselesaikan.')}
                     className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#10b981', color: '#34d399' }}
+                    style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#10b981', color: 'var(--color-success)' }}
                   >
                     IPAM
                   </button>
@@ -682,9 +682,9 @@ export default function CloseTicketModal({
                   style={{
                     width: '100%',
                     fontSize: '0.825rem',
-                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                    borderColor: 'rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--bg-input)',
+                    borderColor: 'var(--border-medium)',
+                    color: 'var(--text-primary)',
                     padding: '10px 12px',
                     borderRadius: '8px',
                     lineHeight: 1.5,
@@ -697,18 +697,19 @@ export default function CloseTicketModal({
                 style={{
                   padding: '12px 14px',
                   borderRadius: '8px',
-                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '12px',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={18} color="#34d399" />
+                  <ShieldCheck size={18} color="var(--color-success)" />
                   <div>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       Sinkronisasi Langsung ke Portal iCare OTRS
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
@@ -724,7 +725,7 @@ export default function CloseTicketModal({
                     onChange={e => setSyncToOtrs(e.target.checked)}
                     style={{ accentColor: '#10b981', width: '16px', height: '16px', cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.78rem', color: syncToOtrs ? '#34d399' : 'var(--text-muted)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.78rem', color: syncToOtrs ? 'var(--color-success)' : 'var(--text-muted)', fontWeight: 600 }}>
                     {syncToOtrs ? 'Tersambung (Aktif)' : 'Lokal Saja'}
                   </span>
                 </label>
@@ -733,7 +734,7 @@ export default function CloseTicketModal({
               {/* Progress bar during execution */}
               {isProcessing && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#818cf8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-accent)' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <RefreshCw size={14} className="animate-spin" />
                       Sedang memproses penutupan {activeTickets.length} tiket di iCare OTRS...
@@ -744,7 +745,7 @@ export default function CloseTicketModal({
                     style={{
                       height: '6px',
                       borderRadius: '3px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'var(--border-subtle)',
                       overflow: 'hidden',
                     }}
                   >
@@ -752,7 +753,7 @@ export default function CloseTicketModal({
                       style={{
                         height: '100%',
                         width: `${progressPercent}%`,
-                        backgroundColor: '#6366f1',
+                        backgroundColor: 'var(--accent-primary)',
                         transition: 'width 0.3s ease',
                       }}
                     />
@@ -767,7 +768,7 @@ export default function CloseTicketModal({
         <div
           className="modal-footer"
           style={{
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            borderTop: '1px solid var(--border-subtle)',
             padding: '14px 20px',
             display: 'flex',
             alignItems: 'center',

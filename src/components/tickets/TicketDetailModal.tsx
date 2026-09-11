@@ -20,6 +20,7 @@ import {
   Layers,
   Pencil,
   Save,
+  Printer,
 } from 'lucide-react';
 
 // ── Kriteria options ──────────────────────────────────────────────
@@ -152,14 +153,16 @@ export default function TicketDetailModal() {
         <div className="modal-header">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#818cf8' }}>
+              <span className="ticket-number-chip" style={{ fontSize: '1.05rem', padding: '3px 10px' }}>
                 {ticket.ticketNumber}
               </span>
               <span style={{
                 fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
                 padding: '2px 8px',
                 borderRadius: '4px',
                 backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border-subtle)',
                 color: 'var(--text-muted)',
               }}>
                 Ext: {ticket.externalId}
@@ -180,24 +183,24 @@ export default function TicketDetailModal() {
                   padding: '2px 10px',
                   borderRadius: '9999px',
                   backgroundColor:
-                    ticket.kriteria === 'IPAM' ? 'rgba(16, 185, 129, 0.2)' :
-                    ticket.kriteria === 'Reserve IP' ? 'rgba(245, 158, 11, 0.2)' :
-                    ticket.kriteria === 'DRP' ? 'rgba(168, 85, 247, 0.2)' :
-                    ticket.kriteria === 'DNS Request' ? 'rgba(59, 130, 246, 0.2)' :
-                    'rgba(148, 163, 184, 0.15)',
+                    ticket.kriteria === 'IPAM' ? 'rgba(16, 185, 129, 0.15)' :
+                    ticket.kriteria === 'Reserve IP' ? 'rgba(245, 158, 11, 0.15)' :
+                    ticket.kriteria === 'DRP' ? 'rgba(168, 85, 247, 0.15)' :
+                    ticket.kriteria === 'DNS Request' ? 'rgba(6, 182, 212, 0.15)' :
+                    'var(--bg-elevated)',
                   border: `1px solid ${
-                    ticket.kriteria === 'IPAM' ? 'rgba(16, 185, 129, 0.5)' :
-                    ticket.kriteria === 'Reserve IP' ? 'rgba(245, 158, 11, 0.5)' :
-                    ticket.kriteria === 'DRP' ? 'rgba(168, 85, 247, 0.5)' :
-                    ticket.kriteria === 'DNS Request' ? 'rgba(59, 130, 246, 0.5)' :
-                    'rgba(148, 163, 184, 0.35)'
+                    ticket.kriteria === 'IPAM' ? 'var(--color-success)' :
+                    ticket.kriteria === 'Reserve IP' ? 'var(--color-warning)' :
+                    ticket.kriteria === 'DRP' ? '#a855f7' :
+                    ticket.kriteria === 'DNS Request' ? 'var(--color-info)' :
+                    'var(--border-subtle)'
                   }`,
                   color:
-                    ticket.kriteria === 'IPAM' ? '#34d399' :
-                    ticket.kriteria === 'Reserve IP' ? '#fbbf24' :
-                    ticket.kriteria === 'DRP' ? '#c084fc' :
-                    ticket.kriteria === 'DNS Request' ? '#60a5fa' :
-                    '#94a3b8',
+                    ticket.kriteria === 'IPAM' ? 'var(--color-success)' :
+                    ticket.kriteria === 'Reserve IP' ? 'var(--color-warning)' :
+                    ticket.kriteria === 'DRP' ? '#a855f7' :
+                    ticket.kriteria === 'DNS Request' ? 'var(--color-info)' :
+                    'var(--text-secondary)',
                 }}>
                   {ticket.kriteria} {ticket.subKriteria ? `• ${ticket.subKriteria}` : ''}
                 </span>
@@ -207,17 +210,43 @@ export default function TicketDetailModal() {
               {ticket.subject}
             </h2>
           </div>
-          <button
-            onClick={() => setSelectedTicket(null)}
-            className="btn btn-outline btn-icon"
-            style={{ padding: '6px' }}
-          >
-            <X size={18} />
-          </button>
+          <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => {
+                const mainContent = document.querySelector<HTMLElement>('.main-content');
+                const origMargin = mainContent ? mainContent.style.marginLeft : null;
+                if (mainContent) {
+                  mainContent.style.marginLeft = '0';
+                  mainContent.style.width = '100%';
+                }
+                window.print();
+                const restore = () => {
+                  if (mainContent && origMargin !== null) {
+                    mainContent.style.marginLeft = origMargin;
+                    mainContent.style.width = '';
+                  }
+                  window.removeEventListener('afterprint', restore);
+                };
+                window.addEventListener('afterprint', restore);
+              }}
+              className="btn btn-outline btn-icon"
+              style={{ padding: '6px' }}
+              title="Cetak Tiket (Print)"
+            >
+              <Printer size={18} />
+            </button>
+            <button
+              onClick={() => setSelectedTicket(null)}
+              className="btn btn-outline btn-icon"
+              style={{ padding: '6px' }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Tab switcher */}
-        <div style={{
+        <div className="no-print" style={{
           display: 'flex',
           borderBottom: '1px solid var(--border-subtle)',
           padding: '0 24px',
@@ -288,9 +317,9 @@ export default function TicketDetailModal() {
             margin: '16px 24px 0 24px',
             padding: '12px 16px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(244, 63, 94, 0.15)',
-            border: '1px solid rgba(244, 63, 94, 0.4)',
-            color: '#fb7185',
+            backgroundColor: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
+            color: 'var(--color-danger)',
             fontSize: '0.825rem',
             display: 'flex',
             alignItems: 'center',
@@ -306,9 +335,9 @@ export default function TicketDetailModal() {
             margin: '16px 24px 0 24px',
             padding: '12px 16px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            color: '#34d399',
+            backgroundColor: 'var(--color-success-bg)',
+            border: '1px solid var(--color-success-border)',
+            color: 'var(--color-success)',
             fontSize: '0.825rem',
             display: 'flex',
             alignItems: 'center',
@@ -430,9 +459,9 @@ export default function TicketDetailModal() {
                         marginLeft: 'auto',
                         padding: '7px 16px',
                         borderRadius: '8px',
-                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                        border: '1px solid rgba(16, 185, 129, 0.5)',
-                        color: '#34d399',
+                        backgroundColor: 'var(--color-success-bg)',
+                        border: '1px solid var(--color-success-border)',
+                        color: 'var(--color-success)',
                         cursor: 'pointer',
                         fontSize: '0.825rem',
                         fontWeight: 700,
@@ -454,9 +483,9 @@ export default function TicketDetailModal() {
                         marginLeft: 'auto',
                         padding: '7px 16px',
                         borderRadius: '8px',
-                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                        border: '1px solid #10b981',
-                        color: '#34d399',
+                        backgroundColor: 'var(--color-success-bg)',
+                        border: '1px solid var(--color-success-border)',
+                        color: 'var(--color-success)',
                         cursor: 'pointer',
                         fontSize: '0.825rem',
                         fontWeight: 700,
@@ -495,10 +524,10 @@ export default function TicketDetailModal() {
               <div style={{
                 padding: '16px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(30, 41, 59, 0.7)',
+                backgroundColor: 'var(--bg-elevated)',
                 border: isEditingKriteria
-                  ? '1px solid rgba(99, 102, 241, 0.6)'
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                  ? '1px solid var(--accent-primary)'
+                  : '1px solid var(--border-subtle)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
@@ -507,8 +536,8 @@ export default function TicketDetailModal() {
                 {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Layers size={16} color="#818cf8" />
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                    <Layers size={16} color="var(--accent-primary)" />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       Klasifikasi Kriteria & Antrian OTRS
                     </span>
                     {isEditingKriteria && (
@@ -517,8 +546,8 @@ export default function TicketDetailModal() {
                         fontWeight: 700,
                         padding: '2px 8px',
                         borderRadius: '20px',
-                        backgroundColor: 'rgba(99, 102, 241, 0.25)',
-                        color: '#a5b4fc',
+                        backgroundColor: 'var(--accent-glow)',
+                        color: 'var(--accent-primary)',
                         letterSpacing: '0.04em',
                       }}>MODE EDIT</span>
                     )}
@@ -529,9 +558,9 @@ export default function TicketDetailModal() {
                         fontSize: '0.72rem',
                         padding: '3px 10px',
                         borderRadius: '6px',
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                        border: '1px solid rgba(99, 102, 241, 0.3)',
-                        color: '#a5b4fc',
+                        backgroundColor: 'var(--accent-glow)',
+                        border: '1px solid var(--border-subtle)',
+                        color: 'var(--accent-primary)',
                         fontWeight: 600,
                       }}>
                         Antrian: {ticket.queueName}
@@ -552,9 +581,9 @@ export default function TicketDetailModal() {
                         style={{
                           padding: '5px 12px',
                           borderRadius: '6px',
-                          border: '1px solid rgba(99, 102, 241, 0.4)',
-                          backgroundColor: 'rgba(99, 102, 241, 0.12)',
-                          color: '#818cf8',
+                          border: '1px solid var(--accent-primary)',
+                          backgroundColor: 'var(--accent-glow)',
+                          color: 'var(--accent-primary)',
                           cursor: 'pointer',
                           fontSize: '0.75rem',
                           fontWeight: 600,
@@ -591,9 +620,9 @@ export default function TicketDetailModal() {
                           style={{
                             padding: '5px 12px',
                             borderRadius: '6px',
-                            border: '1px solid rgba(16, 185, 129, 0.5)',
+                            border: '1px solid var(--color-success)',
                             backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                            color: '#34d399',
+                            color: 'var(--color-success)',
                             cursor: 'pointer',
                             fontSize: '0.75rem',
                             fontWeight: 700,
@@ -610,7 +639,7 @@ export default function TicketDetailModal() {
                           style={{
                             padding: '5px 10px',
                             borderRadius: '6px',
-                            border: '1px solid rgba(148, 163, 184, 0.3)',
+                            border: '1px solid var(--border-subtle)',
                             backgroundColor: 'transparent',
                             color: 'var(--text-muted)',
                             cursor: 'pointer',
@@ -628,25 +657,25 @@ export default function TicketDetailModal() {
                 {/* READ-ONLY display */}
                 {!isEditingKriteria && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
+                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kriteria Utama</span>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff', marginTop: '3px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', marginTop: '3px' }}>
                         {ticket.kriteria || 'General'}
                       </div>
                     </div>
-                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
+                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sub-Kriteria / Tipe Request</span>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#38bdf8', marginTop: '3px' }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-info)', marginTop: '3px' }}>
                         {ticket.subKriteria || '-'}
                       </div>
                     </div>
-                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
+                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Domain Layanan</span>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
                         Infoblox {ticket.technicalCategory}
                       </div>
                     </div>
-                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
+                    <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kategori ITIL</span>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
                         {ticket.mainCategory}
@@ -743,10 +772,10 @@ export default function TicketDetailModal() {
                     <div style={{
                       padding: '8px 12px',
                       borderRadius: '6px',
-                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      backgroundColor: 'var(--color-purple-bg)',
+                      border: '1px solid var(--color-purple-border)',
                       fontSize: '0.72rem',
-                      color: '#a5b4fc',
+                      color: 'var(--color-purple)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
@@ -764,16 +793,16 @@ export default function TicketDetailModal() {
                   Description & Impact
                 </h4>
                 <div style={{
-                  padding: '14px 16px',
+                  padding: '16px',
                   borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'var(--bg-input)',
+                  backgroundColor: 'var(--bg-elevated)',
                   border: '1px solid var(--border-subtle)',
                   fontSize: '0.85rem',
-                  lineHeight: 1.6,
+                  lineHeight: 1.5,
                   color: 'var(--text-primary)',
                   whiteSpace: 'pre-wrap',
                 }}>
-                  {ticket.description}
+                  {ticket.description || 'No description provided.'}
                 </div>
               </div>
 
@@ -782,12 +811,12 @@ export default function TicketDetailModal() {
                 <div style={{
                   padding: '14px 16px',
                   borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  backgroundColor: 'var(--color-purple-bg)',
+                  border: '1px solid var(--color-purple-border)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <Sparkles size={16} color="#818cf8" />
-                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#818cf8' }}>
+                    <Sparkles size={16} color="var(--color-purple)" />
+                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-purple)' }}>
                       Rule Engine Auto-Categorization (Confidence: {ticket.ruleEngineSuggested.confidence}%)
                     </span>
                   </div>
@@ -800,8 +829,8 @@ export default function TicketDetailModal() {
                         fontSize: '0.7rem',
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                        color: '#818cf8',
+                        backgroundColor: 'var(--color-purple-bg)',
+                        color: 'var(--color-purple)',
                       }}>
                         #{kw}
                       </span>
@@ -865,7 +894,7 @@ export default function TicketDetailModal() {
 
                 <div>
                   <label className="form-label">Created At (WIB)</label>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.875rem', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>
                     {!isNaN(new Date(ticket.createdAt).getTime())
                       ? `${new Date(ticket.createdAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`
                       : '-'}
@@ -874,7 +903,7 @@ export default function TicketDetailModal() {
 
                 <div>
                   <label className="form-label">SLA Window</label>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.875rem', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>
                     {ticket.slaHours} Hours Allocated &bull; Due {!isNaN(new Date(ticket.dueAt).getTime())
                       ? `${new Date(ticket.dueAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`
                       : '-'}
@@ -884,14 +913,14 @@ export default function TicketDetailModal() {
 
               {ticket.resolutionNote && (
                 <div>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399', marginBottom: '8px' }}>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-success)', marginBottom: '8px' }}>
                     Resolution Summary
                   </h4>
                   <div style={{
                     padding: '12px 14px',
                     borderRadius: 'var(--radius-md)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    backgroundColor: 'var(--color-success-bg)',
+                    border: '1px solid var(--color-success-border)',
                     fontSize: '0.85rem',
                     color: 'var(--text-primary)',
                   }}>
@@ -1008,8 +1037,8 @@ export default function TicketDetailModal() {
                             fontWeight: 700,
                             padding: '2px 8px',
                             borderRadius: '4px',
-                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                            color: '#818cf8',
+                            backgroundColor: 'var(--color-purple-bg)',
+                            color: 'var(--color-purple)',
                           }}>
                             {wl.durationMinutes} mins ({wl.startTime} - {wl.endTime}) &bull; {wl.date}
                           </span>
@@ -1055,8 +1084,8 @@ export default function TicketDetailModal() {
                           {audit.action.replace('_', ' ')} by {audit.userName} ({audit.role})
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          {audit.oldValue && <span>From: <code style={{ color: '#fbbf24' }}>{audit.oldValue}</code> &rarr; </span>}
-                          {audit.newValue && <span>To: <code style={{ color: '#34d399' }}>{audit.newValue}</code></span>}
+                          {audit.oldValue && <span>From: <code style={{ color: 'var(--color-warning)' }}>{audit.oldValue}</code> &rarr; </span>}
+                          {audit.newValue && <span>To: <code style={{ color: 'var(--color-success)' }}>{audit.newValue}</code></span>}
                         </div>
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
@@ -1085,8 +1114,8 @@ export default function TicketDetailModal() {
               style={{
                 padding: '8px 18px',
                 borderRadius: '8px',
-                backgroundColor: '#059669',
-                border: '1px solid #059669',
+                backgroundColor: 'var(--color-success)',
+                border: '1px solid var(--color-success)',
                 color: '#ffffff',
                 cursor: 'pointer',
                 fontSize: '0.85rem',

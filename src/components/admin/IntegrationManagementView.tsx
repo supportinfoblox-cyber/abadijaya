@@ -57,7 +57,7 @@ export default function IntegrationManagementView() {
   if (!can('integration')) {
     return (
       <div className="glass-panel" style={{ padding: '48px', textAlign: 'center' }}>
-        <div style={{ padding: '12px', borderRadius: '50%', backgroundColor: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', width: '48px', height: '48px', margin: '0 auto 16px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ padding: '12px', borderRadius: '50%', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', width: '48px', height: '48px', margin: '0 auto 16px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Lock size={24} />
         </div>
         <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -80,11 +80,11 @@ export default function IntegrationManagementView() {
               width: '44px',
               height: '44px',
               borderRadius: '10px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              backgroundColor: 'var(--color-purple-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
             }}>
               <Cpu size={24} />
             </div>
@@ -98,8 +98,8 @@ export default function IntegrationManagementView() {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  backgroundColor: integrationConfig.connectionStatus === 'CONNECTED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
-                  color: integrationConfig.connectionStatus === 'CONNECTED' ? '#10b981' : '#f43f5e',
+                  backgroundColor: integrationConfig.connectionStatus === 'CONNECTED' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                  color: integrationConfig.connectionStatus === 'CONNECTED' ? 'var(--color-success)' : 'var(--color-danger)',
                   border: `1px solid ${integrationConfig.connectionStatus === 'CONNECTED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
                 }}>
                   {integrationConfig.connectionStatus}
@@ -138,9 +138,9 @@ export default function IntegrationManagementView() {
             marginTop: '16px',
             padding: '12px 16px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: testResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+            backgroundColor: testResult.success ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
             border: `1px solid ${testResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
-            color: testResult.success ? '#34d399' : '#fb7185',
+            color: testResult.success ? 'var(--color-success)' : 'var(--color-danger)',
             fontSize: '0.825rem',
             display: 'flex',
             alignItems: 'center',
@@ -156,8 +156,8 @@ export default function IntegrationManagementView() {
             marginTop: '16px',
             padding: '10px 14px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            color: '#818cf8',
+            backgroundColor: 'var(--color-purple-bg)',
+            color: 'var(--color-purple)',
             fontSize: '0.825rem',
           }}>
             Integration configuration updated and saved securely.
@@ -226,7 +226,7 @@ export default function IntegrationManagementView() {
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span>API Secret Token / Client Secret</span>
-                <span style={{ fontSize: '0.7rem', color: '#10b981' }}>Encrypted at Rest</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-success)', fontWeight: 600 }}>Encrypted at Rest</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -275,13 +275,13 @@ export default function IntegrationManagementView() {
           <div style={{
             padding: '12px 16px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            backgroundColor: 'var(--color-warning-bg)',
             border: '1px solid rgba(245, 158, 11, 0.3)',
             marginBottom: '16px',
             fontSize: '0.75rem',
             color: 'var(--text-secondary)',
           }}>
-            <strong style={{ color: '#f59e0b' }}>PRD Security Guideline (Section 23 & 26):</strong> Production credentials must never be committed to source repositories or logged to unencrypted outputs. All outbound synchronizations use encrypted HTTP TLS 1.3 tunnels.
+            <strong style={{ color: 'var(--color-warning)' }}>PRD Security Guideline (Section 23 & 26):</strong> Production credentials must never be committed to source repositories or logged to unencrypted outputs. All outbound synchronizations use encrypted HTTP TLS 1.3 tunnels.
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -324,7 +324,7 @@ export default function IntegrationManagementView() {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '4px',
-                      color: log.direction === 'INBOUND' ? '#06b6d4' : '#8b5cf6',
+                      color: log.direction === 'INBOUND' ? 'var(--color-info)' : 'var(--color-purple)',
                     }}>
                       {log.direction === 'INBOUND' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
                       {log.direction}
@@ -336,8 +336,8 @@ export default function IntegrationManagementView() {
                       fontWeight: 700,
                       padding: '2px 8px',
                       borderRadius: '4px',
-                      backgroundColor: log.status === 'SUCCESS' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-                      color: log.status === 'SUCCESS' ? '#10b981' : '#f43f5e',
+                      backgroundColor: log.status === 'SUCCESS' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                      color: log.status === 'SUCCESS' ? 'var(--color-success)' : 'var(--color-danger)',
                     }}>
                       {log.status}
                     </span>
@@ -346,7 +346,7 @@ export default function IntegrationManagementView() {
                   <td style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
                     {log.message}
                     {log.errorDetail && (
-                      <div style={{ color: '#fb7185', fontSize: '0.75rem', marginTop: '2px' }}>
+                      <div style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '2px' }}>
                         Error: {log.errorDetail}
                       </div>
                     )}

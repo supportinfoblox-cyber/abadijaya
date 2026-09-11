@@ -105,8 +105,8 @@ export default function CreateTicketModal({ isOpen, onClose }: CreateTicketModal
               <div style={{
                 padding: '10px 14px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(244, 63, 94, 0.15)',
-                color: '#fb7185',
+                backgroundColor: 'var(--color-danger-bg)',
+                color: 'var(--color-danger)',
                 fontSize: '0.825rem',
               }}>
                 {errorMsg}
@@ -142,13 +142,13 @@ export default function CreateTicketModal({ isOpen, onClose }: CreateTicketModal
               <div style={{
                 padding: '12px 16px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
+                backgroundColor: 'var(--color-purple-bg)',
+                border: '1px solid var(--color-purple-border)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Sparkles size={16} color="#818cf8" />
-                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#818cf8' }}>
+                    <Sparkles size={16} color="var(--color-purple)" />
+                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-purple)' }}>
                       Rule Engine Suggestion ({ruleRecommendation.confidence}% match)
                     </span>
                   </div>
@@ -164,7 +164,7 @@ export default function CreateTicketModal({ isOpen, onClose }: CreateTicketModal
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#818cf8',
+                        color: 'var(--color-purple)',
                         fontSize: '0.72rem',
                         cursor: 'pointer',
                         textDecoration: 'underline',

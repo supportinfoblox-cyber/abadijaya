@@ -51,19 +51,30 @@ export default function SLAMonitoringView() {
         style={{
           padding: '14px',
           borderRadius: 'var(--radius-md)',
-          backgroundColor: 'var(--bg-input)',
-          borderLeft: `4px solid ${statusColor}`,
+          backgroundColor: 'var(--bg-elevated)',
+          border: `1px solid var(--border-subtle)`,
+          borderLeft: `3px solid ${statusColor}`,
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          transition: 'transform var(--transition-fast)',
+          transition: 'all var(--transition-fast)',
+          boxShadow: 'var(--shadow-sm)',
         }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.borderColor = statusColor;
+          e.currentTarget.style.boxShadow = `var(--shadow-md), 0 0 12px ${statusColor}28`;
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = 'none';
+          e.currentTarget.style.borderColor = 'var(--border-subtle)';
+          e.currentTarget.style.borderLeftColor = statusColor;
+          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+        }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontWeight: 700, fontSize: '0.825rem', color: '#818cf8' }}>
+          <span className="ticket-number-chip">
             {ticket.ticketNumber}
           </span>
           <span className={`badge badge-priority-${ticket.priority.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>
@@ -72,7 +83,7 @@ export default function SLAMonitoringView() {
         </div>
 
         <div style={{
-          fontSize: '0.85rem',
+          fontSize: '0.82rem',
           fontWeight: 600,
           color: 'var(--text-primary)',
           overflow: 'hidden',
@@ -86,12 +97,17 @@ export default function SLAMonitoringView() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-          <span>Assignee: {ticket.assigneeName || 'Unassigned'}</span>
+          <span style={{ fontFamily: 'var(--font-mono)' }}>{ticket.assigneeName || 'Unassigned'}</span>
           <span style={{
             fontWeight: 700,
-            color: isOverdue ? '#f43f5e' : diffMin < 60 ? '#ea580c' : '#10b981',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            backgroundColor: isOverdue ? 'var(--color-danger-bg)' : diffMin < 60 ? 'var(--color-orange-bg)' : 'var(--color-success-bg)',
+            color: isOverdue ? 'var(--color-danger)' : diffMin < 60 ? 'var(--color-orange)' : 'var(--color-success)',
           }}>
-            {isOverdue ? `Overdue by ${Math.abs(diffMin)}m` : `${diffMin}m remaining`}
+            {isOverdue ? `−${Math.abs(diffMin)}m` : `+${diffMin}m`}
           </span>
         </div>
       </div>
@@ -105,7 +121,7 @@ export default function SLAMonitoringView() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(99, 102, 241, 0.2)', color: '#818cf8' }}>
+              <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
                 <ShieldAlert size={20} />
               </div>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -127,7 +143,7 @@ export default function SLAMonitoringView() {
               gap: '8px',
             }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Active Compliance Rate:</span>
-              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: compliantPct >= 95 ? '#10b981' : '#f59e0b' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: compliantPct >= 95 ? 'var(--color-success)' : 'var(--color-warning)' }}>
                 {compliantPct}%
               </span>
             </div>
@@ -156,7 +172,7 @@ export default function SLAMonitoringView() {
             </h4>
             <div className="grid-cols-4" style={{ marginBottom: '14px' }}>
               <div>
-                <label className="form-label" style={{ color: '#fb7185' }}>CRITICAL Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-danger)' }}>CRITICAL Target (Hours)</label>
                 <input
                   type="number"
                   min="1"
@@ -168,7 +184,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: '#fb923c' }}>HIGH Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-orange)' }}>HIGH Target (Hours)</label>
                 <input
                   type="number"
                   min="1"
@@ -180,7 +196,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: '#facc15' }}>MEDIUM Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-warning)' }}>MEDIUM Target (Hours)</label>
                 <input
                   type="number"
                   min="1"
@@ -192,7 +208,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: '#60a5fa' }}>LOW Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-info)' }}>LOW Target (Hours)</label>
                 <input
                   type="number"
                   min="1"
@@ -221,8 +237,8 @@ export default function SLAMonitoringView() {
             marginTop: '12px',
             padding: '8px 12px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            color: '#34d399',
+            backgroundColor: 'var(--color-success-bg)',
+            color: 'var(--color-success)',
             fontSize: '0.8rem',
             display: 'flex',
             alignItems: 'center',
@@ -241,11 +257,11 @@ export default function SLAMonitoringView() {
         gap: '16px',
       }}>
         {/* Column 1: BREACHED */}
-        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid #f43f5e' }}>
+        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-danger)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <AlertOctagon size={16} color="#f43f5e" />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f43f5e' }}>
+              <AlertOctagon size={16} color="var(--color-danger)" />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-danger)' }}>
                 BREACHED
               </span>
             </div>
@@ -254,8 +270,8 @@ export default function SLAMonitoringView() {
               fontWeight: 700,
               padding: '2px 8px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(244, 63, 94, 0.2)',
-              color: '#f43f5e',
+              backgroundColor: 'var(--color-danger-bg)',
+              color: 'var(--color-danger)',
             }}>
               {breachedTickets.length}
             </span>
@@ -267,17 +283,17 @@ export default function SLAMonitoringView() {
                 No breached tickets! Excellent SLA discipline.
               </div>
             ) : (
-              breachedTickets.map(t => renderTicketCard(t, '#f43f5e'))
+              breachedTickets.map(t => renderTicketCard(t, 'var(--color-danger)'))
             )}
           </div>
         </div>
 
         {/* Column 2: CRITICAL */}
-        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid #ea580c' }}>
+        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-orange)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <AlertTriangle size={16} color="#ea580c" />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ea580c' }}>
+              <AlertTriangle size={16} color="var(--color-orange)" />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-orange)' }}>
                 CRITICAL (&lt;15% Time)
               </span>
             </div>
@@ -286,8 +302,8 @@ export default function SLAMonitoringView() {
               fontWeight: 700,
               padding: '2px 8px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(234, 88, 12, 0.2)',
-              color: '#ea580c',
+              backgroundColor: 'var(--color-orange-bg)',
+              color: 'var(--color-orange)',
             }}>
               {criticalTickets.length}
             </span>
@@ -299,17 +315,17 @@ export default function SLAMonitoringView() {
                 No tickets in critical countdown.
               </div>
             ) : (
-              criticalTickets.map(t => renderTicketCard(t, '#ea580c'))
+              criticalTickets.map(t => renderTicketCard(t, 'var(--color-orange)'))
             )}
           </div>
         </div>
 
         {/* Column 3: WARNING */}
-        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid #f59e0b' }}>
+        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-warning)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={16} color="#f59e0b" />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f59e0b' }}>
+              <Clock size={16} color="var(--color-warning)" />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-warning)' }}>
                 WARNING (&lt;35% Time)
               </span>
             </div>
@@ -318,8 +334,8 @@ export default function SLAMonitoringView() {
               fontWeight: 700,
               padding: '2px 8px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(245, 158, 11, 0.2)',
-              color: '#f59e0b',
+              backgroundColor: 'var(--color-warning-bg)',
+              color: 'var(--color-warning)',
             }}>
               {warningTickets.length}
             </span>
@@ -331,17 +347,17 @@ export default function SLAMonitoringView() {
                 No tickets in warning status.
               </div>
             ) : (
-              warningTickets.map(t => renderTicketCard(t, '#f59e0b'))
+              warningTickets.map(t => renderTicketCard(t, 'var(--color-warning)'))
             )}
           </div>
         </div>
 
         {/* Column 4: SAFE */}
-        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid #10b981' }}>
+        <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-success)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShieldCheck size={16} color="#10b981" />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10b981' }}>
+              <ShieldCheck size={16} color="var(--color-success)" />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-success)' }}>
                 SAFE (On Track)
               </span>
             </div>
@@ -350,8 +366,8 @@ export default function SLAMonitoringView() {
               fontWeight: 700,
               padding: '2px 8px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(16, 185, 129, 0.2)',
-              color: '#10b981',
+              backgroundColor: 'var(--color-success-bg)',
+              color: 'var(--color-success)',
             }}>
               {safeTickets.length}
             </span>
@@ -363,7 +379,7 @@ export default function SLAMonitoringView() {
                 No active tickets in safe window.
               </div>
             ) : (
-              safeTickets.map(t => renderTicketCard(t, '#10b981'))
+              safeTickets.map(t => renderTicketCard(t, 'var(--color-success)'))
             )}
           </div>
         </div>

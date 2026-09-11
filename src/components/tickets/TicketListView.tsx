@@ -6,6 +6,7 @@ import { Ticket, TicketPriority, TicketStatus, MainCategory, TechnicalCategory }
 import CloseTicketModal from './CloseTicketModal';
 import OtrsSyncModal from './OtrsSyncModal';
 import { exportTicketsToCsv } from '@/services/exportCsv';
+import { exportTicketsToJson } from '@/services/backupJson';
 import {
   Search,
   Filter,
@@ -22,6 +23,7 @@ import {
   XCircle,
   CheckCircle2,
   FileSpreadsheet,
+  FileJson,
   Download,
 } from 'lucide-react';
 
@@ -225,30 +227,30 @@ export default function TicketListView() {
         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>General</span>
       );
     }
-    let bg = 'rgba(99, 102, 241, 0.15)';
-    let border = 'rgba(99, 102, 241, 0.4)';
-    let text = '#818cf8';
+    let bg = 'rgba(99, 102, 241, 0.12)';
+    let border = 'rgba(99, 102, 241, 0.35)';
+    let text = 'var(--accent-primary)';
 
     if (kriteria === 'IPAM') {
-      bg = 'rgba(16, 185, 129, 0.15)';
-      border = 'rgba(16, 185, 129, 0.4)';
-      text = '#34d399';
+      bg = 'rgba(16, 185, 129, 0.12)';
+      border = 'rgba(16, 185, 129, 0.35)';
+      text = 'var(--color-success)';
     } else if (kriteria === 'Reserve IP') {
-      bg = 'rgba(245, 158, 11, 0.15)';
-      border = 'rgba(245, 158, 11, 0.4)';
-      text = '#fbbf24';
+      bg = 'rgba(245, 158, 11, 0.12)';
+      border = 'rgba(245, 158, 11, 0.35)';
+      text = 'var(--color-warning)';
     } else if (kriteria === 'DRP') {
-      bg = 'rgba(168, 85, 247, 0.15)';
-      border = 'rgba(168, 85, 247, 0.4)';
-      text = '#c084fc';
+      bg = 'rgba(168, 85, 247, 0.12)';
+      border = 'rgba(168, 85, 247, 0.35)';
+      text = '#a855f7';
     } else if (kriteria === 'DNS Request') {
-      bg = 'rgba(59, 130, 246, 0.15)';
-      border = 'rgba(59, 130, 246, 0.4)';
-      text = '#60a5fa';
+      bg = 'rgba(59, 130, 246, 0.12)';
+      border = 'rgba(59, 130, 246, 0.35)';
+      text = 'var(--color-info)';
     } else if (kriteria === 'Other') {
-      bg = 'rgba(148, 163, 184, 0.15)';
-      border = 'rgba(148, 163, 184, 0.4)';
-      text = '#cbd5e1';
+      bg = 'rgba(148, 163, 184, 0.12)';
+      border = 'rgba(148, 163, 184, 0.35)';
+      text = 'var(--text-secondary)';
     }
 
     return (
@@ -264,12 +266,23 @@ export default function TicketListView() {
           backgroundColor: bg,
           border: `1px solid ${border}`,
           color: text,
-          width: 'fit-content'
+          width: 'fit-content',
         }}>
           {kriteria}
         </span>
         {subKriteria && (
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={subKriteria}>
+          <span
+            style={{
+              fontSize: '0.68rem',
+              color: 'var(--text-muted)',
+              fontWeight: 500,
+              maxWidth: '140px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+            title={subKriteria}
+          >
             {subKriteria}
           </span>
         )}
@@ -297,20 +310,17 @@ export default function TicketListView() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Kriteria Filter Bar (User criteria: IPAM, Reserve IP, DNS Request, DRP) */}
-      <div style={{
+      <div className="glass-panel" style={{
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
         flexWrap: 'wrap',
         padding: '12px 18px',
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(12px)',
         borderRadius: 'var(--radius-lg)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '6px' }}>
-          <Layers size={15} color="#818cf8" />
-          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <Layers size={15} color="var(--accent-primary)" />
+          <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Kriteria Tiket:
           </span>
         </div>
@@ -328,13 +338,20 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'ALL' ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
-            backgroundColor: activeKriteria === 'ALL' ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-            color: activeKriteria === 'ALL' ? '#ffffff' : 'var(--text-secondary)'
+            border: activeKriteria === 'ALL' ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'ALL' ? 'var(--accent-glow)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'ALL' ? 'var(--accent-primary)' : 'var(--text-secondary)'
           }}
         >
           <span>Semua</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#fff' }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: activeKriteria === 'ALL' ? 'var(--accent-primary)' : 'var(--bg-input)',
+            color: activeKriteria === 'ALL' ? '#ffffff' : 'var(--text-secondary)'
+          }}>
             {kriteriaCounts.ALL}
           </span>
         </button>
@@ -352,14 +369,22 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'IPAM' ? '1px solid #34d399' : '1px solid rgba(16, 185, 129, 0.25)',
-            backgroundColor: activeKriteria === 'IPAM' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.06)',
-            color: activeKriteria === 'IPAM' ? '#34d399' : 'var(--text-secondary)'
+            border: activeKriteria === 'IPAM' ? '1px solid var(--color-success)' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'IPAM' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'IPAM' ? 'var(--color-success)' : 'var(--text-secondary)'
           }}
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#34d399' }}></span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }}></span>
           <span>IPAM</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(16, 185, 129, 0.25)', color: '#34d399', fontWeight: 700 }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            color: 'var(--color-success)',
+            fontWeight: 700
+          }}>
             {kriteriaCounts.IPAM}
           </span>
         </button>
@@ -377,14 +402,22 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'Reserve IP' ? '1px solid #fbbf24' : '1px solid rgba(245, 158, 11, 0.25)',
-            backgroundColor: activeKriteria === 'Reserve IP' ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.06)',
-            color: activeKriteria === 'Reserve IP' ? '#fbbf24' : 'var(--text-secondary)'
+            border: activeKriteria === 'Reserve IP' ? '1px solid var(--color-warning)' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'Reserve IP' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'Reserve IP' ? 'var(--color-warning)' : 'var(--text-secondary)'
           }}
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fbbf24' }}></span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-warning)' }}></span>
           <span>Reserve IP</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(245, 158, 11, 0.25)', color: '#fbbf24', fontWeight: 700 }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+            color: 'var(--color-warning)',
+            fontWeight: 700
+          }}>
             {kriteriaCounts.RESERVE_IP}
           </span>
         </button>
@@ -402,14 +435,22 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'DNS Request' ? '1px solid #60a5fa' : '1px solid rgba(59, 130, 246, 0.25)',
-            backgroundColor: activeKriteria === 'DNS Request' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.06)',
-            color: activeKriteria === 'DNS Request' ? '#60a5fa' : 'var(--text-secondary)'
+            border: activeKriteria === 'DNS Request' ? '1px solid var(--color-info)' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'DNS Request' ? 'rgba(6, 182, 212, 0.15)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'DNS Request' ? 'var(--color-info)' : 'var(--text-secondary)'
           }}
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#60a5fa' }}></span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-info)' }}></span>
           <span>DNS Request</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(59, 130, 246, 0.25)', color: '#60a5fa', fontWeight: 700 }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            color: 'var(--color-info)',
+            fontWeight: 700
+          }}>
             {kriteriaCounts.DNS_REQUEST}
           </span>
         </button>
@@ -426,13 +467,13 @@ export default function TicketListView() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            border: activeKriteria === 'A Record' ? '1px solid #93c5fd' : '1px dashed rgba(59, 130, 246, 0.35)',
-            backgroundColor: activeKriteria === 'A Record' ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-            color: activeKriteria === 'A Record' ? '#ffffff' : '#93c5fd'
+            border: activeKriteria === 'A Record' ? '1px solid var(--color-info)' : '1px dashed var(--border-subtle)',
+            backgroundColor: activeKriteria === 'A Record' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+            color: activeKriteria === 'A Record' ? 'var(--text-primary)' : 'var(--color-info)'
           }}
         >
           <span>&bull; A Record</span>
-          <span style={{ fontSize: '0.68rem', opacity: 0.85 }}>({kriteriaCounts.DNS_A_RECORD})</span>
+          <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', opacity: 0.85 }}>({kriteriaCounts.DNS_A_RECORD})</span>
         </button>
 
         {/* DNS Sub-filter: CNAME */}
@@ -447,13 +488,13 @@ export default function TicketListView() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            border: activeKriteria === 'CNAME' ? '1px solid #93c5fd' : '1px dashed rgba(59, 130, 246, 0.35)',
-            backgroundColor: activeKriteria === 'CNAME' ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-            color: activeKriteria === 'CNAME' ? '#ffffff' : '#93c5fd'
+            border: activeKriteria === 'CNAME' ? '1px solid var(--color-info)' : '1px dashed var(--border-subtle)',
+            backgroundColor: activeKriteria === 'CNAME' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+            color: activeKriteria === 'CNAME' ? 'var(--text-primary)' : 'var(--color-info)'
           }}
         >
           <span>&bull; CNAME</span>
-          <span style={{ fontSize: '0.68rem', opacity: 0.85 }}>({kriteriaCounts.DNS_CNAME})</span>
+          <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', opacity: 0.85 }}>({kriteriaCounts.DNS_CNAME})</span>
         </button>
 
         {/* DRP */}
@@ -469,14 +510,22 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'DRP' ? '1px solid #c084fc' : '1px solid rgba(168, 85, 247, 0.25)',
-            backgroundColor: activeKriteria === 'DRP' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(168, 85, 247, 0.06)',
-            color: activeKriteria === 'DRP' ? '#c084fc' : 'var(--text-secondary)'
+            border: activeKriteria === 'DRP' ? '1px solid #a855f7' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'DRP' ? 'rgba(168, 85, 247, 0.15)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'DRP' ? '#a855f7' : 'var(--text-secondary)'
           }}
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#c084fc' }}></span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#a855f7' }}></span>
           <span>DRP (Standby)</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(168, 85, 247, 0.25)', color: '#c084fc', fontWeight: 700 }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: 'rgba(168, 85, 247, 0.15)',
+            color: '#a855f7',
+            fontWeight: 700
+          }}>
             {kriteriaCounts.DRP}
           </span>
         </button>
@@ -494,18 +543,27 @@ export default function TicketListView() {
             alignItems: 'center',
             gap: '6px',
             transition: 'all 0.15s ease',
-            border: activeKriteria === 'Other' ? '1px solid #cbd5e1' : '1px solid rgba(148, 163, 184, 0.25)',
-            backgroundColor: activeKriteria === 'Other' ? 'rgba(148, 163, 184, 0.25)' : 'rgba(148, 163, 184, 0.06)',
-            color: activeKriteria === 'Other' ? '#ffffff' : 'var(--text-secondary)'
+            border: activeKriteria === 'Other' ? '1px solid var(--border-medium)' : '1px solid var(--border-subtle)',
+            backgroundColor: activeKriteria === 'Other' ? 'var(--bg-input)' : 'var(--bg-elevated)',
+            color: activeKriteria === 'Other' ? 'var(--text-primary)' : 'var(--text-secondary)'
           }}
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#94a3b8' }}></span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }}></span>
           <span>Other</span>
-          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '0.7rem', backgroundColor: 'rgba(148, 163, 184, 0.25)', color: '#cbd5e1', fontWeight: 700 }}>
+          <span style={{
+            padding: '1px 6px',
+            borderRadius: '10px',
+            fontSize: '0.7rem',
+            fontFamily: 'var(--font-mono)',
+            backgroundColor: 'var(--bg-input)',
+            color: 'var(--text-secondary)',
+            fontWeight: 700
+          }}>
             {kriteriaCounts.OTHER}
           </span>
         </button>
       </div>
+
       {/* Sub-tab Navigation */}
       <div style={{
         display: 'flex',
@@ -521,11 +579,11 @@ export default function TicketListView() {
               key={tab.id}
               onClick={() => setActiveFilterStatus(tab.id)}
               style={{
-                padding: '8px 14px',
+                padding: '7px 14px',
                 borderRadius: 'var(--radius-md)',
                 backgroundColor: isActive ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                 color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                border: '1px solid transparent',
+                border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                 cursor: 'pointer',
                 fontSize: '0.825rem',
                 fontWeight: isActive ? 600 : 500,
@@ -534,12 +592,14 @@ export default function TicketListView() {
                 gap: '8px',
                 whiteSpace: 'nowrap',
                 transition: 'all var(--transition-fast)',
+                boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
               }}
             >
               <span>{tab.label}</span>
               <span style={{
                 fontSize: '0.7rem',
                 fontWeight: 700,
+                fontFamily: 'var(--font-mono)',
                 padding: '1px 6px',
                 borderRadius: '10px',
                 backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--bg-input)',
@@ -685,14 +745,33 @@ export default function TicketListView() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                color: '#34d399',
-                borderColor: 'rgba(16, 185, 129, 0.4)',
-                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                color: 'var(--color-success)',
+                borderColor: 'var(--color-success-border)',
+                backgroundColor: 'var(--color-success-bg)',
               }}
               title="Export seluruh tiket hasil filter saat ini ke file CSV yang rapi (format Excel UTF-8)"
             >
               <FileSpreadsheet size={15} />
               <span>Export CSV ({filteredTickets.length})</span>
+            </button>
+
+            {/* Backup JSON Button */}
+            <button
+              onClick={() => exportTicketsToJson(filteredTickets, 'tiket_icare_bsi_backup')}
+              className="btn btn-outline btn-sm"
+              style={{
+                height: '38px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--color-purple)',
+                borderColor: 'var(--color-purple-border)',
+                backgroundColor: 'var(--color-purple-bg)',
+              }}
+              title="Backup seluruh tiket hasil filter saat ini ke format file JSON"
+            >
+              <FileJson size={15} />
+              <span>Backup JSON ({filteredTickets.length})</span>
             </button>
 
 
@@ -775,6 +854,30 @@ export default function TicketListView() {
             >
               <FileSpreadsheet size={15} />
               <span>Export Terpilih ({selectedTicketIds.size})</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const selectedList = filteredTickets.filter(t => selectedTicketIds.has(t.id));
+                exportTicketsToJson(selectedList, 'tiket_terpilih_icare_backup');
+              }}
+              style={{
+                padding: '7px 14px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.4)',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+              title="Backup tiket terpilih ke file format JSON"
+            >
+              <FileJson size={15} />
+              <span>JSON Terpilih ({selectedTicketIds.size})</span>
             </button>
 
             <button
@@ -897,10 +1000,10 @@ export default function TicketListView() {
                     <tr
                       key={ticket.id}
                       onClick={() => setSelectedTicket(ticket)}
+                      className="ticket-row-clickable"
                       style={{
-                        cursor: 'pointer',
                         backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.08)' : undefined,
-                        outline: isSelected ? '1px solid rgba(99, 102, 241, 0.25)' : undefined,
+                        outline: isSelected ? '1px solid rgba(99, 102, 241, 0.35)' : undefined,
                         outlineOffset: '-1px',
                       }}
                     >
@@ -925,10 +1028,10 @@ export default function TicketListView() {
                       </td>
                       {/* Ticket Number */}
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <div style={{ fontWeight: 700, color: '#818cf8', fontSize: '0.875rem' }}>
+                        <div className="ticket-number-chip" style={{ display: 'inline-flex', marginBottom: '3px' }}>
                           {ticket.ticketNumber}
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                           {ticket.externalId}
                         </div>
                       </td>
@@ -996,8 +1099,8 @@ export default function TicketListView() {
                               width: '22px',
                               height: '22px',
                               borderRadius: '50%',
-                              backgroundColor: 'rgba(99, 102, 241, 0.25)',
-                              color: '#818cf8',
+                              backgroundColor: 'var(--color-purple-bg)',
+                              color: 'var(--color-purple)',
                               fontSize: '0.65rem',
                               fontWeight: 700,
                               display: 'flex',
@@ -1015,8 +1118,10 @@ export default function TicketListView() {
 
                       {/* Created Date (WIB / GMT+7) */}
                       <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                        {!isNaN(createdDate.getTime()) ? createdDate.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                          {!isNaN(createdDate.getTime()) ? createdDate.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                           {!isNaN(createdDate.getTime()) ? `${createdDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB` : ''}
                         </div>
                       </td>
@@ -1027,7 +1132,7 @@ export default function TicketListView() {
                           {ticket.slaStatus}
                         </span>
                         {!isClosedOrResolved && !isNaN(dueDate.getTime()) && (
-                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', marginTop: '2px' }}>
                             Due: {dueDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB
                           </div>
                         )}
@@ -1058,9 +1163,9 @@ export default function TicketListView() {
                               style={{
                                 padding: '4px 10px',
                                 fontSize: '0.75rem',
-                                backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                                border: '1px solid rgba(16, 185, 129, 0.4)',
-                                color: '#34d399',
+                                backgroundColor: 'var(--color-success-bg)',
+                                border: '1px solid var(--color-success-border)',
+                                color: 'var(--color-success)',
                                 borderRadius: '6px',
                                 display: 'inline-flex',
                                 alignItems: 'center',

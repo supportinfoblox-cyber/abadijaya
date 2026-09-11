@@ -104,7 +104,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: 'rgba(11, 15, 25, 0.82)',
+      backgroundColor: 'var(--modal-overlay)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
@@ -115,8 +115,8 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
       <div className="glass-panel" style={{
         width: '100%',
         maxWidth: '560px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-        border: '1px solid rgba(99, 102, 241, 0.25)',
+        boxShadow: 'var(--shadow-lg)',
+        border: '1px solid var(--border-medium)',
         overflow: 'hidden',
         animation: 'scaleIn 0.2s ease-out',
       }}>
@@ -127,18 +127,18 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(99, 102, 241, 0.05)',
+          background: 'var(--color-purple-bg)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '38px',
               height: '38px',
               borderRadius: '10px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              backgroundColor: 'var(--color-purple-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
             }}>
               <Download size={20} />
             </div>
@@ -181,17 +181,17 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Server size={13} color="#818cf8" /> Server Portal:
+                <Server size={13} color="var(--color-purple)" /> Server Portal:
               </span>
               <strong style={{ color: 'var(--text-primary)' }}>https://icare.lt-integra.com/otrs/</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
               <span>Antrean Terdaftar:</span>
-              <span style={{ color: '#38bdf8', fontWeight: 600 }}>OP0899 (ID 72) & OP0968 (ID 121)</span>
+              <span style={{ color: 'var(--color-info)', fontWeight: 600 }}>OP0899 (ID 72) & OP0968 (ID 121)</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
               <span>Akun Sinkronisasi:</span>
-              <span style={{ color: '#34d399', fontWeight: 600 }}>ismailak (Administrator)</span>
+              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>ismailak (Administrator)</span>
             </div>
           </div>
 
@@ -199,9 +199,9 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
             <div style={{
               padding: '10px 14px',
               borderRadius: '8px',
-              backgroundColor: 'rgba(244, 63, 94, 0.15)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              color: '#fb7185',
+              backgroundColor: 'var(--color-danger-bg)',
+              border: '1px solid var(--color-danger-border)',
+              color: 'var(--color-danger)',
               fontSize: '0.82rem',
               display: 'flex',
               alignItems: 'center',
@@ -217,23 +217,23 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
             <div style={{
               padding: '18px',
               borderRadius: '10px',
-              backgroundColor: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
+              backgroundColor: 'var(--color-success-bg)',
+              border: '1px solid var(--color-success-border)',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', fontWeight: 700, fontSize: '0.95rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)', fontWeight: 700, fontSize: '0.95rem' }}>
                 <CheckCircle2 size={18} />
                 <span>Berhasil Menarik {syncResult.totalFetched} Tiket dari iCare!</span>
               </div>
               <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                <div>Tiket Baru Ditambahkan: <strong style={{ color: '#34d399' }}>+{syncResult.added}</strong></div>
-                <div>Tiket Diperbarui: <strong style={{ color: '#818cf8' }}>{syncResult.updated}</strong></div>
+                <div>Tiket Baru Ditambahkan: <strong style={{ color: 'var(--color-success)' }}>+{syncResult.added}</strong></div>
+                <div>Tiket Diperbarui: <strong style={{ color: 'var(--color-purple)' }}>{syncResult.updated}</strong></div>
               </div>
 
               {/* Classification Badges */}
-              <div style={{ borderTop: '1px solid rgba(16, 185, 129, 0.2)', paddingTop: '10px' }}>
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
                   Hasil Klasifikasi Otomatis (4 Kriteria):
                 </div>
@@ -241,8 +241,8 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                   <span style={{
                     padding: '3px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                    color: '#818cf8',
+                    backgroundColor: 'var(--color-purple-bg)',
+                    color: 'var(--color-purple)',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                   }}>
@@ -251,8 +251,8 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                   <span style={{
                     padding: '3px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    color: '#34d399',
+                    backgroundColor: 'var(--color-success-bg)',
+                    color: 'var(--color-success)',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                   }}>
@@ -261,8 +261,8 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                   <span style={{
                     padding: '3px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                    color: '#fbbf24',
+                    backgroundColor: 'var(--color-warning-bg)',
+                    color: 'var(--color-warning)',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                   }}>
@@ -271,8 +271,8 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                   <span style={{
                     padding: '3px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(244, 63, 94, 0.2)',
-                    color: '#fb7185',
+                    backgroundColor: 'var(--color-danger-bg)',
+                    color: 'var(--color-danger)',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                   }}>
@@ -294,12 +294,12 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     style={{
                       padding: '12px',
                       borderRadius: '8px',
-                      backgroundColor: mode === 'historical' ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-input)',
-                      border: mode === 'historical' ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                      backgroundColor: mode === 'historical' ? 'var(--color-purple-bg)' : 'var(--bg-input)',
+                      border: mode === 'historical' ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                       cursor: 'pointer',
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: mode === 'historical' ? '#818cf8' : 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: mode === 'historical' ? 'var(--color-purple)' : 'var(--text-primary)' }}>
                       Riwayat Arsip &amp; Filter Waktu
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -312,12 +312,12 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     style={{
                       padding: '12px',
                       borderRadius: '8px',
-                      backgroundColor: mode === 'active' ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-input)',
-                      border: mode === 'active' ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                      backgroundColor: mode === 'active' ? 'var(--color-purple-bg)' : 'var(--bg-input)',
+                      border: mode === 'active' ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                       cursor: 'pointer',
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: mode === 'active' ? '#818cf8' : 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: mode === 'active' ? 'var(--color-purple)' : 'var(--text-primary)' }}>
                       Antrean Aktif Saat Ini
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -334,7 +334,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       Rentang Waktu Tiket:
                     </label>
-                    <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--color-success)', fontWeight: 700 }}>
                       {timeRange === '1-year' ? '1 Tahun Terakhir (~898 Tiket)' : timeRange === 'all' ? 'Seluruh Arsip' : `${timeRange.replace('-months', ' Bulan').replace('-month', ' Bulan')}`}
                     </span>
                   </div>
@@ -360,9 +360,9 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                           position: 'relative',
                           padding: '8px 4px',
                           borderRadius: '6px',
-                          backgroundColor: timeRange === item.id ? 'rgba(99, 102, 241, 0.25)' : 'var(--bg-input)',
-                          border: timeRange === item.id ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
-                          color: timeRange === item.id ? '#818cf8' : 'var(--text-secondary)',
+                          backgroundColor: timeRange === item.id ? 'var(--color-purple-bg)' : 'var(--bg-input)',
+                          border: timeRange === item.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          color: timeRange === item.id ? 'var(--color-purple)' : 'var(--text-secondary)',
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -378,7 +378,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                             fontSize: '0.58rem',
                             padding: '1px 4px',
                             borderRadius: '4px',
-                            background: '#10b981',
+                            background: 'var(--color-success)',
                             color: '#ffffff',
                             fontWeight: 700,
                           }}>
@@ -394,15 +394,15 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     marginTop: '8px',
                     padding: '8px 12px',
                     borderRadius: '6px',
-                    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    backgroundColor: 'var(--color-purple-bg)',
+                    border: '1px solid var(--border-subtle)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     fontSize: '0.73rem',
                     color: 'var(--text-secondary)',
                   }}>
-                    <Calendar size={13} color="#818cf8" style={{ flexShrink: 0 }} />
+                    <Calendar size={13} color="var(--color-purple)" style={{ flexShrink: 0 }} />
                     <span>
                       {timeRange === '1-year'
                         ? 'Tersedia ~898 tiket OP0899 & OP0968 dalam 1 tahun terakhir. Pilih batas 1.000 untuk menarik seluruhnya.'
@@ -421,7 +421,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       Batas Kuota Jumlah Tiket:
                     </label>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#818cf8' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-purple)' }}>
                       Maksimal {limit} Tiket
                     </span>
                   </div>
@@ -435,9 +435,9 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                           flex: 1,
                           padding: '6px',
                           borderRadius: '6px',
-                          backgroundColor: limit === val ? 'rgba(99, 102, 241, 0.25)' : 'var(--bg-input)',
-                          border: limit === val ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
-                          color: limit === val ? '#818cf8' : 'var(--text-secondary)',
+                          backgroundColor: limit === val ? 'var(--color-purple-bg)' : 'var(--bg-input)',
+                          border: limit === val ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          color: limit === val ? 'var(--color-purple)' : 'var(--text-secondary)',
                           fontSize: '0.78rem',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -460,7 +460,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          backgroundColor: 'var(--bg-elevated)',
         }}>
           {!syncResult ? (
             <button

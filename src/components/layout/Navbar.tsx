@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Search,
@@ -21,7 +21,15 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  Sun,
+  Moon,
+  Plus,
+  Sparkles,
+  Cloud,
+  CloudOff,
+  RefreshCw,
 } from 'lucide-react';
+import UserAvatar from '@/components/common/UserAvatar';
 
 export default function Navbar() {
   const {
@@ -41,11 +49,47 @@ export default function Navbar() {
     updateMyProfile,
     isSidebarCollapsed,
     toggleSidebar,
+    cloudSyncStatus,
+    lastCloudSync,
+    syncWithCloudNow,
   } = useTicketOps();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Sync theme with document element and localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('ticketops-theme') as 'dark' | 'light' | null;
+    const initialTheme = saved || (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+    setTheme(initialTheme);
+    document.documentElement.setAttribute('data-theme', initialTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ticketops-theme', next);
+  };
+
+  // Keyboard shortcut Ctrl+K / Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (currentView !== 'tickets' && currentView !== 'dashboard') {
+          setCurrentView('tickets');
+        }
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentView, setCurrentView]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -75,7 +119,7 @@ export default function Navbar() {
     settings: { title: 'System Settings', subtitle: 'App preferences & configuration' },
   };
 
-  const meta = viewMeta[currentView] || { title: 'TicketOps', subtitle: '' };
+  const meta = viewMeta[currentView] || { title: 'Portal Abadi Jaya', subtitle: '' };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -105,88 +149,108 @@ export default function Navbar() {
     reader.readAsDataURL(file);
   };
 
+  const isDark = theme === 'dark';
+
   const notifTypeColor = (type: string) => {
-    if (type.includes('BREACHED') || type.includes('CRITICAL')) return '#f43f5e';
-    if (type.includes('WARNING')) return '#f59e0b';
-    if (type.includes('SYNC') || type.includes('CLOSE')) return '#10b981';
-    return '#a5b4fc';
+    if (type.includes('BREACHED') || type.includes('CRITICAL')) return 'var(--color-danger)';
+    if (type.includes('WARNING')) return 'var(--color-warning)';
+    if (type.includes('SYNC') || type.includes('CLOSE')) return 'var(--color-success)';
+    return 'var(--text-accent)';
   };
 
   return (
-    <header style={{
+    <header className="main-navbar" style={{
       height: 'var(--navbar-height)',
-      background: 'rgba(8, 13, 22, 0.88)',
+      background: 'var(--bg-card)',
       backdropFilter: 'blur(24px) saturate(1.6)',
       WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
       zIndex: 90,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 32px',
-      boxShadow: '0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.3)',
+      padding: '0 24px',
+      boxShadow: 'var(--shadow-md)',
     }}>
       {/* Left: Breadcrumb / Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
         {/* Toggle Sidebar Button */}
         <button
           onClick={toggleSidebar}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '36px', height: '36px', borderRadius: '10px',
-            background: isSidebarCollapsed ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-            border: isSidebarCollapsed ? '1px solid rgba(99,102,241,0.35)' : '1px solid rgba(255,255,255,0.08)',
-            color: isSidebarCollapsed ? '#a5b4fc' : 'var(--text-secondary)',
+            background: isSidebarCollapsed 
+              ? (isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)') 
+              : 'var(--bg-glass)',
+            border: isSidebarCollapsed 
+              ? '1px solid rgba(99,102,241,0.35)' 
+              : '1px solid var(--border-medium)',
+            color: isSidebarCollapsed 
+              ? (isDark ? '#a5b4fc' : '#4f46e5') 
+              : 'var(--text-secondary)',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
             flexShrink: 0,
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(99,102,241,0.16)';
-            e.currentTarget.style.color = '#a5b4fc';
+            e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.16)' : 'rgba(99,102,241,0.1)';
+            e.currentTarget.style.color = isDark ? '#a5b4fc' : '#4f46e5';
             e.currentTarget.style.borderColor = 'rgba(99,102,241,0.35)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = isSidebarCollapsed ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)';
-            e.currentTarget.style.color = isSidebarCollapsed ? '#a5b4fc' : 'var(--text-secondary)';
-            e.currentTarget.style.borderColor = isSidebarCollapsed ? '1px solid rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.background = isSidebarCollapsed 
+              ? (isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)') 
+              : 'var(--bg-glass)';
+            e.currentTarget.style.color = isSidebarCollapsed 
+              ? (isDark ? '#a5b4fc' : '#4f46e5') 
+              : 'var(--text-secondary)';
+            e.currentTarget.style.borderColor = isSidebarCollapsed 
+              ? 'rgba(99,102,241,0.35)' 
+              : 'var(--border-medium)';
           }}
           title={isSidebarCollapsed ? 'Tampilkan Sidebar Menu' : 'Sembunyikan Sidebar Menu (Hide)'}
         >
           {isSidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '34px', height: '34px', borderRadius: '9px',
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.15))',
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.15))'
+              : 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(6,182,212,0.1))',
             border: '1px solid rgba(99,102,241,0.25)',
-            color: '#a5b4fc',
+            color: isDark ? '#a5b4fc' : '#4f46e5',
             flexShrink: 0,
           }}>
             {viewIcons[currentView] || <LayoutDashboard size={16} />}
           </div>
           <div style={{ minWidth: 0 }}>
-            <h1 style={{
-              fontSize: '1rem',
+            <h1 className="navbar-title" style={{
+              fontSize: '0.95rem',
               fontWeight: 800,
               color: 'var(--text-primary)',
               margin: 0,
               lineHeight: 1.2,
               whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
               letterSpacing: '-0.02em',
             }}>
               {meta.title}
             </h1>
-            <div style={{
-              fontSize: '0.7rem',
+            <div className="navbar-subtitle hide-mobile" style={{
+              fontSize: '0.68rem',
               color: 'var(--text-muted)',
               marginTop: '1px',
               letterSpacing: '0.01em',
               whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}>
               {meta.subtitle}
             </div>
@@ -194,19 +258,23 @@ export default function Navbar() {
         </div>
 
         {/* Global Search */}
-        <div style={{
-          position: 'relative',
-          maxWidth: '420px',
-          width: '100%',
-          display: currentView === 'tickets' || currentView === 'dashboard' ? 'block' : 'none',
-        }}>
-          <Search size={15} color="var(--text-muted)" style={{
+        <div
+          className="hide-tablet"
+          style={{
+            position: 'relative',
+            maxWidth: '360px',
+            width: '100%',
+            display: currentView === 'tickets' || currentView === 'dashboard' ? 'block' : 'none',
+          }}
+        >
+          <Search size={14} color="var(--text-muted)" style={{
             position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
             pointerEvents: 'none',
           }} />
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search tickets, subjects, requester..."
+            placeholder="Cari tiket, subjek, pemohon... (⌘K)"
             value={globalSearchQuery}
             onChange={e => {
               setGlobalSearchQuery(e.target.value);
@@ -216,31 +284,37 @@ export default function Navbar() {
             }}
             style={{
               width: '100%',
-              padding: '9px 36px',
-              borderRadius: '10px',
+              padding: '8px 36px',
+              borderRadius: '9px',
               border: '1px solid var(--border-medium)',
-              backgroundColor: 'rgba(8, 13, 22, 0.7)',
+              backgroundColor: 'var(--bg-input)',
               color: 'var(--text-primary)',
               fontSize: '0.82rem',
               outline: 'none',
               transition: 'all 0.15s ease',
-              backdropFilter: 'blur(8px)',
             }}
             onFocus={e => {
-              e.target.style.borderColor = '#6366f1';
-              e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)';
+              e.target.style.borderColor = 'var(--border-focus)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.18)';
             }}
             onBlur={e => {
               e.target.style.borderColor = 'var(--border-medium)';
               e.target.style.boxShadow = 'none';
             }}
           />
-          {globalSearchQuery && (
+          {!globalSearchQuery ? (
+            <span className="kbd" style={{
+              position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+            }}>
+              ⌘K
+            </span>
+          ) : (
             <button
               onClick={() => setGlobalSearchQuery('')}
               style={{
                 position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-subtle)',
                 color: 'var(--text-muted)', cursor: 'pointer',
                 borderRadius: '5px', padding: '2px', display: 'flex',
               }}
@@ -252,28 +326,134 @@ export default function Navbar() {
       </div>
 
       {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+      <div className="navbar-right-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
+
+        {/* Cloud Database (Supabase) Sync Badge */}
+        <button
+          onClick={async () => {
+            await syncWithCloudNow();
+          }}
+          disabled={cloudSyncStatus === 'syncing'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 10px',
+            borderRadius: '100px',
+            background: cloudSyncStatus === 'synced'
+              ? (isDark ? 'rgba(14, 165, 233, 0.09)' : 'rgba(14, 165, 233, 0.12)')
+              : cloudSyncStatus === 'syncing'
+              ? (isDark ? 'rgba(99, 102, 241, 0.12)' : 'rgba(99, 102, 241, 0.12)')
+              : (isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.12)'),
+            border: `1px solid ${
+              cloudSyncStatus === 'synced'
+                ? (isDark ? 'rgba(14, 165, 233, 0.3)' : 'rgba(14, 165, 233, 0.4)')
+                : cloudSyncStatus === 'syncing'
+                ? (isDark ? 'rgba(99, 102, 241, 0.35)' : 'rgba(99, 102, 241, 0.4)')
+                : (isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)')
+            }`,
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            color: cloudSyncStatus === 'synced'
+              ? (isDark ? '#38bdf8' : '#0284c7')
+              : cloudSyncStatus === 'syncing'
+              ? 'var(--text-accent)'
+              : (isDark ? '#f87171' : '#dc2626'),
+            letterSpacing: '0.03em',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            flexShrink: 0,
+          }}
+          title={
+            lastCloudSync
+              ? `Database Cloud (Supabase): ${cloudSyncStatus.toUpperCase()} • Terakhir: ${new Date(lastCloudSync).toLocaleTimeString('id-ID')} • Klik untuk sync ulang sekarang`
+              : 'Database Cloud (Supabase) • Klik untuk sync ulang sekarang'
+          }
+        >
+          {cloudSyncStatus === 'syncing' ? (
+            <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
+          ) : cloudSyncStatus === 'offline' || cloudSyncStatus === 'error' ? (
+            <CloudOff size={13} />
+          ) : (
+            <Cloud size={13} />
+          )}
+          <span className="hide-tablet" style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)' }}>
+            {cloudSyncStatus === 'syncing'
+              ? 'Syncing...'
+              : cloudSyncStatus === 'synced'
+              ? `Cloud: ${tickets.length}`
+              : 'Cloud: Offline'}
+          </span>
+        </button>
+
+        {/* Live Ops Center Pill */}
+        <div className="hide-tablet" style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '4px 10px',
+          borderRadius: '100px',
+          background: isDark ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.12)',
+          border: isDark ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(16, 185, 129, 0.35)',
+          fontSize: '0.7rem',
+          fontWeight: 700,
+          color: 'var(--color-success)',
+          letterSpacing: '0.04em',
+          flexShrink: 0,
+        }}>
+          <span className="live-pulse" style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            backgroundColor: 'var(--color-success)',
+          }} />
+          <span style={{ textTransform: 'uppercase', fontSize: '0.65rem' }}>
+            Live Ops
+          </span>
+        </div>
 
         {/* Role Chip */}
-        <div style={{
+        <div className="hide-tablet" style={{
           display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '5px 12px',
-          background: 'rgba(99, 102, 241, 0.1)',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
+          padding: '5px 11px',
+          background: 'var(--accent-primary-light)',
+          border: '1px solid rgba(99, 102, 241, 0.28)',
           borderRadius: '8px',
-          color: '#a5b4fc',
-          fontSize: '0.775rem',
+          color: 'var(--text-accent)',
+          fontSize: '0.75rem',
           fontWeight: 700,
-          letterSpacing: '0.02em',
+          letterSpacing: '0.03em',
+          flexShrink: 0,
         }}>
           <Shield size={13} />
-          <span style={{ textTransform: 'uppercase', fontSize: '0.72rem' }}>
+          <span style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
             {currentUser.role}
           </span>
         </div>
 
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '34px', height: '34px', borderRadius: '9px',
+            background: 'var(--bg-glass)',
+            border: '1px solid var(--border-medium)',
+            color: theme === 'dark' ? '#fbbf24' : '#4f46e5',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--bg-glass)';
+            e.currentTarget.style.borderColor = 'var(--border-medium)';
+          }}
+          title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
+        >
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
         {/* Divider */}
-        <div style={{ width: '1px', height: '22px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
+        <div className="hide-mobile" style={{ width: '1px', height: '22px', backgroundColor: 'var(--border-subtle)' }} />
 
         {/* Notifications Bell */}
         <div style={{ position: 'relative' }}>
@@ -286,21 +466,21 @@ export default function Navbar() {
               position: 'relative',
               width: '36px', height: '36px', borderRadius: '9px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: isNotifOpen ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${isNotifOpen ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
-              color: isNotifOpen ? '#a5b4fc' : 'var(--text-secondary)',
+              background: isNotifOpen ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.12)') : 'var(--bg-glass)',
+              border: `1px solid ${isNotifOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
+              color: isNotifOpen ? 'var(--text-accent)' : 'var(--text-secondary)',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(99,102,241,0.12)';
+              e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)';
               e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)';
-              e.currentTarget.style.color = '#a5b4fc';
+              e.currentTarget.style.color = isDark ? '#a5b4fc' : '#4f46e5';
             }}
             onMouseLeave={e => {
               if (!isNotifOpen) {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.background = 'var(--bg-glass)';
+                e.currentTarget.style.borderColor = 'var(--border-medium)';
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }
             }}
@@ -317,7 +497,7 @@ export default function Navbar() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '0 3px',
                 boxShadow: '0 0 8px rgba(244, 63, 94, 0.6)',
-                border: '1.5px solid rgba(6, 9, 15, 0.8)',
+                border: isDark ? '1.5px solid rgba(6, 9, 15, 0.8)' : '1.5px solid #ffffff',
               }}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
@@ -331,10 +511,10 @@ export default function Navbar() {
               top: 'calc(100% + 10px)',
               right: 0,
               width: '380px',
-              background: 'rgba(12, 18, 32, 0.97)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-medium)',
               borderRadius: '16px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+              boxShadow: 'var(--shadow-lg)',
               overflow: 'hidden',
               zIndex: 1000,
               animation: 'slideDown 0.2s cubic-bezier(0.34,1.2,0.64,1)',
@@ -343,18 +523,20 @@ export default function Navbar() {
               <div style={{
                 padding: '16px 18px', display: 'flex', alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                background: 'rgba(99,102,241,0.06)',
+                borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--accent-primary-light)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Bell size={15} color="#a5b4fc" />
+                  <Bell size={15} color={isDark ? '#a5b4fc' : '#4f46e5'} />
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     Notifications
                   </span>
                   {unreadCount > 0 && (
                     <span style={{
                       padding: '1px 7px', borderRadius: '100px', fontSize: '0.68rem', fontWeight: 700,
-                      background: 'rgba(244,63,94,0.18)', color: '#fda4af', border: '1px solid rgba(244,63,94,0.3)',
+                      background: isDark ? 'rgba(244,63,94,0.18)' : 'rgba(239,68,68,0.12)',
+                      color: isDark ? '#fda4af' : '#dc2626',
+                      border: isDark ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(239,68,68,0.3)',
                     }}>
                       {unreadCount} unread
                     </span>
@@ -363,7 +545,7 @@ export default function Navbar() {
                 <button
                   onClick={clearAllNotifications}
                   style={{
-                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)',
                     fontSize: '0.7rem', color: 'var(--text-muted)', cursor: 'pointer',
                     padding: '3px 9px', borderRadius: '6px', transition: 'all 0.15s ease',
                   }}
@@ -399,20 +581,20 @@ export default function Navbar() {
                         style={{
                           padding: '10px 12px',
                           borderRadius: '10px',
-                          background: notif.read ? 'rgba(255,255,255,0.02)' : 'rgba(99, 102, 241, 0.08)',
-                          border: notif.read ? '1px solid transparent' : '1px solid rgba(99, 102, 241, 0.2)',
+                          background: notif.read ? 'transparent' : (isDark ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.06)'),
+                          border: notif.read ? '1px solid transparent' : (isDark ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid rgba(99, 102, 241, 0.25)'),
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                           position: 'relative',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.12)'}
-                        onMouseLeave={e => e.currentTarget.style.background = notif.read ? 'rgba(255,255,255,0.02)' : 'rgba(99, 102, 241, 0.08)'}
+                        onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = notif.read ? 'transparent' : (isDark ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.06)')}
                       >
                         {!notif.read && (
                           <div style={{
                             position: 'absolute', top: '12px', right: '12px',
                             width: '6px', height: '6px', borderRadius: '50%',
-                            background: '#6366f1', boxShadow: '0 0 6px rgba(99,102,241,0.6)',
+                            background: 'var(--accent-primary)', boxShadow: '0 0 6px rgba(99,102,241,0.6)',
                           }} />
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -449,56 +631,28 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', gap: '9px',
               padding: '5px 10px 5px 5px',
               borderRadius: '10px',
-              background: isProfileOpen ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${isProfileOpen ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: isProfileOpen ? (isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)') : 'var(--bg-glass)',
+              border: `1px solid ${isProfileOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(99,102,241,0.1)';
-              e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)';
+              e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.08)';
+              e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)';
             }}
             onMouseLeave={e => {
               if (!isProfileOpen) {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.background = 'var(--bg-glass)';
+                e.currentTarget.style.borderColor = 'var(--border-medium)';
               }
             }}
             title="Profil & Pengaturan"
           >
             {/* Avatar */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              {currentUser.avatarUrl ? (
-                <img
-                  src={currentUser.avatarUrl}
-                  alt={currentUser.name}
-                  style={{
-                    width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover',
-                    border: '2px solid rgba(99,102,241,0.5)',
-                    boxShadow: '0 0 8px rgba(99,102,241,0.3)',
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '30px', height: '30px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.8rem', fontWeight: 800, color: '#fff',
-                  border: '2px solid rgba(99,102,241,0.5)',
-                }}>
-                  {currentUser.name.charAt(0)}
-                </div>
-              )}
-              {/* Online dot */}
-              <div style={{
-                position: 'absolute', bottom: '0', right: '0',
-                width: '8px', height: '8px', borderRadius: '50%',
-                background: '#10b981', border: '1.5px solid rgba(6,9,15,0.8)',
-                boxShadow: '0 0 5px #10b981',
-              }} />
-            </div>
-            {/* Name */}
-            <div style={{ lineHeight: 1.25 }}>
+            <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={30} showOnlineDot={true} />
+            
+            {/* Name - hide on mobile */}
+            <div className="hide-mobile" style={{ lineHeight: 1.25 }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 {currentUser.name.split(' ').slice(0, 2).join(' ')}
               </div>
@@ -506,7 +660,7 @@ export default function Navbar() {
                 {currentUser.role}
               </div>
             </div>
-            <ChevronDown size={13} color="var(--text-muted)" style={{
+            <ChevronDown className="hide-mobile" size={13} color="var(--text-muted)" style={{
               transform: isProfileOpen ? 'rotate(180deg)' : 'none',
               transition: 'transform 0.2s ease',
             }} />
@@ -519,10 +673,10 @@ export default function Navbar() {
               top: 'calc(100% + 10px)',
               right: 0,
               width: '240px',
-              background: 'rgba(12, 18, 32, 0.97)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-medium)',
               borderRadius: '16px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              boxShadow: 'var(--shadow-lg)',
               overflow: 'hidden',
               zIndex: 1000,
               animation: 'slideDown 0.2s cubic-bezier(0.34,1.2,0.64,1)',
@@ -530,38 +684,11 @@ export default function Navbar() {
               {/* Profile Header */}
               <div style={{
                 padding: '20px', textAlign: 'center',
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(6,182,212,0.06))',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                background: 'var(--accent-primary-light)',
+                borderBottom: '1px solid var(--border-subtle)',
               }}>
-                <div style={{ position: 'relative', display: 'inline-block', marginBottom: '12px' }}>
-                  {currentUser.avatarUrl ? (
-                    <img
-                      src={currentUser.avatarUrl}
-                      alt={currentUser.name}
-                      style={{
-                        width: '68px', height: '68px', borderRadius: '50%', objectFit: 'cover',
-                        border: '3px solid rgba(99,102,241,0.5)',
-                        boxShadow: '0 0 20px rgba(99,102,241,0.35)',
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '68px', height: '68px', borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.5rem', fontWeight: 900, color: '#fff',
-                      border: '3px solid rgba(99,102,241,0.5)',
-                      boxShadow: '0 0 20px rgba(99,102,241,0.35)',
-                    }}>
-                      {currentUser.name.charAt(0)}
-                    </div>
-                  )}
-                  <div style={{
-                    position: 'absolute', bottom: '2px', right: '2px',
-                    width: '14px', height: '14px', borderRadius: '50%',
-                    background: '#10b981', border: '2px solid rgba(12,18,32,0.97)',
-                    boxShadow: '0 0 6px #10b981',
-                  }} />
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                  <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={68} showOnlineDot={true} />
                 </div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                   {currentUser.name}
@@ -573,8 +700,9 @@ export default function Navbar() {
                   marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px',
                   fontSize: '0.7rem', fontWeight: 700,
                   padding: '3px 10px', borderRadius: '100px',
-                  background: 'rgba(99,102,241,0.18)',
-                  color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)',
+                  background: isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)',
+                  color: isDark ? '#a5b4fc' : '#4338ca',
+                  border: isDark ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(99,102,241,0.25)',
                 }}>
                   <Shield size={11} />
                   {currentUser.role.toUpperCase()}
@@ -591,12 +719,13 @@ export default function Navbar() {
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     gap: '8px', padding: '9px 14px', borderRadius: '10px',
-                    background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.28)',
-                    color: '#a5b4fc', fontSize: '0.8rem', fontWeight: 600,
+                    background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)',
+                    border: isDark ? '1px solid rgba(99,102,241,0.28)' : '1px solid rgba(99,102,241,0.2)',
+                    color: isDark ? '#a5b4fc' : '#4338ca', fontSize: '0.8rem', fontWeight: 600,
                     cursor: 'pointer', transition: 'all 0.15s ease', marginBottom: '8px',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.22)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(99,102,241,0.12)'}
+                  onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.22)' : 'rgba(99,102,241,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)'}
                 >
                   <Camera size={14} />
                   Ganti Foto Profil
@@ -610,12 +739,13 @@ export default function Navbar() {
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     gap: '8px', padding: '9px 14px', borderRadius: '10px',
-                    background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)',
-                    color: '#fda4af', fontSize: '0.8rem', fontWeight: 600,
+                    background: isDark ? 'rgba(244,63,94,0.08)' : 'rgba(239,68,68,0.08)',
+                    border: isDark ? '1px solid rgba(244,63,94,0.2)' : '1px solid rgba(239,68,68,0.2)',
+                    color: isDark ? '#fda4af' : '#dc2626', fontSize: '0.8rem', fontWeight: 600,
                     cursor: 'pointer', transition: 'all 0.15s ease',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(244,63,94,0.18)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(244,63,94,0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(244,63,94,0.18)' : 'rgba(239,68,68,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.background = isDark ? 'rgba(244,63,94,0.08)' : 'rgba(239,68,68,0.08)'}
                 >
                   <LogOut size={14} />
                   Keluar dari Akun

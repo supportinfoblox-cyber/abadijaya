@@ -110,6 +110,23 @@ Saat pertama kali membuka web, Anda akan disambut oleh halaman **Home Login**:
 
 ---
 
+### F. Backup & Restore Data (Format JSON)
+1. **Backup Tiket dari Tabel**:
+   - Klik tombol ungu **"Backup JSON"** pada toolbar tiket untuk mengunduh seluruh tiket hasil filter saat ini dalam format `.json`.
+   - Atau centang beberapa tiket tertentu dan klik tombol **"JSON Terpilih"** pada floating toolbar.
+2. **Full System Backup & Restore**:
+   - Buka menu **Settings**.
+   - Klik **"Download Full Backup (.json)"** untuk mengunduh snapshot komplit (tiket, worklog, audit, pengaturan antrean).
+   - Gunakan form **"Restore Data dari File JSON"** untuk memulihkan seluruh data operasional kapan saja.
+
+---
+
+### G. Menjalankan di Docker & Google Cloud Platform (GCP)
+Aplikasi sudah siap dijalankan via container Docker maupun dideploy gratis ke **Google Cloud Run**:
+- Panduan terperinci dapat dibaca di: [PANDUAN_DOCKER_GCP.md](file:///home/ismail/Downloads/Project%20Lainnya/Project%20Lain%201/PANDUAN_DOCKER_GCP.md).
+
+---
+
 ## 5. Keluar dari Akun (Logout)
 - Klik tombol merah **"Keluar"** di pojok kanan atas Navbar untuk mengakhiri sesi login dan kembali ke halaman Home Login.
 

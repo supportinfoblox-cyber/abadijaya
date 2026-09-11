@@ -127,11 +127,11 @@ export default function MonthlyTicketChart() {
             height: '42px',
             borderRadius: '12px',
             background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.15) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
+            border: '1px solid var(--color-purple-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#818cf8',
+            color: 'var(--color-purple)',
             boxShadow: '0 4px 16px rgba(99, 102, 241, 0.2)',
           }}>
             <BarChart3 size={22} />
@@ -146,9 +146,9 @@ export default function MonthlyTicketChart() {
                 fontWeight: 700,
                 padding: '2px 8px',
                 borderRadius: '6px',
-                backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                color: '#818cf8',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
+                backgroundColor: 'var(--color-purple-bg)',
+                color: 'var(--color-purple)',
+                border: '1px solid var(--color-purple-border)',
               }}>
                 iCare OTRS
               </span>
@@ -160,7 +160,7 @@ export default function MonthlyTicketChart() {
         </div>
 
         {/* Timeframe Filter Buttons */}
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-elevated)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+        <div className="no-print" style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-elevated)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
           {(['all', '6m', '3m'] as const).map(tf => {
             const isActive = timeframe === tf;
             return (
@@ -192,8 +192,9 @@ export default function MonthlyTicketChart() {
         <div style={{
           padding: '18px 22px',
           borderRadius: 'var(--radius-lg)',
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(99, 102, 241, 0.1) 50%, rgba(14, 22, 38, 0.7) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.35)',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(99, 102, 241, 0.08) 50%, var(--bg-card) 100%)',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid rgba(245, 158, 11, 0.4)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -201,6 +202,7 @@ export default function MonthlyTicketChart() {
           gap: '16px',
           position: 'relative',
           overflow: 'hidden',
+          boxShadow: 'var(--shadow-sm)',
         }}>
           <div style={{
             position: 'absolute',
@@ -208,8 +210,8 @@ export default function MonthlyTicketChart() {
             left: 0,
             width: '4px',
             height: '100%',
-            backgroundColor: '#f59e0b',
-            boxShadow: '0 0 12px #f59e0b',
+            backgroundColor: 'var(--color-warning)',
+            boxShadow: '0 0 12px var(--color-warning)',
           }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -222,13 +224,13 @@ export default function MonthlyTicketChart() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#fbbf24',
+              color: 'var(--color-warning)',
               boxShadow: '0 0 16px rgba(245, 158, 11, 0.25)',
             }}>
               <Award size={24} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 <Sparkles size={13} />
                 <span>Bulan Dengan Tiket Terbanyak (Peak Velocity)</span>
               </div>
@@ -240,7 +242,7 @@ export default function MonthlyTicketChart() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#818cf8', lineHeight: 1 }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--accent-primary)', lineHeight: 1 }}>
                 {peakMonth.total} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Tiket</span>
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -258,18 +260,18 @@ export default function MonthlyTicketChart() {
             }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Globe size={13} color="#818cf8" /> DNS: <strong style={{ color: '#818cf8' }}>{peakMonth.dns}</strong>
+                  <Globe size={13} color="var(--color-info)" /> DNS: <strong style={{ color: 'var(--color-info)' }}>{peakMonth.dns}</strong>
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Server size={13} color="#34d399" /> Reserve IP: <strong style={{ color: '#34d399' }}>{peakMonth.reserve}</strong>
+                  <Server size={13} color="var(--color-success)" /> Reserve IP: <strong style={{ color: 'var(--color-success)' }}>{peakMonth.reserve}</strong>
                 </span>
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Network size={13} color="#fbbf24" /> IPAM: <strong style={{ color: '#fbbf24' }}>{peakMonth.ipam}</strong>
+                  <Network size={13} color="var(--color-warning)" /> IPAM: <strong style={{ color: 'var(--color-warning)' }}>{peakMonth.ipam}</strong>
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Shield size={13} color="#fb7185" /> DRP: <strong style={{ color: '#fb7185' }}>{peakMonth.drp}</strong>
+                  <Shield size={13} color="var(--color-danger)" /> DRP: <strong style={{ color: 'var(--color-danger)' }}>{peakMonth.drp}</strong>
                 </span>
               </div>
             </div>
@@ -281,8 +283,9 @@ export default function MonthlyTicketChart() {
       <div style={{
         padding: '24px',
         borderRadius: 'var(--radius-lg)',
-        backgroundColor: 'rgba(15, 23, 42, 0.5)',
+        backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--shadow-sm)',
       }}>
         {monthlyData.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
@@ -302,9 +305,9 @@ export default function MonthlyTicketChart() {
               position: 'relative',
             }}>
               {/* Horizontal Grid lines */}
-              <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.04)' }} />
-              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.04)' }} />
-              <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.04)' }} />
+              <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+              <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
 
               {monthlyData.map(m => {
                 const heightPercent = Math.max(Math.round((m.total / maxMonthTotal) * 100), 10);
@@ -333,37 +336,37 @@ export default function MonthlyTicketChart() {
                         position: 'absolute',
                         bottom: `calc(${heightPercent}% + 28px)`,
                         zIndex: 20,
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(99, 102, 241, 0.5)',
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-medium)',
                         borderRadius: '10px',
                         padding: '10px 14px',
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+                        boxShadow: 'var(--shadow-lg)',
                         whiteSpace: 'nowrap',
                         fontSize: '0.74rem',
                         color: 'var(--text-primary)',
                         pointerEvents: 'none',
                         backdropFilter: 'blur(16px)',
                       }}>
-                        <div style={{ fontWeight: 800, marginBottom: '6px', color: isPeak ? '#fbbf24' : '#818cf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ fontWeight: 800, marginBottom: '6px', color: isPeak ? 'var(--color-warning)' : 'var(--color-purple)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {isPeak && <Award size={13} />}
                           <span>{m.label} &bull; {m.total} Tiket Total</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Globe size={11} color="#818cf8" />
-                            <span>DNS Request: <strong style={{ color: '#818cf8' }}>{m.dns}</strong></span>
+                            <Globe size={11} color="var(--color-purple)" />
+                            <span>DNS Request: <strong style={{ color: 'var(--color-purple)' }}>{m.dns}</strong></span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Server size={11} color="#34d399" />
-                            <span>Reserve IP: <strong style={{ color: '#34d399' }}>{m.reserve}</strong></span>
+                            <Server size={11} color="var(--color-success)" />
+                            <span>Reserve IP: <strong style={{ color: 'var(--color-success)' }}>{m.reserve}</strong></span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Network size={11} color="#fbbf24" />
-                            <span>IPAM: <strong style={{ color: '#fbbf24' }}>{m.ipam}</strong></span>
+                            <Network size={11} color="var(--color-warning)" />
+                            <span>IPAM: <strong style={{ color: 'var(--color-warning)' }}>{m.ipam}</strong></span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Shield size={11} color="#fb7185" />
-                            <span>DRP: <strong style={{ color: '#fb7185' }}>{m.drp}</strong></span>
+                            <Shield size={11} color="var(--color-danger)" />
+                            <span>DRP: <strong style={{ color: 'var(--color-danger)' }}>{m.drp}</strong></span>
                           </div>
                           {m.other > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
@@ -379,38 +382,42 @@ export default function MonthlyTicketChart() {
                     <div style={{
                       fontSize: '0.75rem',
                       fontWeight: 800,
-                      color: isPeak ? '#fbbf24' : 'var(--text-primary)',
+                      color: isPeak ? 'var(--color-warning)' : 'var(--text-primary)',
                       marginBottom: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
                     }}>
-                      {isPeak && <Award size={13} color="#fbbf24" />}
+                      {isPeak && <Award size={13} color="var(--color-warning)" />}
                       <span>{m.total}</span>
                     </div>
 
                     {/* The Bar */}
-                    <div style={{
-                      width: '100%',
-                      maxWidth: '56px',
-                      height: `${heightPercent}%`,
-                      borderRadius: '8px 8px 3px 3px',
-                      background: isPeak
-                        ? 'linear-gradient(180deg, #fbbf24 0%, #d97706 50%, #4f46e5 100%)'
-                        : isHovered
-                        ? 'linear-gradient(180deg, #a5b4fc 0%, #6366f1 100%)'
-                        : 'linear-gradient(180deg, #818cf8 0%, #4338ca 100%)',
-                      boxShadow: isPeak
-                        ? '0 0 20px rgba(245, 158, 11, 0.45)'
-                        : isHovered
-                        ? '0 0 16px rgba(99, 102, 241, 0.4)'
-                        : '0 2px 8px rgba(0, 0, 0, 0.2)',
-                      transition: 'all 0.25s ease',
-                      transform: isHovered ? 'scaleY(1.03)' : 'none',
-                      transformOrigin: 'bottom',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}>
+                    <div
+                      className="monthly-ticket-bar"
+                      style={{
+                        width: '100%',
+                        maxWidth: '56px',
+                        height: `${heightPercent}%`,
+                        borderRadius: '8px 8px 3px 3px',
+                        backgroundColor: isPeak ? 'var(--color-warning)' : 'var(--accent-primary)',
+                        background: isPeak
+                          ? 'linear-gradient(180deg, var(--color-warning-light) 0%, var(--color-warning) 50%, var(--color-indigo) 100%)'
+                          : isHovered
+                          ? 'linear-gradient(180deg, var(--accent-primary-light) 0%, var(--accent-primary) 100%)'
+                          : 'linear-gradient(180deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%)',
+                        boxShadow: isPeak
+                          ? '0 0 20px rgba(245, 158, 11, 0.45)'
+                          : isHovered
+                          ? '0 0 16px rgba(99, 102, 241, 0.4)'
+                          : '0 2px 8px rgba(0, 0, 0, 0.2)',
+                        transition: 'all 0.25s ease',
+                        transform: isHovered ? 'scaleY(1.03)' : 'none',
+                        transformOrigin: 'bottom',
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                    >
                       {/* Sub-bar segments indicators */}
                       <div style={{
                         position: 'absolute',
@@ -418,7 +425,7 @@ export default function MonthlyTicketChart() {
                         left: 0,
                         right: 0,
                         height: `${(m.reserve / m.total) * 100}%`,
-                        backgroundColor: 'rgba(16, 185, 129, 0.35)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.45)',
                       }} />
                     </div>
 
@@ -454,19 +461,19 @@ export default function MonthlyTicketChart() {
               fontSize: '0.78rem',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#818cf8' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--color-purple)' }} />
                 <span>DNS Request</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#34d399' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--color-success)' }} />
                 <span>Reserve IP / Fixed Address</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#fbbf24' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--color-warning)' }} />
                 <span>IPAM</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#fb7185' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--color-danger)' }} />
                 <span>DRP / Standby</span>
               </div>
             </div>

@@ -1,0 +1,20 @@
+services:
+  ticketops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Build-time env vars agar VITE_ tersedia saat `npm run build` di dalam Docker
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-}
+    container_name: ticketops-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    # Membaca env vars dari .env.local secara otomatis
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      - PORT=8080
+      - NODE_ENV=production

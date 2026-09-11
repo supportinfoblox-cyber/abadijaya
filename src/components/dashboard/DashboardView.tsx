@@ -105,14 +105,14 @@ export default function DashboardView() {
   };
 
   const cardMetrics = [
-    { label: 'Total Tickets', count: total, color: '#6366f1', glow: 'rgba(99, 102, 241, 0.25)', filter: 'ALL', icon: TicketIcon, trend: '+100% indexed' },
-    { label: 'New Inbound', count: newCount, color: '#06b6d4', glow: 'rgba(6, 182, 212, 0.25)', filter: 'NEW', icon: ArrowUpRight, trend: 'Awaiting triage' },
-    { label: 'Open Active', count: openCount, color: '#818cf8', glow: 'rgba(129, 140, 248, 0.25)', filter: 'OPEN', icon: Activity, trend: 'Assigned queue' },
-    { label: 'In Progress', count: inProgressCount, color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.25)', filter: 'IN PROGRESS', icon: Clock, trend: 'Working active' },
-    { label: 'Pending / Hold', count: pendingCount, color: '#a855f7', glow: 'rgba(168, 85, 247, 0.25)', filter: 'PENDING', icon: Hourglass, trend: 'Waiting input' },
-    { label: 'Resolved OK', count: resolvedCount, color: '#10b981', glow: 'rgba(16, 185, 129, 0.25)', filter: 'RESOLVED', icon: CheckCircle2, trend: 'Ready to close' },
-    { label: 'Closed Ledger', count: closedCount, color: '#64748b', glow: 'rgba(100, 116, 139, 0.25)', filter: 'CLOSED', icon: ShieldCheck, trend: 'Archived records' },
-    { label: 'Overdue Breached', count: overdueCount, color: '#f43f5e', glow: 'rgba(244, 63, 94, 0.25)', filter: 'OVERDUE', icon: AlertOctagon, trend: overdueCount > 0 ? 'Urgent action' : 'Zero breach' },
+    { label: 'Total Tickets', count: total, color: 'var(--accent-primary)', glow: 'rgba(99, 102, 241, 0.25)', filter: 'ALL', icon: TicketIcon, trend: '+100% indexed' },
+    { label: 'New Inbound', count: newCount, color: 'var(--color-info)', glow: 'rgba(6, 182, 212, 0.25)', filter: 'NEW', icon: ArrowUpRight, trend: 'Awaiting triage' },
+    { label: 'Open Active', count: openCount, color: 'var(--color-purple)', glow: 'rgba(129, 140, 248, 0.25)', filter: 'OPEN', icon: Activity, trend: 'Assigned queue' },
+    { label: 'In Progress', count: inProgressCount, color: 'var(--color-warning)', glow: 'rgba(245, 158, 11, 0.25)', filter: 'IN PROGRESS', icon: Clock, trend: 'Working active' },
+    { label: 'Pending / Hold', count: pendingCount, color: 'var(--color-purple)', glow: 'rgba(168, 85, 247, 0.25)', filter: 'PENDING', icon: Hourglass, trend: 'Waiting input' },
+    { label: 'Resolved OK', count: resolvedCount, color: 'var(--color-success)', glow: 'rgba(16, 185, 129, 0.25)', filter: 'RESOLVED', icon: CheckCircle2, trend: 'Ready to close' },
+    { label: 'Closed Ledger', count: closedCount, color: 'var(--text-muted)', glow: 'rgba(100, 116, 139, 0.25)', filter: 'CLOSED', icon: ShieldCheck, trend: 'Archived records' },
+    { label: 'Overdue Breached', count: overdueCount, color: 'var(--color-danger)', glow: 'rgba(244, 63, 94, 0.25)', filter: 'OVERDUE', icon: AlertOctagon, trend: overdueCount > 0 ? 'Urgent action' : 'Zero breach' },
   ];
 
   return (
@@ -120,22 +120,21 @@ export default function DashboardView() {
       {/* SLA Alert Banner if Breached or Critical tickets exist */}
       {(overdueCount > 0 || warningCount > 0) ? (
         <div
+          className="dashboard-sla-banner alert"
           style={{
-            padding: '18px 24px',
+            padding: '16px 20px',
             borderRadius: 'var(--radius-lg)',
             background: overdueCount > 0
-              ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)'
-              : 'linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
-            border: `1px solid ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.45)' : 'rgba(245, 158, 11, 0.45)'}`,
-            boxShadow: overdueCount > 0
-              ? '0 8px 32px rgba(244, 63, 94, 0.15)'
-              : '0 8px 32px rgba(245, 158, 11, 0.15)',
+              ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, var(--bg-card) 100%)'
+              : 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, var(--bg-card) 100%)',
+            border: `1px solid ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+            boxShadow: 'var(--shadow-card)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             backdropFilter: 'blur(16px)',
             flexWrap: 'wrap',
-            gap: '16px',
+            gap: '14px',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -146,25 +145,26 @@ export default function DashboardView() {
             left: 0,
             width: '4px',
             height: '100%',
-            backgroundColor: overdueCount > 0 ? '#f43f5e' : '#f59e0b',
+            backgroundColor: overdueCount > 0 ? 'var(--color-danger)' : 'var(--color-warning)',
           }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', minWidth: 0 }}>
             <div style={{
-              width: '44px',
-              height: '44px',
+              width: '42px',
+              height: '42px',
               borderRadius: '12px',
-              backgroundColor: overdueCount > 0 ? 'rgba(244, 63, 94, 0.25)' : 'rgba(245, 158, 11, 0.25)',
+              backgroundColor: overdueCount > 0 ? 'rgba(244, 63, 94, 0.18)' : 'rgba(245, 158, 11, 0.18)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: overdueCount > 0 ? '#fb7185' : '#fbbf24',
-              boxShadow: `0 0 16px ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+              color: overdueCount > 0 ? 'var(--color-danger)' : 'var(--color-warning)',
+              boxShadow: `0 0 16px ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+              flexShrink: 0,
             }}>
               <AlertTriangle size={22} className="animate-pulse" />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: overdueCount > 0 ? '#fb7185' : '#fbbf24', letterSpacing: '-0.01em' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: overdueCount > 0 ? 'var(--color-danger)' : 'var(--color-warning)', letterSpacing: '-0.01em' }}>
                   Operational SLA Threshold Alert
                 </span>
                 <span style={{
@@ -172,7 +172,7 @@ export default function DashboardView() {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  backgroundColor: overdueCount > 0 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)',
+                  backgroundColor: overdueCount > 0 ? 'var(--color-danger)' : 'var(--color-warning)',
                   color: '#ffffff',
                 }}>
                   {overdueCount > 0 ? `${overdueCount} BREACHED` : 'WARNING'}
@@ -191,10 +191,11 @@ export default function DashboardView() {
             }}
             className="btn btn-sm hover-glow"
             style={{
-              backgroundColor: overdueCount > 0 ? '#f43f5e' : '#f59e0b',
+              backgroundColor: overdueCount > 0 ? 'var(--color-danger)' : 'var(--color-warning)',
               color: '#ffffff',
               fontWeight: 700,
               boxShadow: `0 4px 14px ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`,
+              flexShrink: 0,
             }}
           >
             Review At-Risk Tickets
@@ -203,52 +204,60 @@ export default function DashboardView() {
         </div>
       ) : (
         <div
+          className="dashboard-sla-banner compliant"
           style={{
             padding: '14px 20px',
             borderRadius: 'var(--radius-lg)',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 22, 38, 0.6) 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.28)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
             backdropFilter: 'blur(16px)',
+            boxShadow: 'var(--shadow-sm)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: 0 }}>
             <div style={{
               width: '32px',
               height: '32px',
               borderRadius: '8px',
-              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              backgroundColor: 'var(--color-success-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#34d399',
+              color: 'var(--color-success)',
+              flexShrink: 0,
             }}>
               <ShieldCheck size={18} />
             </div>
-            <div>
-              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#34d399' }}>
+            <div style={{ minWidth: 0 }}>
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--color-success)' }}>
                 All SLA Thresholds Compliant
               </span>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: '8px' }}>
-                Zero tickets breached &bull; Operational Health Score 100%
+                Zero tickets breached • Health Score 100%
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-            <span>Telemetry Live &bull; Queue OP0899 / OP0968</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)', boxShadow: '0 0 8px var(--color-success)' }} />
+            <span>Telemetry Live &bull; Queue Active</span>
           </div>
         </div>
       )}
 
       {/* Summary Cards Grid (PRD Section 10) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '16px',
-      }}>
+      <div
+        className="dashboard-metrics-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '16px',
+        }}
+      >
         {cardMetrics.map(m => {
           const Icon = m.icon;
           return (
@@ -319,7 +328,9 @@ export default function DashboardView() {
                   color: m.count > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
                   marginTop: '10px',
                   lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.03em',
+                  fontFamily: 'var(--font-mono)',
+                  fontVariantNumeric: 'tabular-nums',
                 }}>
                   {m.count}
                 </div>
@@ -328,14 +339,14 @@ export default function DashboardView() {
               <div style={{ marginTop: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
                   <span>{m.trend}</span>
-                  <span style={{ fontWeight: 600, color: m.color }}>
+                  <span style={{ fontWeight: 600, color: m.color, fontFamily: 'var(--font-mono)' }}>
                     {total > 0 ? `${Math.round((m.count / total) * 100)}%` : '0%'}
                   </span>
                 </div>
                 <div style={{
                   height: '4px',
                   width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  backgroundColor: 'var(--border-subtle)',
                   borderRadius: '2px',
                   overflow: 'hidden',
                 }}>
@@ -366,7 +377,7 @@ export default function DashboardView() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
             }}>
               <Layers size={20} />
             </div>
@@ -416,12 +427,13 @@ export default function DashboardView() {
             style={{
               padding: '20px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(14, 22, 38, 0.7) 100%)',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, var(--bg-card) 100%)',
               border: '1px solid rgba(59, 130, 246, 0.28)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
             }}
             className="hover-elevate"
             onMouseEnter={(e) => {
@@ -430,19 +442,19 @@ export default function DashboardView() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.28)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
+                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--color-info-bg)', color: 'var(--color-info)' }}>
                   <Globe size={15} />
                 </div>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#93c5fd', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-info)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                   DNS Request
                 </span>
               </div>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#bfdbfe' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--color-info)' }}>
                 {tickets.filter(t => t.kriteria === 'DNS Request').length}
               </span>
             </div>
@@ -450,10 +462,10 @@ export default function DashboardView() {
               Permintaan pembuatan & pembaruan DNS record (A, CNAME, PTR)
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#bfdbfe', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-info-bg)', color: 'var(--color-info)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                 A Record: {tickets.filter(t => t.kriteria === 'DNS Request' && t.subKriteria?.includes('A Record')).length}
               </span>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#bfdbfe', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-info-bg)', color: 'var(--color-info)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                 CNAME: {tickets.filter(t => t.kriteria === 'DNS Request' && t.subKriteria?.includes('CNAME')).length}
               </span>
             </div>
@@ -469,12 +481,13 @@ export default function DashboardView() {
             style={{
               padding: '20px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(14, 22, 38, 0.7) 100%)',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-card) 100%)',
               border: '1px solid rgba(245, 158, 11, 0.28)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
             }}
             className="hover-elevate"
             onMouseEnter={(e) => {
@@ -483,19 +496,19 @@ export default function DashboardView() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.28)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24' }}>
+                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)' }}>
                   <Server size={15} />
                 </div>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#fde68a', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-warning)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                   Reserve IP
                 </span>
               </div>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#fef08a' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--color-warning)' }}>
                 {tickets.filter(t => t.kriteria === 'Reserve IP').length}
               </span>
             </div>
@@ -503,7 +516,7 @@ export default function DashboardView() {
               Reservasi Fixed Address & IP DHCP server / host Infoblox
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fef08a', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
                 Fixed Address / Reserved IP
               </span>
             </div>
@@ -519,12 +532,13 @@ export default function DashboardView() {
             style={{
               padding: '20px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(14, 22, 38, 0.7) 100%)',
+              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, var(--bg-card) 100%)',
               border: '1px solid rgba(168, 85, 247, 0.28)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
             }}
             className="hover-elevate"
             onMouseEnter={(e) => {
@@ -533,19 +547,19 @@ export default function DashboardView() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.28)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }}>
+                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
                   <Shield size={15} />
                 </div>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#e9d5ff', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-purple)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                   DRP (Standby)
                 </span>
               </div>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#f3e8ff' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--color-purple)' }}>
                 {tickets.filter(t => t.kriteria === 'DRP').length}
               </span>
             </div>
@@ -553,7 +567,7 @@ export default function DashboardView() {
               Pendampingan teknis & standby deployment sistem kritis BSI
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(168, 85, 247, 0.2)', color: '#f3e8ff', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
                 Go UMKM &bull; Procsyst &bull; WISE
               </span>
             </div>
@@ -569,33 +583,34 @@ export default function DashboardView() {
             style={{
               padding: '20px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 22, 38, 0.7) 100%)',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%)',
               border: '1px solid rgba(16, 185, 129, 0.28)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
             }}
             className="hover-elevate"
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#34d399';
+              e.currentTarget.style.borderColor = 'var(--color-success)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.28)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'var(--color-success-border)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#34d399' }}>
+                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
                   <Network size={15} />
                 </div>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#a7f3d0', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-success)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                   IPAM
                 </span>
               </div>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#d1fae5' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--color-success)' }}>
                 {tickets.filter(t => t.kriteria === 'IPAM').length}
               </span>
             </div>
@@ -603,7 +618,7 @@ export default function DashboardView() {
               Manajemen subnetting, range pool, & alokasi IP enterprise
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#d1fae5', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
                 Billing Hasanah &bull; Medallion
               </span>
             </div>
@@ -619,33 +634,34 @@ export default function DashboardView() {
             style={{
               padding: '20px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(14, 22, 38, 0.7) 100%)',
-              border: '1px solid rgba(148, 163, 184, 0.28)',
+              background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.1) 0%, var(--bg-card) 100%)',
+              border: '1px solid var(--border-medium)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
             }}
             className="hover-elevate"
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#cbd5e1';
+              e.currentTarget.style.borderColor = 'var(--text-secondary)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(148, 163, 184, 0.2)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.28)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'var(--border-medium)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(148, 163, 184, 0.2)', color: '#cbd5e1' }}>
+                <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
                   <MoreHorizontal size={15} />
                 </div>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#cbd5e1', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                   OTHER
                 </span>
               </div>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#f1f5f9' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
                 {tickets.filter(t => t.kriteria === 'Other').length}
               </span>
             </div>
@@ -653,7 +669,7 @@ export default function DashboardView() {
               Tiket umum, laporan koordinasi meeting, & operasional pendukung
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(148, 163, 184, 0.2)', color: '#f1f5f9', border: '1px solid rgba(148, 163, 184, 0.3)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
                 Report & Meeting &bull; General Support
               </span>
             </div>
@@ -665,12 +681,12 @@ export default function DashboardView() {
       <MonthlyTicketChart />
 
       {/* Analytics & Distribution Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+      <div className="dashboard-analytics-grid" style={{ display: 'grid', gap: '20px' }}>
         {/* Category Breakdown & Status Velocity */}
         <div className="glass-panel" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <div style={{ minWidth: '180px', flex: 1 }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: 0 }}>
                 Ticket Classification Distribution
               </h3>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -680,7 +696,7 @@ export default function DashboardView() {
             <button
               onClick={() => setCurrentView('categories')}
               className="btn btn-outline btn-sm hover-glow"
-              style={{ fontSize: '0.75rem' }}
+              style={{ fontSize: '0.75rem', flexShrink: 0 }}
             >
               <Zap size={14} />
               View Rule Engine
@@ -691,13 +707,13 @@ export default function DashboardView() {
             {Object.entries(categoryCounts).map(([cat, count]) => {
               const pct = total > 0 ? Math.round((count / total) * 100) : 0;
               const catColors: Record<string, string> = {
-                Incident: '#f43f5e',
-                'Service Request': '#06b6d4',
-                Problem: '#f59e0b',
-                'Change Request': '#8b5cf6',
-                Maintenance: '#10b981',
+                Incident: 'var(--color-danger)',
+                'Service Request': 'var(--accent-cyan)',
+                Problem: 'var(--color-warning)',
+                'Change Request': 'var(--color-purple)',
+                Maintenance: 'var(--color-success)',
               };
-              const color = catColors[cat] || '#6366f1';
+              const color = catColors[cat] || 'var(--accent-primary)';
               return (
                 <div key={cat}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '8px' }}>
@@ -712,16 +728,16 @@ export default function DashboardView() {
                   <div style={{
                     height: '8px',
                     width: '100%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '6px',
+                    borderRadius: '100px',
+                    backgroundColor: 'var(--bg-input)',
                     overflow: 'hidden',
                   }}>
                     <div style={{
                       height: '100%',
                       width: `${pct}%`,
-                      background: `linear-gradient(90deg, ${color}99, ${color})`,
-                      borderRadius: '6px',
-                      transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                      borderRadius: '100px',
+                      backgroundColor: color,
+                      transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                     }} />
                   </div>
                 </div>
@@ -733,7 +749,7 @@ export default function DashboardView() {
         {/* SLA & Priority Matrix */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: 0 }}>
               Operational Performance
             </h3>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px', marginBottom: '20px' }}>
@@ -744,18 +760,20 @@ export default function DashboardView() {
             <div style={{
               padding: '18px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 22, 38, 0.8) 100%)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
               marginBottom: '20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              gap: '12px',
+              boxShadow: 'var(--shadow-sm)',
             }}>
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                   SLA Achievement
                 </div>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: slaAchievementRate >= 95 ? '#10b981' : '#f59e0b', lineHeight: 1.1, marginTop: '4px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: slaAchievementRate >= 95 ? 'var(--color-success)' : 'var(--color-warning)', lineHeight: 1.1, marginTop: '4px', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                   {slaAchievementRate}%
                 </div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
@@ -769,7 +787,7 @@ export default function DashboardView() {
                 background: slaAchievementRate >= 95
                   ? 'radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 70%)'
                   : 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.05) 70%)',
-                border: `4px solid ${slaAchievementRate >= 95 ? '#10b981' : '#f59e0b'}`,
+                border: `4px solid ${slaAchievementRate >= 95 ? 'var(--color-success)' : 'var(--color-warning)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -795,7 +813,7 @@ export default function DashboardView() {
                     <span className={`badge ${getPriorityBadgeClass(p)}`} style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
                       {p}
                     </span>
-                    <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                       {count} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({pct}%)</span>
                     </span>
                   </div>
@@ -827,8 +845,8 @@ export default function DashboardView() {
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                backgroundColor: '#10b981',
-                boxShadow: '0 0 8px #10b981',
+                backgroundColor: 'var(--color-success)',
+                boxShadow: '0 0 8px var(--color-success)',
               }} className="animate-pulse" />
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -864,14 +882,14 @@ export default function DashboardView() {
                 <tr
                   key={ticket.id}
                   onClick={() => setSelectedTicket(ticket)}
-                  style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
-                  className="table-row-hover"
+                  style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+                  className="ticket-row-clickable"
                 >
-                  <td style={{ fontWeight: 700, color: '#818cf8', whiteSpace: 'nowrap' }}>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>{ticket.ticketNumber}</span>
+                      <span className="ticket-number-chip">{ticket.ticketNumber}</span>
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
                       {ticket.externalId}
                     </div>
                   </td>
@@ -898,9 +916,9 @@ export default function DashboardView() {
                       fontWeight: 600,
                       padding: '3px 8px',
                       borderRadius: '6px',
-                      backgroundColor: 'rgba(99, 102, 241, 0.12)',
-                      color: '#a5b4fc',
-                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      backgroundColor: 'var(--accent-primary-light)',
+                      color: 'var(--text-accent)',
+                      border: '1px solid rgba(99, 102, 241, 0.25)',
                     }}>
                       {ticket.technicalCategory}
                     </span>
@@ -922,8 +940,8 @@ export default function DashboardView() {
                           width: '20px',
                           height: '20px',
                           borderRadius: '50%',
-                          backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                          color: '#818cf8',
+                          backgroundColor: 'var(--color-purple-bg)',
+                          color: 'var(--color-purple)',
                           fontSize: '0.65rem',
                           fontWeight: 700,
                           display: 'inline-flex',

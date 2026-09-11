@@ -78,25 +78,25 @@ export default function AuditLogView() {
   };
 
   const getActionBadge = (action: string) => {
-    let bg = 'rgba(99, 102, 241, 0.12)';
-    let text = '#818cf8';
+    let bg = 'var(--color-purple-bg)';
+    let text = 'var(--color-purple)';
     let border = 'rgba(99, 102, 241, 0.25)';
 
     if (action.includes('CLOSE') || action.includes('RESOLVE')) {
-      bg = 'rgba(16, 185, 129, 0.12)';
-      text = '#34d399';
+      bg = 'var(--color-success-bg)';
+      text = 'var(--color-success)';
       border = 'rgba(16, 185, 129, 0.3)';
     } else if (action.includes('INTEGRATION') || action.includes('SYNC')) {
-      bg = 'rgba(6, 182, 212, 0.12)';
-      text = '#22d3ee';
+      bg = 'var(--color-info-bg)';
+      text = 'var(--color-info)';
       border = 'rgba(6, 182, 212, 0.3)';
     } else if (action.includes('DELETE') || action.includes('BREACH')) {
-      bg = 'rgba(244, 63, 94, 0.12)';
-      text = '#fb7185';
+      bg = 'var(--color-danger-bg)';
+      text = 'var(--color-danger)';
       border = 'rgba(244, 63, 94, 0.3)';
     } else if (action.includes('UPDATE') || action.includes('ASSIGN')) {
-      bg = 'rgba(245, 158, 11, 0.12)';
-      text = '#fbbf24';
+      bg = 'var(--color-warning-bg)';
+      text = 'var(--color-warning)';
       border = 'rgba(245, 158, 11, 0.3)';
     }
 
@@ -133,7 +133,7 @@ export default function AuditLogView() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818cf8',
+              color: 'var(--color-purple)',
               boxShadow: '0 4px 16px rgba(99, 102, 241, 0.2)',
             }}>
               <FileSpreadsheet size={24} />
@@ -148,9 +148,9 @@ export default function AuditLogView() {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '6px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: '#34d399',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  backgroundColor: 'var(--color-success-bg)',
+                  color: 'var(--color-success)',
+                  border: '1px solid var(--color-success-border)',
                 }}>
                   IMMUTABLE
                 </span>
@@ -230,7 +230,7 @@ export default function AuditLogView() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       margin: '0 auto 12px auto',
-                      color: '#818cf8',
+                      color: 'var(--color-purple)',
                     }}>
                       <Inbox size={22} />
                     </div>
@@ -260,7 +260,7 @@ export default function AuditLogView() {
                           height: '24px',
                           borderRadius: '50%',
                           backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                          color: '#818cf8',
+                          color: 'var(--color-purple)',
                           fontSize: '0.7rem',
                           fontWeight: 700,
                           display: 'flex',
@@ -293,18 +293,18 @@ export default function AuditLogView() {
                         {log.module}
                       </span>
                     </td>
-                    <td style={{ fontWeight: 700, fontSize: '0.825rem', color: '#818cf8', whiteSpace: 'nowrap' }}>
+                    <td style={{ fontWeight: 700, fontSize: '0.825rem', color: 'var(--color-purple)', whiteSpace: 'nowrap' }}>
                       <code>{log.entityId}</code>
                     </td>
                     <td style={{ fontSize: '0.8rem', maxWidth: '340px' }}>
                       {log.oldValue && (
                         <span style={{ color: 'var(--text-muted)' }}>
-                          From: <code style={{ color: '#fbbf24', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>{log.oldValue}</code> &rarr;{' '}
+                          From: <code style={{ color: 'var(--color-warning)', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'var(--color-warning-bg)' }}>{log.oldValue}</code> &rarr;{' '}
                         </span>
                       )}
                       {log.newValue && (
                         <span style={{ color: 'var(--text-primary)' }}>
-                          To: <code style={{ color: '#34d399', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>{log.newValue}</code>
+                          To: <code style={{ color: 'var(--color-success)', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'var(--color-success-bg)' }}>{log.newValue}</code>
                         </span>
                       )}
                       {!log.oldValue && !log.newValue && (

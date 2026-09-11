@@ -40,13 +40,13 @@ class ErrorBoundary extends React.Component<
         <div style={{
           padding: '40px 24px',
           textAlign: 'center',
-          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '16px',
           border: '1px solid rgba(244, 63, 94, 0.3)',
           margin: '40px auto',
           maxWidth: '560px',
           backdropFilter: 'blur(10px)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-lg)',
         }}>
           <div style={{
             width: '48px', height: '48px', borderRadius: '50%',
@@ -87,7 +87,7 @@ class ErrorBoundary extends React.Component<
 }
 
 function AppContent() {
-  const { currentView, isAuthenticated, isSidebarCollapsed, setGlobalSearchQuery, setActiveKriteria } = useTicketOps();
+  const { currentView, isAuthenticated, isSidebarCollapsed, setIsSidebarCollapsed, setGlobalSearchQuery, setActiveKriteria } = useTicketOps();
 
   if (!isAuthenticated) {
     return <LoginView />;
@@ -122,14 +122,18 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Mobile Drawer Backdrop */}
+      {!isSidebarCollapsed && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarCollapsed(true)}
+          title="Tutup menu sidebar"
+        />
+      )}
+
       <Sidebar />
-      <div
-        className="main-content"
-        style={{
-          marginLeft: isSidebarCollapsed ? '0' : 'var(--sidebar-width)',
-          transition: 'margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
+
+      <div className={`main-content ${isSidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
         <Navbar />
         <main className="page-body">
           <ErrorBoundary onReset={() => { setGlobalSearchQuery(''); setActiveKriteria('ALL'); }}>
