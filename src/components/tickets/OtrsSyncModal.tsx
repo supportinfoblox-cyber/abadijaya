@@ -25,10 +25,10 @@ interface OtrsSyncModalProps {
 type TimeRange = '1-year' | '6-months' | '3-months' | '1-month' | 'all';
 
 export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
-  const { importSyncedTickets } = useTicketOps();
-  const [mode, setMode] = useState<'historical' | 'active'>('historical');
-  const [timeRange, setTimeRange] = useState<TimeRange>('1-year');
-  const [limit, setLimit] = useState<number>(500);
+  const { importSyncedTickets, syncWithCloudNow, tickets } = useTicketOps();
+  const [mode, setMode] = useState<'historical' | 'active'>('active');
+  const [timeRange, setTimeRange] = useState<TimeRange>('1-month');
+  const [limit, setLimit] = useState<number>(100);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<{
@@ -46,29 +46,61 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     setSyncResult(null);
 
     try {
-      // Fetch live from OTRS bridge with mode, limit, and timeRange
-      const queryParams = mode === 'active'
-        ? 'mode=active'
-        : `mode=historical&limit=${limit}&timeRange=${timeRange}`;
+      const initialTickets = tickets;
+      const initialNumbers = new Set(initialTickets.map(t => t.ticketNumber));
 
-      const res = await fetch(`/api/otrs/fetch-history?${queryParams}`, {
-        method: 'GET',
-      });
-      const data = await res.json();
+      // 1. Try local dev proxy endpoint if available
+      let fetchedTickets: any[] = [];
+      let breakdown: Record<string, number> = {};
+      try {
+        const queryParams = mode === 'active'
+          ? 'mode=active'
+          : `mode=historical&limit=${limit}&timeRange=${timeRange}`;
 
-      if (!data.success || !data.tickets) {
-        throw new Error(data.error || 'Gagal mengambil data tiket dari portal iCare.');
+        const res = await fetch(`/api/otrs/fetch-history?${queryParams}`, {
+          method: 'GET',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tickets && Array.isArray(data.tickets) && data.tickets.length > 0) {
+            fetchedTickets = data.tickets;
+            breakdown = data.breakdown || {};
+          }
+        }
+      } catch {
+        // Dev proxy not running (Cloudflare Pages static hosting)
       }
 
-      // Merge into app state
-      const importStats = importSyncedTickets(data.tickets);
-
-      setSyncResult({
-        totalFetched: data.totalFetched || data.tickets.length,
-        added: importStats.added,
-        updated: importStats.updated,
-        breakdown: data.breakdown || {},
-      });
+      if (fetchedTickets.length > 0) {
+        const importStats = importSyncedTickets(fetchedTickets);
+        setSyncResult({
+          totalFetched: fetchedTickets.length,
+          added: importStats.added,
+          updated: importStats.updated,
+          breakdown,
+        });
+      } else {
+        // Fallback to Supabase Cloud Database sync
+        const cloudRes = await syncWithCloudNow();
+        if (cloudRes.success) {
+          // Calculate how many were newly loaded
+          const newCount = tickets.filter(t => !initialNumbers.has(t.ticketNumber)).length;
+          const totalCount = cloudRes.count || tickets.length;
+          setSyncResult({
+            totalFetched: totalCount,
+            added: newCount,
+            updated: totalCount - newCount,
+            breakdown: {
+              'DNS Request': tickets.filter(t => t.kriteria === 'DNS Request').length,
+              'Reserve IP': tickets.filter(t => t.kriteria === 'Reserve IP').length,
+              'IPAM': tickets.filter(t => t.kriteria === 'IPAM').length,
+              'DRP': tickets.filter(t => t.kriteria === 'DRP').length,
+            },
+          });
+        } else {
+          throw new Error(cloudRes.error || 'Gagal sinkronisasi data dari Cloud Database atau iCare OTRS.');
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan saat sinkronisasi tiket dari iCare OTRS.');
     } finally {
@@ -80,18 +112,41 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/otrs/cache');
-      const data = await res.json();
-      if (data.tickets && data.tickets.length > 0) {
-        const importStats = importSyncedTickets(data.tickets);
-        setSyncResult({
-          totalFetched: data.totalFetched || data.tickets.length,
-          added: importStats.added,
-          updated: importStats.updated,
-          breakdown: data.breakdown || {},
-        });
-      } else {
-        throw new Error('Cache lokal kosong, silakan gunakan tombol Mulai Tarik Data.');
+      let loaded = false;
+      try {
+        const res = await fetch('/api/otrs/cache');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tickets && data.tickets.length > 0) {
+            const importStats = importSyncedTickets(data.tickets);
+            setSyncResult({
+              totalFetched: data.totalFetched || data.tickets.length,
+              added: importStats.added,
+              updated: importStats.updated,
+              breakdown: data.breakdown || {},
+            });
+            loaded = true;
+          }
+        }
+      } catch {
+        // Cache API not on static hosting
+      }
+
+      if (!loaded) {
+        // Cloud sync fallback
+        const cloudRes = await syncWithCloudNow();
+        if (cloudRes.success) {
+          setSyncResult({
+            totalFetched: cloudRes.count || tickets.length,
+            added: 0,
+            updated: cloudRes.count || tickets.length,
+            breakdown: {
+              'Cloud Supabase': cloudRes.count || tickets.length,
+            },
+          });
+        } else {
+          throw new Error('Gagal memuat tiket dari Cloud Database.');
+        }
       }
     } catch (e: any) {
       setError(e.message || 'Gagal memuat cache tiket.');

@@ -908,6 +908,12 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     };
 
     updateTicket(ticketId, updates);
+    const updatedTicket: Ticket = { ...ticket, ...updates };
+    try {
+      await upsertTicket(updatedTicket);
+    } catch (e: any) {
+      console.warn('[Supabase] closeTicket upsert error:', e?.message);
+    }
 
     addAuditLogEntry({
       action: 'CLOSE_TICKET',
@@ -994,7 +1000,11 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     );
 
     if (toClose.length > 0) {
-      upsertTickets(toClose).catch(err => console.warn('[Supabase] bulkClose upsert failed:', err));
+      try {
+        await upsertTickets(toClose);
+      } catch (e: any) {
+        console.warn('[Supabase] bulkClose upsert failed:', e?.message);
+      }
     }
 
     if (selectedTicket && idSet.has(selectedTicket.id)) {
@@ -1075,7 +1085,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
-  // Sync with External Portal (PRD Section 16 & 17)
+  // Sync with External Portal & Supabase Cloud (PRD Section 16 & 17)
   const syncTicketsNow = async () => {
     setIsSyncing(true);
     const start = performance.now();
@@ -1084,23 +1094,45 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       let addedCount = 0;
       let updatedCount = 0;
 
-      // 1. Fetch live active tickets directly from OTRS fetcher endpoint
+      // Track existing tickets before sync to accurately detect brand new tickets
+      const initialTickets = ticketsRef.current;
+      const initialNumbers = new Set(initialTickets.map(t => t.ticketNumber));
+
+      // 1. Fetch live active tickets directly from OTRS fetcher endpoint (when in local dev proxy)
       try {
         const liveRes = await fetch('/api/otrs/fetch-history?mode=active&limit=100');
         if (liveRes.ok) {
           const liveData = await liveRes.json();
           if (liveData && Array.isArray(liveData.tickets) && liveData.tickets.length > 0) {
             const stats = importSyncedTickets(liveData.tickets);
-            addedCount = stats.added;
-            updatedCount = stats.updated;
-            importedCount = stats.added + stats.updated;
+            addedCount += stats.added;
+            updatedCount += stats.updated;
+            importedCount += stats.added + stats.updated;
           }
         }
       } catch (err) {
-        console.warn('Live OTRS fetch error, falling back to cache:', err);
+        console.warn('Live OTRS local fetch error, proceeding to Supabase cloud sync:', err);
       }
 
-      // 2. If live fetch returned 0, check local OTRS bridge cache
+      // 2. ALWAYS sync with Supabase Cloud Database!
+      // This ensures all devices & Cloudflare Pages pull any new tickets from the cloud DB.
+      try {
+        const cloudSyncRes = await syncWithCloudNow();
+        if (cloudSyncRes.success) {
+          const afterTickets = ticketsRef.current;
+          const newFromCloud = afterTickets.filter(t => !initialNumbers.has(t.ticketNumber));
+          if (newFromCloud.length > 0) {
+            addedCount += newFromCloud.length;
+            importedCount += newFromCloud.length;
+          } else if (importedCount === 0) {
+            importedCount = afterTickets.length;
+          }
+        }
+      } catch (cloudErr) {
+        console.warn('Supabase cloud sync note in syncTicketsNow:', cloudErr);
+      }
+
+      // 3. Fallback: Check local OTRS bridge cache if available
       if (importedCount === 0) {
         try {
           const cacheRes = await fetch('/api/otrs/cache');
@@ -1108,9 +1140,9 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
             const cacheData = await cacheRes.json();
             if (cacheData && Array.isArray(cacheData.tickets) && cacheData.tickets.length > 0) {
               const stats = importSyncedTickets(cacheData.tickets);
-              addedCount = stats.added;
-              updatedCount = stats.updated;
-              importedCount = stats.added + stats.updated;
+              addedCount += stats.added;
+              updatedCount += stats.updated;
+              importedCount += stats.added + stats.updated;
             }
           }
         } catch (err) {
@@ -1119,15 +1151,16 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       }
 
       const durationMs = Math.round(performance.now() - start);
+      const totalTicketsCount = ticketsRef.current.length;
       const newSyncLog: SyncLog = {
         id: `sync-${Date.now()}`,
         timestamp: new Date().toISOString(),
         direction: 'INBOUND',
         status: 'SUCCESS',
         recordsCount: importedCount,
-        message: importedCount > 0
-          ? `Berhasil sinkronisasi: ${addedCount} tiket baru, ${updatedCount} tiket diperbarui dari ${integrationConfig.providerName}.`
-          : `Semua tiket sudah sinkron dengan portal iCare (${integrationConfig.providerName}).`,
+        message: addedCount > 0
+          ? `Berhasil sinkronisasi: ${addedCount} tiket baru berhasil masuk ke sistem dari iCare OTRS / Cloud Database.`
+          : `Seluruh tiket (${totalTicketsCount} tiket) sudah mutakhir dan sinkron dengan Cloud Database & iCare OTRS.`,
         durationMs,
       };
 
@@ -1147,18 +1180,18 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       });
 
       pushNotification(
-        'Portal Sync Completed',
-        importedCount > 0
-          ? `Berhasil memperbarui ${importedCount} tiket (${addedCount} baru, ${updatedCount} updated) dari portal iCare OTRS.`
-          : `Seluruh tiket telah sinkron dengan portal iCare OTRS.`,
+        'Sinkronisasi Tiket Selesai',
+        addedCount > 0
+          ? `Berhasil sinkronisasi ${addedCount} tiket baru ke dalam sistem dari Cloud Database / iCare OTRS.`
+          : `Seluruh ${totalTicketsCount} tiket telah sinkron dan mutakhir.`,
         'NEW_TICKET'
       );
 
       return {
         success: true,
-        message: importedCount > 0
-          ? `Sinkronisasi berhasil. ${addedCount} baru, ${updatedCount} diperbarui.`
-          : `Sinkronisasi selesai. Seluruh data sudah sesuai dengan portal iCare.`,
+        message: addedCount > 0
+          ? `Sinkronisasi berhasil. ${addedCount} tiket baru masuk.`
+          : `Sinkronisasi selesai. Seluruh tiket sudah mutakhir.`,
         count: importedCount,
       };
     } catch (e: any) {

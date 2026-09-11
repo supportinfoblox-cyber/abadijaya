@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "checkpoint": "bash scripts/checkpoint.sh",
     "rollback": "bash scripts/rollback.sh",
-    "rollback:stable": "git reset --hard v1.0.0-stable"
+    "rollback:stable": "git reset --hard v1.0.0-stable",
+    "sync:otrs": "node scripts/sync_otrs_to_supabase.mjs",
+    "sync:daemon": "node scripts/sync_otrs_to_supabase.mjs --daemon",
+    "sync:watch": "node scripts/sync_otrs_to_supabase.mjs --daemon --interval 180"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

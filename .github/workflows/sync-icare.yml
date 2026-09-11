@@ -1,0 +1,40 @@
+name: iCare OTRS Automatic Sync to Supabase
+
+on:
+  schedule:
+    # Runs automatically every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allows manual trigger directly from GitHub web UI
+
+jobs:
+  sync-icare:
+    name: Sync iCare Tickets to Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python & Node Dependencies
+        run: |
+          pip install requests urllib3
+          npm install --prefer-offline --no-audit
+
+      - name: Run iCare OTRS -> Supabase Synchronization
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://swetbrajtwfworcvgssh.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3ZXRicmFqdHdmd29yY3Znc3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4Njc3MjksImV4cCI6MjEwNDQ0MzcyOX0.LpW33pYy1RMJKLdZHCvz-a-4_1MqnOIZez-92E3gKTA' }}
+        run: |
+          node scripts/sync_otrs_to_supabase.mjs

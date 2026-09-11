@@ -88,27 +88,56 @@ def get_session():
 
     return s_new, None
 
-def normalize_ticket_id(tid_raw):
+def normalize_ticket_id(session, tid_raw):
     """Extracts numeric ticket ID from formats like 'tkt-otrs-32407' or '32407' or '2026090122000053'."""
     s = str(tid_raw).strip()
     if s.startswith("tkt-otrs-"):
         return s.replace("tkt-otrs-", "")
+    if s.startswith("tkt-"):
+        s = s.replace("tkt-", "")
     if s.startswith("TKT-"):
-        # Ticket number: lookup ticket_id
         s = s.replace("TKT-", "")
     if s.startswith("OTRS-"):
         s = s.replace("OTRS-", "")
 
-    # Check if this is a 16-digit ticket number (e.g. 2026090122000053)
-    if len(s) >= 14 and os.path.exists(BSITICKETS_FILE):
-        try:
-            with open(BSITICKETS_FILE, "r", encoding="utf-8") as f:
-                tkts = json.load(f)
-                for t in tkts:
-                    if t.get("ticket_number") == s:
-                        return t.get("ticket_id")
-        except Exception:
-            pass
+    # Check if this is a 12+ digit ticket number (e.g. 2026091122000123)
+    if len(s) >= 12:
+        # 1. First check local cache file if available
+        if os.path.exists(BSITICKETS_FILE):
+            try:
+                with open(BSITICKETS_FILE, "r", encoding="utf-8") as f:
+                    tkts = json.load(f)
+                    for t in tkts:
+                        if t.get("ticket_number") == s:
+                            return str(t.get("ticket_id"))
+            except Exception:
+                pass
+        
+        # 2. Check otrs_tickets_cache.json
+        cache_path = os.path.join(os.path.dirname(__file__), "otrs_tickets_cache.json")
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    cdata = json.load(f)
+                    for t in (cdata.get("tickets") or []):
+                        if t.get("ticketNumber") == s:
+                            m = re.search(r'TicketID=(\d+)', t.get("otrsUrl") or '')
+                            if m:
+                                return m.group(1)
+            except Exception:
+                pass
+
+        # 3. Query OTRS AgentTicketZoom by TicketNumber
+        if session:
+            try:
+                r = session.get(f"{BASE_URL}?Action=AgentTicketZoom;TicketNumber={s}", headers=DEFAULT_HEADERS, timeout=12)
+                m = re.search(r'TicketID=(\d+)', r.url)
+                if not m:
+                    m = re.search(r'TicketID[=_](\d+)', r.text)
+                if m:
+                    return m.group(1)
+            except Exception:
+                pass
 
     return s
 
@@ -119,7 +148,7 @@ def close_single_otrs_ticket(session, ticket_id, resolution_note, new_state_id="
     2. POST Action=AgentTicketClose;Subaction=Store with resolution note and state
     3. Verify closure
     """
-    tid = normalize_ticket_id(ticket_id)
+    tid = normalize_ticket_id(session, ticket_id)
     result = {
         "rawTicketId": ticket_id,
         "otrsTicketId": tid,

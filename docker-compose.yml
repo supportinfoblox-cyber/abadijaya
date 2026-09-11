@@ -18,3 +18,5 @@ services:
     environment:
       - PORT=8080
       - NODE_ENV=production
+    security_opt:
+      - apparmor:unconfined
