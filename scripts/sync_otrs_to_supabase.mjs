@@ -13,7 +13,10 @@ const rawKey = process.env.VITE_SUPABASE_ANON_KEY;
 const SUPABASE_ANON_KEY = (rawKey && rawKey.length > 20) ? rawKey : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3ZXRicmFqdHdmd29yY3Znc3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4Njc3MjksImV4cCI6MjEwNDQ0MzcyOX0.LpW33pYy1RMJKLdZHCvz-a-4_1MqnOIZez-92E3gKTA';
 
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false },
+});
+
 
 function runFetcher(args) {
   return new Promise((resolve, reject) => {
