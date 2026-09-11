@@ -1,10 +1,13 @@
 name: iCare OTRS Automatic Sync to Supabase
 
 on:
+  push:
+    branches: [ master, main ]
   schedule:
     # Runs automatically every 15 minutes
     - cron: '*/15 * * * *'
   workflow_dispatch: # Allows manual trigger directly from GitHub web UI
+
 
 jobs:
   sync-icare:
