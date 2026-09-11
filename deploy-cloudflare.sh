@@ -12,8 +12,9 @@ echo ""
 echo "========================================="
 echo "Mendeploy ke Cloudflare Pages..."
 echo "========================================="
-# Ganti 'ticketops' dengan nama proyek Cloudflare yang Anda inginkan
-npx --yes wrangler pages deploy dist --project-name ticketops
+# Deploy ke Cloudflare Pages dengan target project ticketops
+npx wrangler pages deploy dist --project-name ticketops --branch master --commit-dirty=true
+
 
 echo ""
 echo "========================================="
