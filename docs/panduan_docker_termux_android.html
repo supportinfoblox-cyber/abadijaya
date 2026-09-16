@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Panduan Operasional TicketOps – Docker & Termux Android</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 9.5pt;
+      padding: 0;
+    }
+
+    .cover-header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #31104b 100%);
+      color: #ffffff;
+      padding: 24px 28px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    }
+
+    .cover-header h1 {
+      font-size: 19pt;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      color: #ffffff;
+    }
+
+    .cover-header .subtitle {
+      font-size: 10pt;
+      color: #cbd5e1;
+      font-weight: 400;
+      margin-bottom: 14px;
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: rgba(255, 255, 255, 0.14);
+      color: #f1f5f9;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-accent {
+      background: #4f46e5;
+      border-color: #6366f1;
+    }
+
+    .badge-green {
+      background: #059669;
+      border-color: #10b981;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 9px;
+      color: #334155;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    .callout {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-size: 9pt;
+      border-left: 4px solid;
+    }
+
+    .callout-info {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+
+    .callout-success {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 8.5pt;
+      background: #f1f5f9;
+      color: #d946ef;
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 8.2pt;
+      line-height: 1.45;
+      overflow-x: auto;
+      margin: 8px 0 12px 0;
+      border: 1px solid #1e293b;
+    }
+
+    pre .comment { color: #64748b; }
+    pre .cmd { color: #38bdf8; font-weight: 600; }
+    pre .arg { color: #a5b4fc; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 8.5pt;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) td {
+      background: #fbfcfe;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .diagram-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+      text-align: center;
+      font-size: 8.8pt;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="cover-header">
+    <h1>PANDUAN OPERASIONAL TICKETOPS</h1>
+    <div class="subtitle">Sistem Manajemen Tiket iCare OTRS & BSI Infoblox (Docker Hub & Termux Android)</div>
+    <div class="badge-bar">
+      <span class="badge badge-accent">Docker: centerback/ticketops:latest</span>
+      <span class="badge badge-green">PWA Mobile Ready</span>
+      <span class="badge">Cloudflare Pages</span>
+      <span class="badge">Termux Android 24/7</span>
+    </div>
+  </div>
+
+  <!-- BAGIAN 1: ARSITEKTUR -->
+  <h2>1. Ringkasan Sistem & Cara Kerja Sinkronisasi Cloud</h2>
+  <p>
+    Aplikasi <strong>TicketOps</strong> dirancang dengan arsitektur cloud terpusat. Basis data tiket berada di <strong>Supabase Cloud</strong>, antarmuka web dipublikasikan melalui <strong>Cloudflare Pages</strong>, dan penarikan data iCare OTRS dijalankan secara otomatis oleh background daemon.
+  </p>
+
+  <div class="diagram-box">
+    <strong>Alur Aliran Data Tiket:</strong><br><br>
+    🏢 <strong>Portal iCare OTRS</strong> ➔ ⚙️ <strong>Background Sync Daemon</strong> <em>(di Docker / Termux HP)</em><br>
+    ➔ ☁️ <strong>Supabase Cloud DB</strong> ➔ 📱 <strong>Pengguna (Web Cloudflare / HP Android)</strong>
+  </div>
+
+  <div class="callout callout-success">
+    <strong>Pertanyaan Kritis: Apakah laptop boleh dimatikan total?</strong><br>
+    <strong>YA, BOLEH DIMATIKAN!</strong> Jika background daemon dijalankan di <strong>Termux HP Android</strong> atau <strong>Server Docker Cloud</strong>, maka mesin tersebutlah yang bekerja menarik tiket setiap 3 menit. Laptop Anda bebas dimatikan kapan saja, dan tiket baru akan tetap terus masuk ke Supabase!
+  </div>
+
+  <!-- BAGIAN 2: PANDUAN PWA ANDROID -->
+  <h2>2. Panduan Penggunaan di HP Android (Tanpa Install Apapun)</h2>
+  <p>
+    Aplikasi TicketOps sudah dilengkapi dengan fitur <strong>Progressive Web App (PWA)</strong> dan antarmuka responsif ramah layar sentuh (resolusi smartphone):
+  </p>
+
+  <ol>
+    <li>Buka browser <strong>Google Chrome</strong> di HP Android Anda.</li>
+    <li>Akses alamat web aplikasi: <code>https://ticketops.pages.dev</code></li>
+    <li>Tekan tombol menu titik tiga (<strong>⋮</strong>) di pojok kanan atas Chrome.</li>
+    <li>Pilih menu <strong>"Tambahkan ke Layar Utama"</strong> (atau <strong>"Instal Aplikasi"</strong>).</li>
+    <li>Ikon <strong>TicketOps</strong> akan muncul di layar beranda (Homescreen) HP Anda layaknya aplikasi Android bawaan (native), beroperasi fullscreen tanpa bilah URL browser.</li>
+  </ol>
+
+  <div class="page-break"></div>
+
+  <!-- BAGIAN 3: TERMUX SETUP -->
+  <h2>3. Panduan Menjalankan Penarik Tiket di Termux (HP Android)</h2>
+  <p>
+    Dengan cara ini, <strong>HP Android Anda bertindak sebagai server penarik tiket 24 jam</strong>, sehingga Anda tidak perlu lagi menyalakan laptop atau mengetik perintah apapun di laptop.
+  </p>
+
+  <h3>Langkah 1: Setup Sekali Saja di Termux (1-Klik)</h3>
+  <p>Buka aplikasi Termux di HP, lalu copy-paste perintah berikut dan tekan Enter:</p>
+  <pre><span class="cmd">pkg update -y</span> && <span class="cmd">pkg install -y</span> git nodejs-lts python curl && \
+<span class="cmd">pip install</span> requests urllib3 && \
+<span class="cmd">git clone</span> https://github.com/supportinfoblox-cyber/abadijaya.git ~/ticketops && \
+<span class="cmd">cd</span> ~/ticketops && <span class="cmd">npm install</span> --production</pre>
+
+  <h3>Langkah 2: Menjalankan Background Sync Daemon</h3>
+  <p>Untuk memulai penarikan tiket iCare otomatis setiap 3 menit di HP:</p>
+  <pre><span class="cmd">cd</span> ~/ticketops
+<span class="cmd">bash</span> scripts/start_sync_daemon.sh</pre>
+
+  <h3>Langkah 3: Mencegah Termux Dimatikan oleh Penghemat Baterai Android</h3>
+  <p>Agar Android tidak mematikan Termux saat layar HP padam:</p>
+  <pre><span class="cmd">termux-wake-lock</span></pre>
+  <p><em>(Atau tarik bilah notifikasi atas HP Anda, pada notifikasi Termux klik tombol <strong>"Acquire Wakelock"</strong>).</em></p>
+
+  <div class="callout callout-info">
+    <strong>Apa yang terjadi jika HP kehabisan baterai / restart?</strong><br>
+    Semua instalasi tetap tersimpan aman. Saat HP hidup kembali, Anda <strong>TIDAK PERLU INSTALL ULANG</strong>. Cukup buka Termux lalu ketik:
+    <br><code>cd ~/ticketops && bash scripts/start_sync_daemon.sh</code>
+  </div>
+
+  <h3>Tips Otomatis: Membuat Shortcut 1 Kata di Termux</h3>
+  <p>Jalankan perintah ini sekali di Termux agar Anda cukup mengetik <code>tarik</code> untuk menjalankan daemon:</p>
+  <pre><span class="cmd">echo</span> "alias tarik='cd ~/ticketops && bash scripts/start_sync_daemon.sh'" >> ~/.bashrc
+<span class="cmd">echo</span> "alias status='ps aux | grep sync'" >> ~/.bashrc
+<span class="cmd">source</span> ~/.bashrc</pre>
+  <ul>
+    <li>Ketik <strong><code>tarik</code></strong>: Otomatis masuk folder dan menyalakan penarik tiket.</li>
+    <li>Ketik <strong><code>status</code></strong>: Memeriksa apakah penarik tiket sedang berjalan di latar belakang HP.</li>
+  </ul>
+
+  <!-- BAGIAN 4: DOCKER RUN -->
+  <h2>4. Panduan Menjalankan Docker Container (Docker Hub)</h2>
+  <p>
+    Image resmi telah diupload dan siap digunakan langsung dari registry Docker Hub:
+  </p>
+  <p><strong>Nama Image:</strong> <code>centerback/ticketops:latest</code></p>
+
+  <h3>A. Menjalankan di Server / Komputer Lain (Cukup 1 Baris):</h3>
+  <pre><span class="cmd">docker run</span> -d -p 8080:8080 --name ticketops-app <span class="arg">centerback/ticketops:latest</span></pre>
+
+  <h3>B. Menjalankan Menggunakan Docker Compose:</h3>
+  <pre><span class="cmd">cd</span> "/home/ismail/Downloads/Project Lainnya/Project Lain 1"
+<span class="cmd">docker compose up</span> -d</pre>
+
+  <div class="callout callout-success">
+    <strong>Fitur Otomatis di Container Terbaru:</strong><br>
+    Di dalam image <code>centerback/ticketops:latest</code>, skrip <code>docker-entrypoint.sh</code> otomatis menjalankan:
+    <br>1. Background Sync Daemon (Node.js & Python) setiap 3 menit.
+    <br>2. Web server produksi Vite Preview di port 8080.
+    <br><em>Anda tidak perlu lagi menjalankan skrip manual di dalam container!</em>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- BAGIAN 5: TABEL CHEAT SHEET -->
+  <h2>5. Tabel Ringkasan Perintah Cepat (Cheat Sheet)</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Kebutuhan / Skenario</th>
+        <th style="width: 45%;">Perintah yang Dijalankan</th>
+        <th style="width: 30%;">Keterangan</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Buka Web di HP</strong></td>
+        <td>Buka <code>https://ticketops.pages.dev</code></td>
+        <td>Klik titik tiga Chrome ➔ "Instal Aplikasi"</td>
+      </tr>
+      <tr>
+        <td><strong>Mulai Sync di Termux</strong></td>
+        <td><code>tarik</code> <em>(atau <code>cd ~/ticketops && bash scripts/start_sync_daemon.sh</code>)</em></td>
+        <td>Daemon jalan tiap 3 menit di background HP</td>
+      </tr>
+      <tr>
+        <td><strong>Cek Status Sync Termux</strong></td>
+        <td><code>status</code> <em>(atau <code>ps aux | grep sync</code>)</em></td>
+        <td>Mengecek proses aktif penarik tiket</td>
+      </tr>
+      <tr>
+        <td><strong>Kunci WakeLock Termux</strong></td>
+        <td><code>termux-wake-lock</code></td>
+        <td>Cegah Termux tidur saat layar HP padam</td>
+      </tr>
+      <tr>
+        <td><strong>Jalankan Docker Baru</strong></td>
+        <td><code>docker run -d -p 8080:8080 centerback/ticketops:latest</code></td>
+        <td>Tarik langsung dari Docker Hub</td>
+      </tr>
+      <tr>
+        <td><strong>Melihat Log Docker</strong></td>
+        <td><code>docker logs -f ticketops-app</code></td>
+        <td>Melihat riwayat penarikan tiket realtime</td>
+      </tr>
+      <tr>
+        <td><strong>Deploy ke Cloudflare</strong></td>
+        <td><code>./deploy-cloudflare.sh</code></td>
+        <td>Update web bila ada perubahan desain frontend</td>
+      </tr>
+      <tr>
+        <td><strong>Rollback Sistem</strong></td>
+        <td><code>npm run rollback</code></td>
+        <td>Kembalikan kode ke checkpoint stabil</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- BAGIAN 6: KESIMPULAN OPERASIONAL -->
+  <h2>6. Prosedur Kerja Sehari-hari (Rekomendasi Terbaik)</h2>
+  <ol>
+    <li>
+      <strong>Di Pagi Hari:</strong> Pastikan Termux di HP Anda aktif (atau container Docker di server menyala). Cukup ketik <code>tarik</code> di Termux jika HP baru dinyalakan.
+    </li>
+    <li>
+      <strong>Sepanjang Hari:</strong> Anda dan seluruh staf tim Infoblox/BSI dapat memantau, memeriksa, mengekspor laporan CSV, dan menutup tiket langsung dari browser atau aplikasi HP di alamat <strong><code>https://ticketops.pages.dev</code></strong>.
+    </li>
+    <li>
+      <strong>Laptop Anda:</strong> Bebas dimatikan atau digunakan untuk keperluan lain. Data tiket akan selalu segar dan up-to-date secara otomatis!
+    </li>
+  </ol>
+
+  <div class="footer-note">
+    <span>Dokumen Resmi Sistem Operasional TicketOps &bull; Tim Cyber Infoblox & iCare BSI</span>
+    <span>Akun Docker: centerback &bull; Tanggal Rilis: 16 September 2026</span>
+  </div>
+
+</body>
+</html>
