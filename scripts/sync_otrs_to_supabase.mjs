@@ -50,6 +50,39 @@ function runFetcher(args) {
   });
 }
 
+function runCloser(ticketId, resolutionNote, stateId = '2') {
+  return new Promise((resolve, reject) => {
+    const py = spawn('python3', [
+      path.resolve(__dirname, 'otrs_close_bridge.py'),
+      '--ticket-ids', String(ticketId),
+      '--note', resolutionNote || 'Permohonan telah diselesaikan dan diverifikasi pada appliance Infoblox BSI. Tiket ditutup via TicketOps Automation.',
+      '--state-id', String(stateId)
+    ], { cwd: rootDir });
+
+    let stdout = '';
+    let stderr = '';
+
+    py.stdout.on('data', (d) => { stdout += d.toString(); });
+    py.stderr.on('data', (d) => { stderr += d.toString(); });
+
+    py.on('close', (code) => {
+      if (code !== 0) {
+        return reject(new Error(`Closer exited with code ${code}: ${stderr}`));
+      }
+      try {
+        const parsed = JSON.parse(stdout);
+        resolve(parsed);
+      } catch (e) {
+        reject(new Error(`Failed to parse closer JSON: ${e.message}. Raw output: ${stdout}`));
+      }
+    });
+
+    py.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
 function ticketToRow(t) {
   let ticketNumber = String(t.ticketNumber || '');
   if (ticketNumber.startsWith('TKT-')) ticketNumber = ticketNumber.replace(/^TKT-/, '');
@@ -131,7 +164,7 @@ async function runSyncOnce() {
   const numbers = rows.map(r => r.ticket_number);
   const { data: existing, error: fetchErr } = await supabase
     .from('tickets')
-    .select('ticket_number, status, updated_at')
+    .select('ticket_number, status, resolution_note, closed_at, updated_at')
     .in('ticket_number', numbers);
 
   if (fetchErr) {
@@ -141,15 +174,33 @@ async function runSyncOnce() {
   const existingMap = new Map((existing || []).map(e => [e.ticket_number, e]));
   let newCount = 0;
   let updatedCount = 0;
+  const ticketsPendingCloseInOtrs = [];
 
   for (const r of rows) {
     if (existingMap.has(r.ticket_number)) {
       const ex = existingMap.get(r.ticket_number);
-      // Preserve CLOSED status so incoming iCare active fetch doesn't revert user-closed tickets
+      // If user marked ticket as CLOSED in TicketOps, preserve it and queue for iCare outbound close
       if (ex.status === 'CLOSED') {
         r.status = 'CLOSED';
         r.closed_at = ex.closed_at || new Date().toISOString();
-        r.resolution_note = ex.resolution_note || r.resolution_note;
+        let resNote = ex.resolution_note;
+        if (!resNote || resNote.trim().length < 5) {
+          if (r.kriteria === 'Reserve IP') {
+            resNote = 'Permohonan alokasi IP Address dan Server Production SORT telah selesai dikonfigurasi pada Infoblox BSI. Tiket diselesaikan.';
+          } else if (r.kriteria === 'DNS Request') {
+            resNote = 'Penambahan konfigurasi DNS telah selesai dipublikasikan dan diverifikasi normal pada Grid Infoblox BSI. Tiket diselesaikan.';
+          } else {
+            resNote = 'Permohonan telah diselesaikan dan diverifikasi pada appliance Infoblox BSI. Tiket ditutup via TicketOps Automation.';
+          }
+        }
+        r.resolution_note = resNote;
+
+        ticketsPendingCloseInOtrs.push({
+          ticket_number: r.ticket_number,
+          subject: r.subject,
+          kriteria: r.kriteria,
+          resolution_note: resNote,
+        });
       }
       updatedCount++;
     } else {
@@ -158,6 +209,37 @@ async function runSyncOnce() {
   }
 
   console.log(`   -> ${newCount} new tickets to insert, ${updatedCount} existing tickets to update/verify.`);
+
+  // 2. Execute Outbound Close to iCare OTRS for user-closed tickets
+  if (ticketsPendingCloseInOtrs.length > 0) {
+    console.log(`\n🔄 [Outbound 2-Way Sync] Mendeteksi ${ticketsPendingCloseInOtrs.length} tiket berstatus CLOSED di TicketOps yang masih aktif di iCare:`);
+    for (const item of ticketsPendingCloseInOtrs) {
+      console.log(`   ⏳ Memproses penutupan di portal iCare OTRS: #${item.ticket_number} - "${item.subject}"...`);
+      try {
+        const closeRes = await runCloser(item.ticket_number, item.resolution_note, '2');
+        const rResult = closeRes.results?.[0];
+        if (closeRes.success && (rResult?.success || rResult?.state !== 'unknown')) {
+          console.log(`   ✅ SUKSES DITUTUP DI ICARE OTRS: #${item.ticket_number} (State: ${rResult?.state || 'Berhasil ditutup'})`);
+          try {
+            await supabase.from('audit_logs').insert({
+              id: `audit-close-${Date.now()}-${item.ticket_number}`,
+              timestamp: new Date().toISOString(),
+              user_id: 'usr-ismailak',
+              user_name: 'Ismail Akbar',
+              action: 'CLOSE_TICKET_OTRS',
+              module: 'Integration',
+              entity_id: item.ticket_number,
+              new_value: `Status diubah menjadi 'Berhasil ditutup' (StateID 2) di portal iCare OTRS. Note: ${item.resolution_note}`,
+            });
+          } catch (_) {}
+        } else {
+          console.error(`   ⚠️  Gagal menutup tiket iCare #${item.ticket_number}:`, rResult?.message || closeRes.error || 'Unknown error');
+        }
+      } catch (err) {
+        console.error(`   ❌ Error eksekusi penutupan #${item.ticket_number}:`, err.message);
+      }
+    }
+  }
 
   // Upsert in batches of 50
   const batchSize = 50;

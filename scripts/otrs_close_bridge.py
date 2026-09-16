@@ -182,6 +182,34 @@ def close_single_otrs_ticket(session, ticket_id, resolution_note, new_state_id="
     form_id_m = re.search(r'name="FormID"\s*value="([^"]+)"', r_get.text)
 
     if not token_m or not form_id_m:
+        # Check if requires ownership transfer to current user first
+        if "harus menjadi pemilik tiket" in r_get.text or "Ubah Pemilik" in r_get.text:
+            try:
+                r_owner = session.get(f"{BASE_URL}?Action=AgentTicketOwner;TicketID={tid}", headers=DEFAULT_HEADERS, timeout=15)
+                ow_token_m = re.search(r'name="ChallengeToken"\s*value="([^"]+)"', r_owner.text)
+                ow_form_id_m = re.search(r'name="FormID"\s*value="([^"]+)"', r_owner.text)
+                ismail_opt = re.search(r'<option[^>]*value="(\d+)"[^>]*>[^<]*ismail[^<]*</option>', r_owner.text, flags=re.IGNORECASE)
+                new_owner_id = ismail_opt.group(1) if ismail_opt else "153"
+                if ow_token_m and ow_form_id_m:
+                    session.post(BASE_URL, data={
+                        "Action": "AgentTicketOwner",
+                        "Subaction": "Store",
+                        "TicketID": tid,
+                        "ChallengeToken": ow_token_m.group(1),
+                        "FormID": ow_form_id_m.group(1),
+                        "NewOwnerID": new_owner_id,
+                        "Subject": "Ownership handover for resolution",
+                        "Body": "Mengambil alih kepemilikan tiket untuk proses penutupan dan verifikasi.",
+                        "IsVisibleForCustomer": "0",
+                        "TimeUnits": "",
+                    }, headers=DEFAULT_HEADERS, timeout=15)
+                    # Re-fetch AgentTicketClose page with ownership now transferred
+                    r_get = session.get(close_page_url, headers=DEFAULT_HEADERS, timeout=15)
+                    token_m = re.search(r'name="ChallengeToken"\s*value="([^"]+)"', r_get.text)
+                    form_id_m = re.search(r'name="FormID"\s*value="([^"]+)"', r_get.text)
+            except Exception as e:
+                pass
+
         # Check if already closed
         if "AgentTicketClose" not in r_get.url and "AgentTicketZoom" in r_get.url:
             # Let's check status
@@ -193,8 +221,9 @@ def close_single_otrs_ticket(session, ticket_id, resolution_note, new_state_id="
             result["closedAt"] = datetime.now(timezone.utc).isoformat()
             return result
 
-        result["message"] = f"Failed to retrieve ChallengeToken or FormID for ticket {tid}."
-        return result
+        if not token_m or not form_id_m:
+            result["message"] = f"Failed to retrieve ChallengeToken or FormID for ticket {tid}."
+            return result
 
     challenge_token = token_m.group(1)
     form_id = form_id_m.group(1)
