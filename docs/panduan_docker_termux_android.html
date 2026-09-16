@@ -307,8 +307,22 @@
     <li>Ketik <strong><code>status</code></strong>: Memeriksa apakah penarik tiket sedang berjalan di latar belakang HP.</li>
   </ul>
 
-  <!-- BAGIAN 4: DOCKER RUN -->
-  <h2>4. Panduan Menjalankan Docker Container (Docker Hub)</h2>
+  <!-- BAGIAN 4: AKSES LUAR JARINGAN & DNS -->
+  <h2>4. Akses Rekan Tim dari Luar Jaringan & Kepastian DNS / Domain</h2>
+  <div class="callout callout-info">
+    <strong>Apakah alamat DNS / URL web tetap sama saat daemon dijalankan di Termux?</strong><br>
+    <strong>YA, TETAP SAMA PERSIS 100%!</strong> Domain yang diakses oleh rekan tim Anda tetap: <code>https://ticketops.pages.dev</code>
+  </div>
+
+  <p><strong>Mengapa rekan tim di luar jaringan bisa langsung mengakses tanpa hambatan?</strong></p>
+  <ul>
+    <li><strong>Rekan tim TIDAK mengakses HP Anda:</strong> Rekan tim tidak perlu tahu IP HP Anda dan tidak perlu berada di jaringan WiFi yang sama. Mereka bisa menggunakan WiFi kantor, rumah, atau paket data seluler mana pun (Telkomsel, Indosat, XL, dll).</li>
+    <li><strong>HP Anda (Termux) Berperan Sebagai "Data Feeder":</strong> HP Anda hanya bertugas mengambil tiket dari iCare OTRS lalu mengirimkannya ke database cloud terpusat (<strong>Supabase Cloud</strong>).</li>
+    <li><strong>Akses Web Terpusat via Cloudflare:</strong> Rekan tim membuka <code>https://ticketops.pages.dev</code> yang langsung mengambil data tiket terbaru dari database Supabase tersebut secara otomatis dan realtime.</li>
+  </ul>
+
+  <!-- BAGIAN 5: DOCKER RUN -->
+  <h2>5. Panduan Menjalankan Docker Container (Docker Hub)</h2>
   <p>
     Image resmi telah diupload dan siap digunakan langsung dari registry Docker Hub:
   </p>
@@ -331,8 +345,8 @@
 
   <div class="page-break"></div>
 
-  <!-- BAGIAN 5: TABEL CHEAT SHEET -->
-  <h2>5. Tabel Ringkasan Perintah Cepat (Cheat Sheet)</h2>
+  <!-- BAGIAN 6: TABEL CHEAT SHEET -->
+  <h2>6. Tabel Ringkasan Perintah Cepat (Cheat Sheet)</h2>
 
   <table>
     <thead>
