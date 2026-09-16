@@ -1589,6 +1589,14 @@ select.form-control option {
   .hide-mobile { display: none !important; }
   .page-title { font-size: 1.15rem; }
 
+  /* Android & Mobile Top & Bottom Safe Area */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .main-navbar {
     padding: 0 12px !important;
     height: 56px !important;
@@ -1603,10 +1611,16 @@ select.form-control option {
     padding: 12px 14px !important;
   }
 
-  /* Improve typography legibility on mobile */
-  body {
-    -webkit-text-size-adjust: 100%;
-    text-rendering: optimizeLegibility;
+  /* Table horizontal touch scroll */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .data-table {
+    min-width: 680px; /* Keep tabular data legible with horizontal swipe */
   }
 
   .data-table th,
@@ -1614,12 +1628,52 @@ select.form-control option {
     padding: 10px 12px !important;
     font-size: 0.8rem !important;
   }
+
+  /* Form controls prevent unwanted zoom on Android focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modals on mobile: fill screen width comfortably */
+  .glass-panel[style*="max-width: 560px"],
+  .glass-panel[style*="maxWidth: 560px"],
+  .glass-panel[style*="max-width: 640px"],
+  .glass-panel[style*="maxWidth: 640px"],
+  .glass-panel[style*="maxWidth: 600px"] {
+    max-width: 95vw !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Floating toolbars */
+  .floating-batch-bar,
+  div[style*="position: fixed"][style*="bottom:"] {
+    left: 10px !important;
+    right: 10px !important;
+    transform: none !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    padding: 10px 14px !important;
+  }
 }
 
 @media (max-width: 480px) {
   .dashboard-metrics-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
+  }
+
+  .page-body {
+    padding: 10px 10px 24px 10px !important;
+  }
+
+  /* Touch target sizes for primary buttons on Android */
+  button.btn-primary, 
+  button.btn-secondary, 
+  button.btn-glass {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 

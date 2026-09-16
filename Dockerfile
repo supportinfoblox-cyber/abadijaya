@@ -44,11 +44,11 @@ RUN npm run build
 # Set production environment for runtime
 ENV NODE_ENV=production
 
-# 6. Make python & bash scripts executable
-RUN chmod +x scripts/*.py scripts/*.sh 2>/dev/null || true
+# 6. Make python, bash scripts, and entrypoint executable
+RUN chmod +x docker-entrypoint.sh scripts/*.py scripts/*.sh 2>/dev/null || true
 
-# 7. Expose default Google Cloud Run port
+# 7. Expose default Google Cloud Run / Container port
 EXPOSE 8080
 
-# 8. Start preview server (bound to 0.0.0.0, handling both static files & /api/otrs bridge)
-CMD ["sh", "-c", "npx vite preview --host 0.0.0.0 --port ${PORT:-8080}"]
+# 8. Run entrypoint script that starts both sync daemon & web server
+CMD ["./docker-entrypoint.sh"]

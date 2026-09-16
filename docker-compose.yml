@@ -7,6 +7,7 @@ services:
       args:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-}
+    image: centerback/ticketops:latest
     container_name: ticketops-app
     restart: unless-stopped
     ports:
@@ -18,5 +19,6 @@ services:
     environment:
       - PORT=8080
       - NODE_ENV=production
+      - ENABLE_SYNC_DAEMON=true
     security_opt:
       - apparmor:unconfined
