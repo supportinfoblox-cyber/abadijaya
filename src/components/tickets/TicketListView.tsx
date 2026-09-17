@@ -6,7 +6,6 @@ import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import CloseTicketModal from './CloseTicketModal';
 import OtrsSyncModal from './OtrsSyncModal';
 import ExportTicketsModal from './ExportTicketsModal';
-import { exportTicketsToCsv } from '@/services/exportCsv';
 import { exportTicketsToJson } from '@/services/backupJson';
 
 import {
@@ -733,7 +732,7 @@ export default function TicketListView() {
               <span>Tarik Data iCare</span>
             </button>
 
-            {/* Export Excel (.xlsx) dengan Range Waktu & Opsi Cepat */}
+            {/* Tarik & Export Tiket (Excel & CSV) */}
             <button
               onClick={() => setShowExportModal(true)}
               className="btn btn-primary btn-sm"
@@ -748,30 +747,10 @@ export default function TicketListView() {
                 boxShadow: '0 2px 10px rgba(5, 150, 105, 0.3)',
                 fontWeight: 600,
               }}
-              title="Tarik & Export tiket ke Excel (.xlsx) dengan rentang waktu kustom atau opsi cepat 1 bulan / 3 bulan"
+              title="Tarik & Export tiket ke Excel (.xlsx) atau CSV dengan rentang waktu kustom atau opsi cepat"
             >
               <FileSpreadsheet size={15} />
-              <span>Export Excel (XLSX)</span>
-            </button>
-
-
-            {/* Export CSV Rapih Button */}
-            <button
-              onClick={() => exportTicketsToCsv(filteredTickets, 'tiket_icare_bsi_filtered')}
-              className="btn btn-outline btn-sm"
-              style={{
-                height: '38px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--color-success)',
-                borderColor: 'var(--color-success-border)',
-                backgroundColor: 'var(--color-success-bg)',
-              }}
-              title="Export seluruh tiket hasil filter saat ini ke file CSV yang rapi (format Excel UTF-8)"
-            >
-              <FileSpreadsheet size={15} />
-              <span>Export CSV ({filteredTickets.length})</span>
+              <span>Tarik & Export Data</span>
             </button>
 
             {/* Backup JSON Button */}
@@ -868,34 +847,10 @@ export default function TicketListView() {
                 alignItems: 'center',
                 gap: '6px',
               }}
-              title="Export tiket terpilih ke Excel (.xlsx)"
+              title="Export tiket terpilih ke Excel (.xlsx) atau CSV"
             >
               <FileSpreadsheet size={15} />
-              <span>Export Excel Terpilih ({selectedTicketIds.size})</span>
-            </button>
-
-            <button
-              onClick={() => {
-                const selectedList = filteredTickets.filter(t => selectedTicketIds.has(t.id));
-                exportTicketsToCsv(selectedList, 'tiket_terpilih_icare');
-              }}
-              style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.4)',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-              title="Export tiket terpilih ke CSV"
-            >
-              <FileSpreadsheet size={15} />
-              <span>Export Terpilih ({selectedTicketIds.size})</span>
+              <span>Export Tiket Terpilih ({selectedTicketIds.size})</span>
             </button>
 
             <button
