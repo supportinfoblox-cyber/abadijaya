@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Cpu,
@@ -11,12 +11,9 @@ import {
   Eye,
   EyeOff,
   Save,
-  Globe,
   Radio,
-  Server,
   ArrowDownLeft,
   ArrowUpRight,
-  RotateCw,
 } from 'lucide-react';
 
 export default function IntegrationManagementView() {

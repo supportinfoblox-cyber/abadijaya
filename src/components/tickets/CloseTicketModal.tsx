@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket } from '@/types';
 import {
@@ -10,12 +10,10 @@ import {
   RefreshCw,
   ExternalLink,
   Layers,
-  FileText,
   ShieldCheck,
   Check,
   ChevronDown,
   ChevronUp,
-  Sliders,
 } from 'lucide-react';
 
 interface CloseTicketModalProps {
@@ -29,7 +27,7 @@ export default function CloseTicketModal({
   onClose,
   onSuccess,
 }: CloseTicketModalProps) {
-  const { closeTicket, bulkCloseTickets, currentUser } = useTicketOps();
+  const { closeTicket, bulkCloseTickets } = useTicketOps();
 
   // Selection state inside modal (default all checked)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
@@ -40,7 +38,6 @@ export default function CloseTicketModal({
   // State selection: 2 = Berhasil ditutup (Successful), 3 = Tidak berhasil ditutup
   const [newStateId, setNewStateId] = useState<'2' | '3'>('2');
   const [syncToOtrs, setSyncToOtrs] = useState(true);
-  const [dryRun, setDryRun] = useState(false);
 
   // Initial resolution note template based on ticket kriteria
   const defaultNote = useMemo(() => {

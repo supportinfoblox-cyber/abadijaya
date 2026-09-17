@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
-import { Clock, Plus, Filter, User as UserIcon, Calendar, CheckCircle, FileText } from 'lucide-react';
+import { Plus, CheckCircle } from 'lucide-react';
 
 export default function WorklogModuleView() {
-  const { worklogs, addWorklog, tickets, users, currentUser, can, setSelectedTicket, setCurrentView } = useTicketOps();
+  const { worklogs, addWorklog, tickets, users, currentUser, can, setSelectedTicket } = useTicketOps();
 
   const [selectedTicketId, setSelectedTicketId] = useState(tickets[0]?.id || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);

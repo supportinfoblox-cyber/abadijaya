@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   LayoutDashboard,
@@ -15,9 +14,9 @@ import {
   Settings,
   RefreshCw,
   Zap,
-  Network,
   X,
 } from 'lucide-react';
+
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function Sidebar() {

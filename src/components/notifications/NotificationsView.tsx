@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Bell,
@@ -10,10 +10,8 @@ import {
   Check,
   Trash2,
   ArrowRight,
-  Filter,
   CheckCheck,
   Clock,
-  Sparkles,
   Inbox,
 } from 'lucide-react';
 

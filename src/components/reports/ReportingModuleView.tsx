@@ -1,23 +1,21 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import MonthlyTicketChart from '@/components/dashboard/MonthlyTicketChart';
 import { exportTicketsToCsv } from '@/services/exportCsv';
+import { exportTicketsToExcel } from '@/services/exportExcel';
 import {
   BarChart3,
   Download,
   Printer,
-  Calendar,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  UserCheck,
   FileSpreadsheet,
   Moon,
   Sun,
   ChevronDown,
+  Monitor,
 } from 'lucide-react';
+
 
 export default function ReportingModuleView() {
   const { tickets, worklogs, users, currentUser } = useTicketOps();
@@ -41,8 +39,8 @@ export default function ReportingModuleView() {
   const dailyTotal = tickets.length;
   const dailyResolved = tickets.filter(t => t.status === 'RESOLVED').length;
   const dailyClosed = tickets.filter(t => t.status === 'CLOSED').length;
-  const dailyPending = tickets.filter(t => t.status === 'PENDING').length;
   const dailyInProgress = tickets.filter(t => t.status === 'IN PROGRESS').length;
+
   const dailyOverdue = tickets.filter(
     t => t.slaStatus === 'BREACHED' && t.status !== 'CLOSED' && t.status !== 'RESOLVED'
   ).length;
@@ -69,7 +67,24 @@ export default function ReportingModuleView() {
     exportTicketsToCsv(tickets, `laporan_operasional_${reportType}`);
   };
 
-  const executePrint = (theme: 'dark' | 'light') => {
+  // Export Excel generator
+  const handleExportExcel = () => {
+    exportTicketsToExcel(tickets, {
+      filenamePrefix: `laporan_operasional_${reportType}`,
+      filterLabel: `${reportType.toUpperCase()} Operational Telemetry`,
+    });
+  };
+
+  const getActiveTheme = (): 'light' | 'dark' => {
+    if (typeof document !== 'undefined') {
+      const cur = document.documentElement.getAttribute('data-theme');
+      if (cur === 'light') return 'light';
+      if (cur === 'dark') return 'dark';
+    }
+    return 'light';
+  };
+
+  const executePrint = (themeMode: 'dark' | 'light') => {
     setShowPrintMenu(false);
 
     // Temporarily remove inline marginLeft from .main-content so @media print CSS takes full effect
@@ -80,20 +95,23 @@ export default function ReportingModuleView() {
       mainContent.style.width = '100%';
     }
 
-    if (theme === 'light') {
+    if (themeMode === 'light') {
       document.body.classList.add('print-light-mode');
+      document.body.classList.remove('print-dark-mode');
     } else {
+      document.body.classList.add('print-dark-mode');
       document.body.classList.remove('print-light-mode');
     }
 
     // Small delay to let the browser re-render DOM changes before print dialog
     setTimeout(() => {
       window.print();
-    }, 100);
+    }, 150);
 
     // Reset after print dialog closes
     const handleAfterPrint = () => {
       document.body.classList.remove('print-light-mode');
+      document.body.classList.remove('print-dark-mode');
       if (mainContent && originalMarginLeft !== null) {
         mainContent.style.marginLeft = originalMarginLeft;
         mainContent.style.width = '';
@@ -102,6 +120,7 @@ export default function ReportingModuleView() {
     };
     window.addEventListener('afterprint', handleAfterPrint);
   };
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -143,7 +162,7 @@ export default function ReportingModuleView() {
       </div>
 
       {/* Header & Controls */}
-      <div className="glass-panel" style={{ padding: '22px' }}>
+      <div className="glass-panel" style={{ padding: '22px', overflow: 'visible', position: 'relative', zIndex: 30 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -183,7 +202,26 @@ export default function ReportingModuleView() {
               ))}
             </div>
 
-            {/* Export Buttons */}
+            {/* Export Excel Button */}
+            <button
+              onClick={handleExportExcel}
+              className="btn btn-sm"
+              style={{
+                backgroundColor: 'var(--color-success-bg)',
+                borderColor: 'var(--color-success-border)',
+                color: 'var(--color-success)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 600,
+              }}
+              title="Export Laporan Telemetri Lengkap ke Excel (.xlsx)"
+            >
+              <FileSpreadsheet size={15} />
+              Export Excel
+            </button>
+
+            {/* Export CSV Button */}
             <button onClick={handleExportCSV} className="btn btn-secondary btn-sm">
               <Download size={15} />
               Export CSV
@@ -193,16 +231,20 @@ export default function ReportingModuleView() {
             <div ref={printMenuRef} style={{ position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <button
-                  onClick={() => executePrint('dark')}
+                  onClick={() => executePrint(getActiveTheme())}
                   className="btn btn-outline btn-sm"
                   style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
-                  title="Cetak Laporan dengan Tampilan Web Asli (Dark Theme)"
+                  title={`Cetak Laporan Sesuai Tema Aktif (${getActiveTheme() === 'light' ? 'Mode Cerah' : 'Mode Gelap'})`}
                 >
                   <Printer size={15} />
                   Print / PDF
                 </button>
                 <button
-                  onClick={() => setShowPrintMenu(prev => !prev)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPrintMenu(prev => !prev);
+                  }}
                   className="btn btn-outline btn-sm"
                   style={{
                     borderTopLeftRadius: 0,
@@ -210,7 +252,7 @@ export default function ReportingModuleView() {
                     borderLeft: 'none',
                     padding: '0 8px',
                   }}
-                  title="Pilihan Tema Cetak"
+                  title="Pilihan Format & Tema Cetak"
                 >
                   <ChevronDown size={14} />
                 </button>
@@ -218,24 +260,27 @@ export default function ReportingModuleView() {
 
               {showPrintMenu && (
                 <div
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     position: 'absolute',
-                    top: 'calc(100% + 6px)',
+                    top: 'calc(100% + 8px)',
                     right: 0,
                     backgroundColor: 'var(--bg-secondary)',
                     border: '1px solid var(--border-medium)',
                     borderRadius: 'var(--radius-md)',
                     boxShadow: 'var(--shadow-lg)',
-                    padding: '6px',
-                    width: '260px',
-                    zIndex: 50,
+                    padding: '8px',
+                    width: '280px',
+                    zIndex: 9999,
                   }}
                 >
-                  <div style={{ padding: '6px 10px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ padding: '6px 10px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Pilih Format Cetak
                   </div>
+
+                  {/* Sesuai Tema Web Aktif */}
                   <button
-                    onClick={() => executePrint('dark')}
+                    onClick={() => executePrint(getActiveTheme())}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -253,12 +298,14 @@ export default function ReportingModuleView() {
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-elevated)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <Moon size={15} color="var(--color-purple)" />
+                    <Monitor size={16} color="var(--accent-primary)" />
                     <div>
-                      <div style={{ fontWeight: 600 }}>Tampilan Web (Dark)</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Sesuai warna asli web & diagram penuh</div>
+                      <div style={{ fontWeight: 600 }}>Sesuai Tema Aktif ({getActiveTheme() === 'light' ? 'Cerah' : 'Gelap'})</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Mengikuti tampilan layar Anda saat ini</div>
                     </div>
                   </button>
+
+                  {/* Tema Cerah (Kertas Putih) */}
                   <button
                     onClick={() => executePrint('light')}
                     style={{
@@ -278,10 +325,37 @@ export default function ReportingModuleView() {
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-elevated)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <Sun size={15} color="var(--color-warning)" />
+                    <Sun size={16} color="var(--color-warning)" />
                     <div>
-                      <div style={{ fontWeight: 600 }}>Hemat Tinta (Light Paper)</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Kertas putih untuk printer fisik biasa</div>
+                      <div style={{ fontWeight: 600 }}>Tema Cerah (Kertas Putih)</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Hemat tinta printer, latar putih bersih</div>
+                    </div>
+                  </button>
+
+                  {/* Tema Gelap (Dark Mode Asli) */}
+                  <button
+                    onClick={() => executePrint('dark')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '0.82rem',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-elevated)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <Moon size={16} color="var(--color-purple)" />
+                    <div>
+                      <div style={{ fontWeight: 600 }}>Tema Gelap (Dark Mode Asli)</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Sesuai warna asli dark mode & diagram</div>
                     </div>
                   </button>
                 </div>
@@ -290,6 +364,7 @@ export default function ReportingModuleView() {
           </div>
         </div>
       </div>
+
 
       {/* Daily Report View */}
       {reportType === 'daily' && (

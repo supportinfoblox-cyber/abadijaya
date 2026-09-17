@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
-import { SLAPolicyConfig, SLAStatus, TicketPriority } from '@/types';
+import { SLAPolicyConfig } from '@/types';
 import {
   ShieldAlert,
   ShieldCheck,

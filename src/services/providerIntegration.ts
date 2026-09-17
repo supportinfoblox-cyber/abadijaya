@@ -1,4 +1,4 @@
-import { Ticket, Worklog, SyncLog, IntegrationConfig } from '@/types';
+import { Ticket, Worklog, IntegrationConfig } from '@/types';
 
 export interface TicketProvider {
   name: string;

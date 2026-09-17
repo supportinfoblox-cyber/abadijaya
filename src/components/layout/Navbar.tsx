@@ -23,19 +23,17 @@ import {
   PanelLeft,
   Sun,
   Moon,
-  Plus,
-  Sparkles,
+  RefreshCw,
   Cloud,
   CloudOff,
-  RefreshCw,
 } from 'lucide-react';
+
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function Navbar() {
   const {
     currentUser,
     logout,
-    can,
     notifications,
     markNotificationAsRead,
     clearAllNotifications,
@@ -45,7 +43,6 @@ export default function Navbar() {
     setCurrentView,
     setSelectedTicket,
     tickets,
-    updateUser,
     updateMyProfile,
     isSidebarCollapsed,
     toggleSidebar,
@@ -176,9 +173,10 @@ export default function Navbar() {
     }}>
       {/* Left: Breadcrumb / Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-        {/* Toggle Sidebar Button */}
+        {/* Toggle Sidebar Button (Hidden on Mobile) */}
         <button
           onClick={toggleSidebar}
+          className="hide-mobile"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '36px', height: '36px', borderRadius: '10px',

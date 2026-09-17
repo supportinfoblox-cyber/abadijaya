@@ -24,16 +24,25 @@ export interface FullBackupPayload {
  */
 function downloadJsonFile(content: string, filename: string): void {
   const blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  import('./exportExcel').then(({ saveOrShareFile }) => {
+    saveOrShareFile({
+      filename,
+      blob,
+      mimeType: 'application/json;charset=utf-8;',
+    });
+  }).catch(() => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
 }
+
 
 /**
  * Export filtered or selected tickets to clean JSON format

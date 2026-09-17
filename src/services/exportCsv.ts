@@ -85,13 +85,23 @@ export function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = '
   const dateSuffix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   const filename = `${filenamePrefix}_${dateSuffix}.csv`;
 
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Dynamically import or call universal file saver
+  import('./exportExcel').then(({ saveOrShareFile }) => {
+    saveOrShareFile({
+      filename,
+      blob,
+      mimeType: 'text/csv;charset=utf-8;',
+    });
+  }).catch(() => {
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
 }
+

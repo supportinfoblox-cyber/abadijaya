@@ -10,16 +10,24 @@
     "checkpoint": "bash scripts/checkpoint.sh",
     "rollback": "bash scripts/rollback.sh",
     "rollback:stable": "git reset --hard v1.0.0-stable",
+    "build:apk": "bash build-apk.sh",
+    "cap:sync": "npx cap sync android",
     "sync:otrs": "node scripts/sync_otrs_to_supabase.mjs",
     "sync:daemon": "node scripts/sync_otrs_to_supabase.mjs --daemon",
     "sync:watch": "node scripts/sync_otrs_to_supabase.mjs --daemon --interval 180"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.2",
     "@supabase/supabase-js": "^2.116.0",
     "lucide-react": "^1.42.0",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",

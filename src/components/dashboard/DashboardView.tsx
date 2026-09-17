@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import MonthlyTicketChart from './MonthlyTicketChart';
@@ -11,22 +10,19 @@ import {
   CheckCircle2,
   Hourglass,
   ArrowUpRight,
-  TrendingUp,
   Activity,
   ShieldCheck,
   AlertTriangle,
-  ExternalLink,
   ChevronRight,
   Layers,
   Globe,
   Server,
   Shield,
   Network,
-  Sparkles,
   Zap,
-  Check,
   MoreHorizontal,
 } from 'lucide-react';
+
 
 export default function DashboardView() {
   const { tickets, setSelectedTicket, setCurrentView, setActiveFilterStatus, setActiveKriteria } = useTicketOps();

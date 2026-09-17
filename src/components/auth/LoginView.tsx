@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
-  Ticket,
   Shield,
   Lock,
   User,
@@ -13,7 +12,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Server,
-  Zap,
 } from 'lucide-react';
 
 export default function LoginView() {

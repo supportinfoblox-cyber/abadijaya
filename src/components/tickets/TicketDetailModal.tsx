@@ -1,21 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
-import { Ticket, TicketStatus, MainCategory, TechnicalCategory, TicketPriority } from '@/types';
+import { TicketStatus, MainCategory, TechnicalCategory } from '@/types';
 import CloseTicketModal from './CloseTicketModal';
 import {
   X,
-  Clock,
-  UserCheck,
   CheckCircle2,
   AlertTriangle,
-  Send,
   Plus,
-  ShieldCheck,
-  ExternalLink,
-  ChevronRight,
-  ArrowRight,
   Sparkles,
   Layers,
   Pencil,

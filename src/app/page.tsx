@@ -16,6 +16,7 @@ import UserManagementView from '@/components/admin/UserManagementView';
 import AuditLogView from '@/components/admin/AuditLogView';
 import SettingsView from '@/components/settings/SettingsView';
 import LoginView from '@/components/auth/LoginView';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; onReset?: () => void },
@@ -144,6 +145,9 @@ function AppContent() {
 
       {/* Ticket Detail Modal */}
       <TicketDetailModal />
+
+      {/* Mobile Bottom Navigation for Smartphones */}
+      <MobileBottomNav />
     </div>
   );
 }

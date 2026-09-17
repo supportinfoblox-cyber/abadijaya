@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { analyzeTicketWithRuleEngine } from '@/services/ruleEngine';
 import { MainCategory, TechnicalCategory } from '@/types';
 import {
-  Layers,
   Sparkles,
-  Search,
-  CheckCircle,
   Cpu,
   Shield,
   Database,

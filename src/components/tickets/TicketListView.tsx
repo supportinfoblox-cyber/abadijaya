@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
-import { Ticket, TicketPriority, TicketStatus, MainCategory, TechnicalCategory } from '@/types';
+import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import CloseTicketModal from './CloseTicketModal';
 import OtrsSyncModal from './OtrsSyncModal';
+import ExportTicketsModal from './ExportTicketsModal';
 import { exportTicketsToCsv } from '@/services/exportCsv';
 import { exportTicketsToJson } from '@/services/backupJson';
+
 import {
   Search,
-  Filter,
   ArrowUpDown,
-  UserCheck,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   X,
-  RefreshCw,
   Layers,
   CheckSquare,
-  Square,
   XCircle,
   CheckCircle2,
   FileSpreadsheet,
@@ -37,11 +32,10 @@ export default function TicketListView() {
     setGlobalSearchQuery,
     currentUser,
     can,
-    syncTicketsNow,
-    isSyncing,
     activeKriteria,
     setActiveKriteria,
   } = useTicketOps();
+
 
   // Local filters
   const [selectedPriority, setSelectedPriority] = useState<string>('ALL');
@@ -56,6 +50,9 @@ export default function TicketListView() {
   const [closeModalTickets, setCloseModalTickets] = useState<Ticket[] | null>(null);
   // OTRS Sync modal state
   const [showSyncModal, setShowSyncModal] = useState(false);
+  // Export Tickets modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+
 
   // Sub-tabs
   const tabs = [
@@ -736,6 +733,28 @@ export default function TicketListView() {
               <span>Tarik Data iCare</span>
             </button>
 
+            {/* Export Excel (.xlsx) dengan Range Waktu & Opsi Cepat */}
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="btn btn-primary btn-sm"
+              style={{
+                height: '38px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#059669',
+                borderColor: '#10b981',
+                color: '#ffffff',
+                boxShadow: '0 2px 10px rgba(5, 150, 105, 0.3)',
+                fontWeight: 600,
+              }}
+              title="Tarik & Export tiket ke Excel (.xlsx) dengan rentang waktu kustom atau opsi cepat 1 bulan / 3 bulan"
+            >
+              <FileSpreadsheet size={15} />
+              <span>Export Excel (XLSX)</span>
+            </button>
+
+
             {/* Export CSV Rapih Button */}
             <button
               onClick={() => exportTicketsToCsv(filteredTickets, 'tiket_icare_bsi_filtered')}
@@ -832,6 +851,29 @@ export default function TicketListView() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => {
+                setShowExportModal(true);
+              }}
+              style={{
+                padding: '7px 14px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.4)',
+                backgroundColor: '#059669',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+              title="Export tiket terpilih ke Excel (.xlsx)"
+            >
+              <FileSpreadsheet size={15} />
+              <span>Export Excel Terpilih ({selectedTicketIds.size})</span>
+            </button>
+
             <button
               onClick={() => {
                 const selectedList = filteredTickets.filter(t => selectedTicketIds.has(t.id));
@@ -1205,6 +1247,15 @@ export default function TicketListView() {
         isOpen={showSyncModal}
         onClose={() => setShowSyncModal(false)}
       />
+
+      {/* Export Tickets Modal (Excel & CSV with Date Range) */}
+      <ExportTicketsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        allTickets={tickets}
+        defaultSelectedIds={selectedTicketIds.size > 0 ? selectedTicketIds : undefined}
+      />
     </div>
   );
+
 }

@@ -1,20 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   FileSpreadsheet,
   Search,
-  Filter,
-  ShieldCheck,
   Download,
   Lock,
-  History,
-  Activity,
-  UserCheck,
-  Cpu,
   Inbox,
-  ArrowRight,
 } from 'lucide-react';
 
 export default function AuditLogView() {

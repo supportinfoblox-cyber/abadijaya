@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import {
   Ticket,
   User,
@@ -39,8 +39,8 @@ import {
   upsertWorklogs,
   fetchAuditLogs,
   insertAuditLog,
-  upsertAuditLogs,
   fetchUsers,
+
   upsertUser,
   upsertUsers,
   deleteUserById,

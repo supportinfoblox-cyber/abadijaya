@@ -6,10 +6,9 @@
 
 class SecurityGuard {
   private isDevToolsOpen: boolean = false;
-  private warningOverlay: HTMLDivElement | null = null;
-  private checkInterval: any = null;
 
   public init() {
+
     if (typeof window === 'undefined') return;
 
     this.disableContextMenu();
@@ -133,7 +132,7 @@ class SecurityGuard {
     };
 
     window.addEventListener('resize', checkDevTools);
-    this.checkInterval = setInterval(checkDevTools, 1000);
+    setInterval(checkDevTools, 1000);
 
     // Anti-debugging loop saat devtools terdeteksi aktif
     setInterval(() => {
@@ -220,16 +219,15 @@ class SecurityGuard {
     `;
 
     document.body.appendChild(overlay);
-    this.warningOverlay = overlay;
   }
 
   private removeDevToolsWarningOverlay() {
     const overlay = document.getElementById('security-devtools-overlay');
     if (overlay) {
       overlay.remove();
-      this.warningOverlay = null;
     }
   }
+
 
   /**
    * Tampilkan Toast Alert singkat jika tombol pintas diblokir

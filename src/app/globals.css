@@ -1585,11 +1585,20 @@ select.form-control option {
   }
 }
 
-@media (max-width: 768px) {
-  .hide-mobile { display: none !important; }
-  .page-title { font-size: 1.15rem; }
+/* Mobile Bottom Nav Bar */
+.mobile-bottom-nav {
+  display: none !important;
+}
 
-  /* Android & Mobile Top & Bottom Safe Area */
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  .hide-mobile { display: none !important; }
+  .page-title { font-size: 1.1rem; }
+
+  /* Android Safe Area & Viewport Handling */
   body {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
@@ -1597,9 +1606,47 @@ select.form-control option {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* Status Bar Top Safe Margin: Prevent navbar from colliding with Android clock/battery */
   .main-navbar {
-    padding: 0 12px !important;
-    height: 56px !important;
+    padding-top: max(env(safe-area-inset-top, 0px), 36px) !important;
+    padding-bottom: 10px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    height: auto !important;
+    min-height: calc(54px + max(env(safe-area-inset-top, 0px), 36px)) !important;
+  }
+
+  /* Content area padded above bottom nav bar */
+  .page-body {
+    padding: 10px 12px calc(78px + env(safe-area-inset-bottom, 0px)) 12px !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Sembunyikan mini sidebar di HP agar tidak mempersempit layar & diagram */
+  .app-sidebar.sidebar-mini {
+    display: none !important;
+  }
+
+  .main-content.sidebar-collapsed,
+  .main-content.sidebar-expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* Bila Menu dibuka dari Bottom Nav, tampilkan sebagai drawer slide-in */
+  .app-sidebar.sidebar-full {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    z-index: 1000 !important;
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.8) !important;
   }
 
   .dashboard-metrics-grid {
@@ -1849,7 +1896,9 @@ select.form-control option {
     border-radius: 8px !important;
   }
 
-  /* === LIGHT THEME PRINT MODE (Tampilan Kertas / Hemat Tinta) === */
+  /* === LIGHT THEME PRINT MODE (Tampilan Kertas / Hemat Tinta / Sesuai Tema Cerah) === */
+  html[data-theme="light"]:not(.print-dark-mode),
+  html[data-theme="light"]:not(.print-dark-mode) body,
   body.print-light-mode,
   body.print-light-mode html {
     background-color: #ffffff !important;
@@ -1857,10 +1906,15 @@ select.form-control option {
     color: #0f172a !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) .app-container,
   body.print-light-mode .app-container {
     background: #ffffff !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) .glass-panel,
+  html[data-theme="light"]:not(.print-dark-mode) .premium-card,
+  html[data-theme="light"]:not(.print-dark-mode) .metric-card,
+  html[data-theme="light"]:not(.print-dark-mode) .modal-content,
   body.print-light-mode .glass-panel,
   body.print-light-mode .premium-card,
   body.print-light-mode .metric-card,
@@ -1871,6 +1925,11 @@ select.form-control option {
     color: #0f172a !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) h1,
+  html[data-theme="light"]:not(.print-dark-mode) h2,
+  html[data-theme="light"]:not(.print-dark-mode) h3,
+  html[data-theme="light"]:not(.print-dark-mode) h4,
+  html[data-theme="light"]:not(.print-dark-mode) strong,
   body.print-light-mode h1,
   body.print-light-mode h2,
   body.print-light-mode h3,
@@ -1879,24 +1938,30 @@ select.form-control option {
     color: #0f172a !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) p,
+  html[data-theme="light"]:not(.print-dark-mode) span:not(.badge),
   body.print-light-mode p,
   body.print-light-mode span:not(.badge) {
     color: #334155 !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) .data-table th,
   body.print-light-mode .data-table th {
     background-color: #f1f5f9 !important;
     color: #1e293b !important;
     border-bottom: 2px solid #cbd5e1 !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) .data-table td,
   body.print-light-mode .data-table td {
     border-bottom: 1px solid #e2e8f0 !important;
     color: #0f172a !important;
   }
 
+  html[data-theme="light"]:not(.print-dark-mode) .monthly-ticket-bar,
   body.print-light-mode .monthly-ticket-bar {
     border: 1px solid rgba(0, 0, 0, 0.15) !important;
   }
 }
+
 

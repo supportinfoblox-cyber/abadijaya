@@ -50,3 +50,11 @@ __pycache__/
 # local runtime caches
 scripts/otrs_session_cache.json
 scripts/otrs_tickets_cache.json
+scripts/.sync_daemon.pid
+
+# ide
+.vscode/
+
+# android binary builds
+*.apk
+TicketOps-v1.0.apk

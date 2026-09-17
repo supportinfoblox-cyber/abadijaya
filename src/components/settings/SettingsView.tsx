@@ -1,16 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Settings,
-  Shield,
   RefreshCw,
-  CheckCircle,
-  Database,
-  Server,
-  Cpu,
-  HardDrive,
   Download,
   Upload,
   FileJson,

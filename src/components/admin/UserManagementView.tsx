@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
-import { User, UserRole } from '@/types';
+import { UserRole } from '@/types';
 import {
   Users,
-  Shield,
   UserPlus,
-  UserCheck,
-  UserX,
   KeyRound,
   Check,
   X,
@@ -18,7 +15,7 @@ import {
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function UserManagementView() {
-  const { users, addUser, updateUser, toggleUserActive, deleteUser, can, currentUser } = useTicketOps();
+  const { users, addUser, toggleUserActive, deleteUser, can, currentUser } = useTicketOps();
 
   const [showAddUser, setShowAddUser] = useState(false);
   const [name, setName] = useState('');

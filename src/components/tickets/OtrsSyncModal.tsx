@@ -1,18 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Download,
   RefreshCw,
-  Clock,
-  Layers,
   CheckCircle2,
   AlertCircle,
   X,
   Database,
-  ExternalLink,
-  Shield,
   Server,
   Calendar,
 } from 'lucide-react';

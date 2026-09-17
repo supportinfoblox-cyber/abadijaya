@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { MainCategory, TechnicalCategory, TicketPriority } from '@/types';
 import { analyzeTicketWithRuleEngine } from '@/services/ruleEngine';
-import { X, Sparkles, Plus, AlertCircle } from 'lucide-react';
+import { X, Sparkles, Plus } from 'lucide-react';
 
 interface CreateTicketModalProps {
   isOpen: boolean;
@@ -22,7 +22,7 @@ export default function CreateTicketModal({ isOpen, onClose }: CreateTicketModal
   const [requester, setRequester] = useState('');
   const [requesterEmail, setRequesterEmail] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
-  const [assignmentGroup, setAssignmentGroup] = useState('Network Infrastructure Tier-2');
+  const assignmentGroup = 'Network Infrastructure Tier-2';
   
   const [ruleRecommendation, setRuleRecommendation] = useState<any>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
