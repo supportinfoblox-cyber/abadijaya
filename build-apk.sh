@@ -36,8 +36,6 @@ cd "$PROJECT_DIR/android"
 # 5. Salin hasil APK
 cd "$PROJECT_DIR"
 cp android/app/build/outputs/apk/debug/app-debug.apk "$PROJECT_DIR/TicketOps-v1.0.apk"
-mkdir -p "$PROJECT_DIR/public"
-cp android/app/build/outputs/apk/debug/app-debug.apk "$PROJECT_DIR/public/TicketOps-v1.0.apk"
 
 echo ""
 echo "========================================================"
