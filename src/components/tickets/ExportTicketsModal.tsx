@@ -274,8 +274,14 @@ export default function ExportTicketsModal({
                     setStartDate(e.target.value);
                     setQuickRange('custom');
                   }}
-                  className="input"
-                  style={{ width: '100%', fontSize: '0.85rem' }}
+                  className="form-control"
+                  style={{
+                    width: '100%',
+                    fontSize: '0.85rem',
+                    backgroundColor: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-medium)',
+                  }}
                 />
               </div>
               <div>
@@ -290,8 +296,14 @@ export default function ExportTicketsModal({
                     setEndDate(e.target.value);
                     setQuickRange('custom');
                   }}
-                  className="input"
-                  style={{ width: '100%', fontSize: '0.85rem' }}
+                  className="form-control"
+                  style={{
+                    width: '100%',
+                    fontSize: '0.85rem',
+                    backgroundColor: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-medium)',
+                  }}
                 />
               </div>
             </div>
@@ -306,8 +318,14 @@ export default function ExportTicketsModal({
               <select
                 value={selectedKriteria}
                 onChange={e => setSelectedKriteria(e.target.value)}
-                className="input"
-                style={{ width: '100%', fontSize: '0.82rem' }}
+                className="form-control"
+                style={{
+                  width: '100%',
+                  fontSize: '0.82rem',
+                  backgroundColor: 'var(--bg-input)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-medium)',
+                }}
               >
                 <option value="ALL">Semua Kriteria</option>
                 <option value="DNS Request">DNS Request</option>
@@ -324,8 +342,14 @@ export default function ExportTicketsModal({
               <select
                 value={selectedStatus}
                 onChange={e => setSelectedStatus(e.target.value)}
-                className="input"
-                style={{ width: '100%', fontSize: '0.82rem' }}
+                className="form-control"
+                style={{
+                  width: '100%',
+                  fontSize: '0.82rem',
+                  backgroundColor: 'var(--bg-input)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-medium)',
+                }}
               >
                 <option value="ALL">Semua Status</option>
                 <option value="OPEN">Open</option>

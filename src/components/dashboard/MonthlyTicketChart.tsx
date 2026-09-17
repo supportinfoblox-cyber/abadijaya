@@ -444,8 +444,16 @@ export default function MonthlyTicketChart() {
               <select
                 value={selectedMonth}
                 onChange={e => { setSelectedMonth(e.target.value); setSelectedBarKey(null); }}
-                className="input"
-                style={{ height: '32px', fontSize: '0.78rem', padding: '0 10px', minWidth: '160px' }}
+                className="form-control"
+                style={{
+                  height: '34px',
+                  fontSize: '0.78rem',
+                  padding: '0 30px 0 10px',
+                  minWidth: '160px',
+                  backgroundColor: 'var(--bg-input)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-medium)',
+                }}
               >
                 {availableMonths.map(mKey => {
                   const [yr, mo] = mKey.split('-');
@@ -465,8 +473,15 @@ export default function MonthlyTicketChart() {
                   type="date"
                   value={customStartDate}
                   onChange={e => { setCustomStartDate(e.target.value); setSelectedBarKey(null); }}
-                  className="input"
-                  style={{ height: '32px', fontSize: '0.76rem', padding: '0 8px' }}
+                  className="form-control"
+                  style={{
+                    height: '34px',
+                    fontSize: '0.76rem',
+                    padding: '0 8px',
+                    backgroundColor: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-medium)',
+                  }}
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -475,8 +490,15 @@ export default function MonthlyTicketChart() {
                   type="date"
                   value={customEndDate}
                   onChange={e => { setCustomEndDate(e.target.value); setSelectedBarKey(null); }}
-                  className="input"
-                  style={{ height: '32px', fontSize: '0.76rem', padding: '0 8px' }}
+                  className="form-control"
+                  style={{
+                    height: '34px',
+                    fontSize: '0.76rem',
+                    padding: '0 8px',
+                    backgroundColor: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-medium)',
+                  }}
                 />
               </div>
             </div>
@@ -932,8 +954,16 @@ export default function MonthlyTicketChart() {
               placeholder="Cari No. Tiket, Subjek..."
               value={rosterSearch}
               onChange={e => { setRosterSearch(e.target.value); setRosterPage(1); }}
-              className="input"
-              style={{ paddingLeft: '32px', height: '32px', fontSize: '0.76rem', width: '100%' }}
+              className="form-control"
+              style={{
+                paddingLeft: '32px',
+                height: '32px',
+                fontSize: '0.76rem',
+                width: '100%',
+                backgroundColor: 'var(--bg-input)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-medium)',
+              }}
             />
           </div>
 
