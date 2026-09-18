@@ -764,7 +764,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       'IN PROGRESS': ['PENDING', 'RESOLVED', 'CLOSED'],
       PENDING: ['IN PROGRESS', 'CLOSED'],
       RESOLVED: ['CLOSED', 'IN PROGRESS'],
-      CLOSED: [], // terminal
+      CLOSED: can('updateTicket') ? ['IN PROGRESS', 'OPEN'] : [],
     };
 
     if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
@@ -801,13 +801,22 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     } else if (newStatus === 'CLOSED') {
       updates.closedAt = nowIso;
       if (resolutionNote) updates.resolutionNote = resolutionNote;
+    } else if (currentStatus === 'CLOSED') {
+      // Re-opening ticket
+      updates.closedAt = undefined;
     }
 
     const result = updateTicket(ticketId, updates);
     if (!result.success) return result;
 
     addAuditLogEntry({
-      action: newStatus === 'CLOSED' ? 'CLOSE_TICKET' : newStatus === 'RESOLVED' ? 'RESOLVE_TICKET' : 'STATUS_CHANGE',
+      action: currentStatus === 'CLOSED'
+        ? 'REOPEN_TICKET'
+        : newStatus === 'CLOSED'
+        ? 'CLOSE_TICKET'
+        : newStatus === 'RESOLVED'
+        ? 'RESOLVE_TICKET'
+        : 'STATUS_CHANGE',
       module: 'Ticket',
       entityId: ticket.ticketNumber,
       oldValue: currentStatus,

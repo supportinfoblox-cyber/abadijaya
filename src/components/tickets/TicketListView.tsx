@@ -1086,6 +1086,11 @@ export default function TicketListView() {
                         <span className={`badge ${getStatusBadgeClass(ticket.status)}`}>
                           {ticket.status}
                         </span>
+                        {ticket.status === 'CLOSED' && ticket.closedAt && (
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
+                            {new Date(ticket.closedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB
+                          </div>
+                        )}
                       </td>
 
                       {/* Assignee */}

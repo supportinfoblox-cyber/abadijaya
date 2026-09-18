@@ -14,6 +14,8 @@ import {
   Pencil,
   Save,
   Printer,
+  Clock,
+  RotateCcw,
 } from 'lucide-react';
 
 // ── Kriteria options ──────────────────────────────────────────────
@@ -81,7 +83,8 @@ export default function TicketDetailModal() {
 
   // Find ticket specific worklogs & audit logs
   const ticketWorklogs = worklogs.filter(w => w.ticketId === ticket.id || w.ticketNumber === ticket.ticketNumber);
-  const ticketAuditLogs = auditLogs.filter(a => a.entityId === ticket.ticketNumber);
+  const ticketAuditLogs = auditLogs.filter(a => a.entityId === ticket.ticketNumber || a.entityId === ticket.id);
+  const closeAuditLog = ticketAuditLogs.find(a => a.action.includes('CLOSE'));
 
   // Status transitions
   const handleTransition = (targetStatus: TicketStatus) => {
@@ -345,6 +348,92 @@ export default function TicketDetailModal() {
         <div className="modal-body">
           {selectedTab === 'details' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Closed Ticket Notice Banner */}
+              {ticket.status === 'CLOSED' && (
+                <div style={{
+                  padding: '16px 20px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '14px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                      color: 'var(--color-success)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <CheckCircle2 size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-success)' }}>
+                        Tiket Resmi Ditutup (CLOSED)
+                      </div>
+                      <div style={{ fontSize: '0.825rem', color: 'var(--text-primary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={13} color="var(--color-success)" />
+                        <span>
+                          <strong>Waktu Penutupan:</strong> {
+                            ticket.closedAt
+                              ? `${new Date(ticket.closedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' })} WIB, ${new Date(ticket.closedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' })}`
+                              : closeAuditLog
+                              ? `${new Date(closeAuditLog.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' })} WIB, ${new Date(closeAuditLog.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' })}`
+                              : 'Tercatat di sistem'
+                          }
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                        <strong>Ditutup Oleh:</strong> <span style={{ color: 'var(--color-purple)', fontWeight: 700 }}>
+                          {closeAuditLog ? `${closeAuditLog.userName} (${closeAuditLog.role.toUpperCase()})` : 'Operator / Automation'}
+                        </span>
+                      </div>
+                      {ticket.resolutionNote && (
+                        <div style={{
+                          fontSize: '0.78rem',
+                          color: 'var(--text-muted)',
+                          marginTop: '6px',
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                          borderLeft: '2px solid var(--color-success)',
+                          fontStyle: 'italic',
+                        }}>
+                          &ldquo;{ticket.resolutionNote}&rdquo;
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {can('updateTicket') && (
+                    <button
+                      onClick={() => handleTransition('IN PROGRESS')}
+                      className="btn btn-secondary btn-sm"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.78rem',
+                        borderColor: 'rgba(59, 130, 246, 0.4)',
+                        color: '#60a5fa',
+                        alignSelf: 'center',
+                      }}
+                    >
+                      <RotateCcw size={13} />
+                      <span>Buka Kembali (Re-open)</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Status Workflow Controls (PRD Section 12) */}
               <div style={{
                 padding: '16px',
@@ -439,9 +528,28 @@ export default function TicketDetailModal() {
                   )}
 
                   {ticket.status === 'CLOSED' && (
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                      Tiket ini sudah resmi ditutup. Semua transisi status dikunci.
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '10px' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        Tiket ini sudah resmi ditutup. Semua transisi status terkunci untuk mencegah modifikasi tidak sah.
+                      </span>
+                      {can('updateTicket') && (
+                        <button
+                          onClick={() => handleTransition('IN PROGRESS')}
+                          className="btn btn-secondary btn-sm"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '0.78rem',
+                            borderColor: 'rgba(59, 130, 246, 0.4)',
+                            color: '#60a5fa',
+                          }}
+                        >
+                          <RotateCcw size={13} />
+                          <span>Re-open Tiket ke In Progress</span>
+                        </button>
+                      )}
+                    </div>
                   )}
 
                   {/* === TOMBOL TUTUP TIKET KE ICARE OTRS === */}
@@ -1055,37 +1163,56 @@ export default function TicketDetailModal() {
               </h4>
               {ticketAuditLogs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '0.825rem' }}>
-                  No audit logs recorded for this ticket yet.
+                  Belum ada log audit tercatat untuk tiket ini.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {ticketAuditLogs.map(audit => (
-                    <div
-                      key={audit.id}
-                      style={{
-                        padding: '10px 14px',
-                        borderRadius: 'var(--radius-md)',
-                        backgroundColor: 'var(--bg-input)',
-                        border: '1px solid var(--border-subtle)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {audit.action.replace('_', ' ')} by {audit.userName} ({audit.role})
+                  {ticketAuditLogs.map(audit => {
+                    const isClose = audit.action.includes('CLOSE');
+                    const d = new Date(audit.timestamp);
+                    const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' });
+                    const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
+
+                    return (
+                      <div
+                        key={audit.id}
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: 'var(--radius-md)',
+                          backgroundColor: isClose ? 'rgba(16, 185, 129, 0.05)' : 'var(--bg-input)',
+                          border: isClose ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-subtle)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ fontSize: '0.825rem', fontWeight: 700, color: isClose ? 'var(--color-success)' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {isClose && <CheckCircle2 size={13} color="var(--color-success)" />}
+                            <span>{audit.action.replace(/_/g, ' ')}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>oleh</span>
+                            <span style={{ color: 'var(--color-purple)' }}>{audit.userName}</span>
+                            <span style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-elevated)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                              {audit.role}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {audit.oldValue && <span>Dari: <code style={{ color: 'var(--color-warning)' }}>{audit.oldValue}</code> &rarr; </span>}
+                            {audit.newValue && <span>Ke: <code style={{ color: 'var(--color-success)' }}>{audit.newValue}</code></span>}
+                          </div>
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          {audit.oldValue && <span>From: <code style={{ color: 'var(--color-warning)' }}>{audit.oldValue}</code> &rarr; </span>}
-                          {audit.newValue && <span>To: <code style={{ color: 'var(--color-success)' }}>{audit.newValue}</code></span>}
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {timeStr} WIB
+                          </div>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                            {dateStr}
+                          </div>
                         </div>
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        {new Date(audit.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
