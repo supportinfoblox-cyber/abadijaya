@@ -22,6 +22,7 @@ import * as XLSX from 'xlsx';
 import { exportRosterToExcelStyled } from '@/services/exportShiftRosterExcel';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { ShiftRosterConfig } from '@/types/shiftRoster';
+import { DEFAULT_SHIFT_ROSTER_CONFIG } from '@/data/defaultShiftRoster';
 
 const INDONESIAN_MONTHS = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -57,9 +58,24 @@ export default function ShiftScheduleView() {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
 
-  // Roster Configuration
-  const [rosterConfig, setRosterConfig] = useState<ShiftRosterConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Roster Configuration - Initialized immediately from localStorage or default static config
+  const [rosterConfig, setRosterConfig] = useState<ShiftRosterConfig>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('ticketops_shift_roster');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && Array.isArray(parsed.engineers) && Array.isArray(parsed.shifts)) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading cached shift roster:', e);
+      }
+    }
+    return DEFAULT_SHIFT_ROSTER_CONFIG;
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -82,39 +98,67 @@ export default function ShiftScheduleView() {
   const [swapNote, setSwapNote] = useState('');
 
   // Edit Settings Draft State
-  const [draftConfig, setDraftConfig] = useState<ShiftRosterConfig | null>(null);
+  const [draftConfig, setDraftConfig] = useState<ShiftRosterConfig | null>(() => {
+    return JSON.parse(JSON.stringify(rosterConfig));
+  });
+
+  // Helper to load roster config from network with fallback chain:
+  // 1. /api/shift/roster (Node/Vite server)
+  // 2. /data/shift_roster.json (Static file on Cloudflare Pages / dist)
+  // 3. /shift_roster.json (Root static fallback)
+  const fetchRosterData = useCallback(async (): Promise<ShiftRosterConfig | null> => {
+    const endpoints = ['/api/shift/roster', '/data/shift_roster.json', '/shift_roster.json'];
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/json') || ep.endsWith('.json')) {
+            const data = await res.json();
+            if (data && Array.isArray(data.shifts) && Array.isArray(data.engineers)) {
+              return data as ShiftRosterConfig;
+            }
+          }
+        }
+      } catch {
+        // continue to next endpoint
+      }
+    }
+    return null;
+  }, []);
 
   // Fetch initial config on mount
   useEffect(() => {
     let active = true;
     const loadInitialRoster = async () => {
       try {
-        const res = await fetch('/api/shift/roster');
-        if (res.ok) {
-          const data: ShiftRosterConfig = await res.json();
-          if (active) {
-            setRosterConfig(data);
-            setDraftConfig(JSON.parse(JSON.stringify(data)));
+        const networkData = await fetchRosterData();
+        if (networkData && active) {
+          const localStr = typeof window !== 'undefined' ? localStorage.getItem('ticketops_shift_roster') : null;
+          if (localStr) {
+            try {
+              const localData = JSON.parse(localStr);
+              const localTime = new Date(localData.lastUpdatedAt || 0).getTime();
+              const networkTime = new Date(networkData.lastUpdatedAt || 0).getTime();
+              if (networkTime > localTime) {
+                setRosterConfig(networkData);
+                setDraftConfig(JSON.parse(JSON.stringify(networkData)));
+                localStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
+              }
+            } catch {
+              setRosterConfig(networkData);
+              setDraftConfig(JSON.parse(JSON.stringify(networkData)));
+            }
+          } else {
+            setRosterConfig(networkData);
+            setDraftConfig(JSON.parse(JSON.stringify(networkData)));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
+            }
           }
-        } else {
-          throw new Error('Gagal memuat jadwal dari server');
         }
       } catch (err: unknown) {
-        console.warn('Fallback loading shift roster:', err);
-        const local = typeof window !== 'undefined' ? localStorage.getItem('ticketops_shift_roster') : null;
-        if (local && active) {
-          try {
-            const parsed = JSON.parse(local);
-            setRosterConfig(parsed);
-            setDraftConfig(parsed);
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
+        console.warn('Network sync for shift roster skipped:', err);
       }
     };
 
@@ -122,52 +166,61 @@ export default function ShiftScheduleView() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [fetchRosterData]);
 
   // Manual refresh handler
   const fetchRosterConfig = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/shift/roster');
-      if (res.ok) {
-        const data: ShiftRosterConfig = await res.json();
+      const data = await fetchRosterData();
+      if (data) {
         setRosterConfig(data);
         setDraftConfig(JSON.parse(JSON.stringify(data)));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ticketops_shift_roster', JSON.stringify(data));
+        }
+        setFeedback({ type: 'success', message: 'Jadwal shift berhasil dimuat ulang!' });
+      } else {
+        setFeedback({ type: 'success', message: 'Jadwal shift aktif menggunakan konfigurasi tersimpan.' });
       }
     } catch (err: unknown) {
       console.warn('Manual refresh failed:', err);
     } finally {
       setIsLoading(false);
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 
-  // Save roster config to server
+  // Save roster config to server & local storage
   const saveRosterToServer = async (newConfig: ShiftRosterConfig, successMsg = 'Jadwal shift berhasil diperbarui!') => {
     setIsSaving(true);
+    const stampedConfig: ShiftRosterConfig = {
+      ...newConfig,
+      lastUpdatedAt: new Date().toISOString(),
+    };
     try {
+      // Immediate local state commit so user never loses their changes
+      setRosterConfig(stampedConfig);
+      setDraftConfig(JSON.parse(JSON.stringify(stampedConfig)));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ticketops_shift_roster', JSON.stringify(stampedConfig));
+      }
+
+      // Try syncing to backend API if available (e.g. Node/Docker/Vite)
       const res = await fetch('/api/shift/roster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConfig),
+        body: JSON.stringify(stampedConfig),
       });
 
       if (res.ok) {
-        setRosterConfig(newConfig);
-        setDraftConfig(JSON.parse(JSON.stringify(newConfig)));
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ticketops_shift_roster', JSON.stringify(newConfig));
-        }
         setFeedback({ type: 'success', message: successMsg });
       } else {
-        throw new Error('Server menolak penyimpanan jadwal');
+        setFeedback({ type: 'success', message: `${successMsg} (Tersimpan di browser)` });
       }
     } catch (err: unknown) {
-      console.warn('Saving to server failed, using local cache:', err);
-      setRosterConfig(newConfig);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('ticketops_shift_roster', JSON.stringify(newConfig));
-      }
-      setFeedback({ type: 'success', message: `${successMsg} (Tersimpan di cache lokal)` });
+      console.warn('Saving to server API skipped (static mode), cached locally:', err);
+      setFeedback({ type: 'success', message: `${successMsg} (Tersimpan di browser)` });
     } finally {
       setIsSaving(false);
       setTimeout(() => setFeedback(null), 4000);
@@ -662,7 +715,7 @@ export default function ShiftScheduleView() {
     };
   }, [rosterConfig, todayStr, getAssignmentForDate]);
 
-  if (isLoading || !rosterConfig) {
+  if (!rosterConfig) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 12px auto', color: 'var(--accent-primary)' }} />
