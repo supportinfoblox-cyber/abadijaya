@@ -162,7 +162,7 @@ export default function ReportingModuleView() {
       </div>
 
       {/* Header & Controls */}
-      <div className="glass-panel" style={{ padding: '22px', overflow: 'visible', position: 'relative', zIndex: 30 }}>
+      <div className="glass-panel reporting-header-card" style={{ overflow: 'visible', position: 'relative', zIndex: 30 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -178,102 +178,100 @@ export default function ReportingModuleView() {
             </p>
           </div>
 
-          <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="no-print reporting-header-controls">
             {/* Report Mode Tabs */}
-            <div style={{ display: 'flex', backgroundColor: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: '3px' }}>
+            <div className="reporting-tabs">
               {(['daily', 'weekly', 'monthly'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setReportType(type)}
+                  className="reporting-tab-btn"
                   style={{
-                    padding: '6px 14px',
-                    borderRadius: 'var(--radius-sm)',
                     background: reportType === type ? 'var(--accent-primary)' : 'transparent',
                     color: reportType === type ? '#ffffff' : 'var(--text-secondary)',
-                    border: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
                   }}
                 >
-                  {type} Report
+                  <span className="tab-full-label">{type} Report</span>
+                  <span className="tab-short-label">{type}</span>
                 </button>
               ))}
             </div>
 
-            {/* Export Excel Button */}
-            <button
-              onClick={handleExportExcel}
-              className="btn btn-sm"
-              style={{
-                backgroundColor: 'var(--color-success-bg)',
-                borderColor: 'var(--color-success-border)',
-                color: 'var(--color-success)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontWeight: 600,
-              }}
-              title="Export Laporan Telemetri Lengkap ke Excel (.xlsx)"
-            >
-              <FileSpreadsheet size={15} />
-              Export Excel
-            </button>
+            {/* Action Buttons Group */}
+            <div className="reporting-action-btns">
+              {/* Export Excel Button */}
+              <button
+                onClick={handleExportExcel}
+                className="btn btn-sm reporting-btn"
+                style={{
+                  backgroundColor: 'var(--color-success-bg)',
+                  borderColor: 'var(--color-success-border)',
+                  color: 'var(--color-success)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontWeight: 600,
+                }}
+                title="Export Laporan Telemetri Lengkap ke Excel (.xlsx)"
+              >
+                <FileSpreadsheet size={15} />
+                <span>Export Excel</span>
+              </button>
 
-            {/* Export CSV Button */}
-            <button onClick={handleExportCSV} className="btn btn-secondary btn-sm">
-              <Download size={15} />
-              Export CSV
-            </button>
+              {/* Export CSV Button */}
+              <button onClick={handleExportCSV} className="btn btn-secondary btn-sm reporting-btn">
+                <Download size={15} />
+                <span>Export CSV</span>
+              </button>
 
-            {/* Print Button with Dropdown Options */}
-            <div ref={printMenuRef} style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <button
-                  onClick={() => executePrint(getActiveTheme())}
-                  className="btn btn-outline btn-sm"
-                  style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
-                  title={`Cetak Laporan Sesuai Tema Aktif (${getActiveTheme() === 'light' ? 'Mode Cerah' : 'Mode Gelap'})`}
-                >
-                  <Printer size={15} />
-                  Print / PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowPrintMenu(prev => !prev);
-                  }}
-                  className="btn btn-outline btn-sm"
-                  style={{
-                    borderTopLeftRadius: 0,
-                    borderBottomLeftRadius: 0,
-                    borderLeft: 'none',
-                    padding: '0 8px',
-                  }}
-                  title="Pilihan Format & Tema Cetak"
-                >
-                  <ChevronDown size={14} />
-                </button>
-              </div>
+              {/* Print Button with Dropdown Options */}
+              <div ref={printMenuRef} style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <button
+                    onClick={() => executePrint(getActiveTheme())}
+                    className="btn btn-outline btn-sm reporting-btn"
+                    style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+                    title={`Cetak Laporan Sesuai Tema Aktif (${getActiveTheme() === 'light' ? 'Mode Cerah' : 'Mode Gelap'})`}
+                  >
+                    <Printer size={15} />
+                    <span>Print / PDF</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPrintMenu(prev => !prev);
+                    }}
+                    className="btn btn-outline btn-sm"
+                    style={{
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      borderLeft: 'none',
+                      padding: '0 8px',
+                    }}
+                    title="Pilihan Format & Tema Cetak"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
 
-              {showPrintMenu && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    right: 0,
-                    backgroundColor: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-medium)',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-lg)',
-                    padding: '8px',
-                    width: '280px',
-                    zIndex: 9999,
-                  }}
-                >
+                {showPrintMenu && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      backgroundColor: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-medium)',
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-lg)',
+                      padding: '8px',
+                      width: '280px',
+                      maxWidth: 'calc(100vw - 32px)',
+                      zIndex: 9999,
+                    }}
+                  >
                   <div style={{ padding: '6px 10px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Pilih Format Cetak
                   </div>
@@ -364,6 +362,7 @@ export default function ReportingModuleView() {
           </div>
         </div>
       </div>
+    </div>
 
 
       {/* Daily Report View */}

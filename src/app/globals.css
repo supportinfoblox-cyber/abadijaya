@@ -1795,6 +1795,101 @@ select.input option {
   }
 }
 
+/* === REPORTING MODULE CONTROLS (RESPONSIVE FOR ANDROID / MOBILE) === */
+.reporting-header-card {
+  padding: 22px;
+}
+
+.reporting-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reporting-tabs {
+  display: flex;
+  background-color: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.reporting-tab-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: all 0.2s ease;
+}
+
+.tab-short-label {
+  display: none;
+}
+.tab-full-label {
+  display: inline;
+}
+
+.reporting-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .reporting-header-card {
+    padding: 14px !important;
+  }
+
+  .reporting-header-controls {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .reporting-tabs {
+    width: 100% !important;
+  }
+
+  .reporting-tab-btn {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 7px 4px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .tab-full-label {
+    display: none !important;
+  }
+
+  .tab-short-label {
+    display: inline !important;
+  }
+
+  .reporting-action-btns {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .reporting-action-btns .reporting-btn,
+  .reporting-action-btns > button,
+  .reporting-action-btns > div {
+    flex: 1 1 auto !important;
+  }
+
+  .reporting-action-btns .btn {
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 7px 10px !important;
+  }
+}
+
 /* === PRINT UTILITY CLASSES (SCREEN) === */
 .print-only {
   display: none !important;
