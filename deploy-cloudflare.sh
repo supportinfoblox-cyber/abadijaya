@@ -13,7 +13,7 @@ echo "========================================="
 echo "Mendeploy ke Cloudflare Pages..."
 echo "========================================="
 # Deploy ke Cloudflare Pages dengan target project ticketops
-npx wrangler pages deploy dist --project-name ticketops --branch master --commit-dirty=true
+npx -y wrangler pages deploy dist --project-name ticketops --branch master --commit-dirty=true
 
 
 echo ""
