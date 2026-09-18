@@ -15,6 +15,9 @@ import {
   Clock,
   ShieldAlert,
   LayoutDashboard,
+  CalendarCheck,
+  ClipboardCheck,
+  HardDrive,
   Users,
   Cpu,
   FileSpreadsheet,
@@ -56,15 +59,17 @@ export default function Navbar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ticketops-theme') as 'dark' | 'light' | null;
+      return saved || (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+    }
+    return 'dark';
+  });
 
-  // Sync theme with document element and localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('ticketops-theme') as 'dark' | 'light' | null;
-    const initialTheme = saved || (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
-    setTheme(initialTheme);
-    document.documentElement.setAttribute('data-theme', initialTheme);
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -93,6 +98,10 @@ export default function Navbar() {
   const viewIcons: Record<string, React.ReactNode> = {
     dashboard: <LayoutDashboard size={16} />,
     tickets: <Ticket size={16} />,
+    'pm-schedule': <CalendarCheck size={16} />,
+    'shift-schedule': <CalendarCheck size={16} />,
+    'icare-attendance': <ClipboardCheck size={16} />,
+    'ms-devices': <HardDrive size={16} />,
     worklog: <Clock size={16} />,
     sla: <ShieldAlert size={16} />,
     reports: <BarChart3 size={16} />,
@@ -106,6 +115,10 @@ export default function Navbar() {
   const viewMeta: Record<string, { title: string; subtitle: string }> = {
     dashboard: { title: 'Operational Command Center', subtitle: 'Real-time monitoring • BSI Infoblox Ops' },
     tickets: { title: 'Ticket Management', subtitle: 'OTRS/iCare queue · OP0899 & OP0968' },
+    'pm-schedule': { title: 'Jadwal Preventive Maintenance', subtitle: 'Kalender & checklist inspeksi pemeliharaan rutin perangkat BSI Infoblox' },
+    'shift-schedule': { title: 'Jadwal Shift Kerja & Roster', subtitle: 'Manajemen rotasi shift mingguan, non-shift, & tukar shift real-time' },
+    'icare-attendance': { title: 'Absen iCare Daily Report', subtitle: 'Pelaporan harian engineer terhubung portal iCare LT Integra' },
+    'ms-devices': { title: 'Daftar Perangkat Manage Services', subtitle: 'Inventarisasi hardware Infoblox & monitoring masa aktif lisensi' },
     worklog: { title: 'Engineer Worklog', subtitle: 'Time tracking & work documentation' },
     sla: { title: 'SLA Monitoring', subtitle: 'Compliance matrix · SLA thresholds' },
     reports: { title: 'Analytics & Reporting', subtitle: 'Operational insights & data exports' },
@@ -421,7 +434,7 @@ export default function Navbar() {
         }}>
           <Shield size={13} />
           <span style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
-            {currentUser.role}
+            {currentUser?.role || 'engineer'}
           </span>
         </div>
 
@@ -647,15 +660,15 @@ export default function Navbar() {
             title="Profil & Pengaturan"
           >
             {/* Avatar */}
-            <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={30} showOnlineDot={true} />
+            <UserAvatar name={currentUser?.name || currentUser?.username || 'User'} avatarUrl={currentUser?.avatarUrl} size={30} showOnlineDot={true} />
             
             {/* Name - hide on mobile */}
             <div className="hide-mobile" style={{ lineHeight: 1.25 }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                {currentUser.name.split(' ').slice(0, 2).join(' ')}
+                {(currentUser?.name || currentUser?.username || 'User').split(' ').slice(0, 2).join(' ')}
               </div>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                {currentUser.role}
+                {currentUser?.role || 'engineer'}
               </div>
             </div>
             <ChevronDown className="hide-mobile" size={13} color="var(--text-muted)" style={{
@@ -686,13 +699,13 @@ export default function Navbar() {
                 borderBottom: '1px solid var(--border-subtle)',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                  <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={68} showOnlineDot={true} />
+                  <UserAvatar name={currentUser?.name || currentUser?.username || 'User'} avatarUrl={currentUser?.avatarUrl} size={68} showOnlineDot={true} />
                 </div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-                  {currentUser.name}
+                  {currentUser?.name || currentUser?.username || 'User'}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  {currentUser.email}
+                  {currentUser?.email || '-'}
                 </div>
                 <div style={{
                   marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px',
@@ -703,7 +716,7 @@ export default function Navbar() {
                   border: isDark ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(99,102,241,0.25)',
                 }}>
                   <Shield size={11} />
-                  {currentUser.role.toUpperCase()}
+                  {String(currentUser?.role || 'engineer').toUpperCase()}
                 </div>
               </div>
 

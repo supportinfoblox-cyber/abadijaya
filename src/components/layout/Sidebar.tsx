@@ -4,6 +4,9 @@ import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   LayoutDashboard,
   Ticket as TicketIcon,
+  CalendarCheck,
+  ClipboardCheck,
+  HardDrive,
   Clock,
   ShieldAlert,
   BarChart3,
@@ -15,6 +18,7 @@ import {
   RefreshCw,
   Zap,
   X,
+  CalendarDays,
 } from 'lucide-react';
 
 import UserAvatar from '@/components/common/UserAvatar';
@@ -42,6 +46,10 @@ export default function Sidebar() {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
     { id: 'tickets', label: 'Ticket Management', icon: TicketIcon, badge: openTicketsCount, badgeColor: 'accent' },
+    { id: 'shift-schedule', label: 'Jadwal Shift Kerja', icon: CalendarDays, badge: null },
+    { id: 'pm-schedule', label: 'Jadwal Preventive Maintenance', icon: CalendarCheck, badge: null },
+    { id: 'icare-attendance', label: 'Absen iCare', icon: ClipboardCheck, badge: null },
+    { id: 'ms-devices', label: 'Daftar Perangkat Manage Services', icon: HardDrive, badge: null },
     { id: 'worklog', label: 'Worklog', icon: Clock, badge: null },
     { id: 'sla', label: 'SLA Monitoring', icon: ShieldAlert, badge: breachedCount > 0 ? `${breachedCount} Breached` : null, badgeColor: 'danger' },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3, badge: null },
@@ -454,21 +462,21 @@ export default function Sidebar() {
           display: 'flex', alignItems: 'center', gap: '10px',
           justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
         }}>
-          <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={isSidebarCollapsed ? 32 : 34} />
+          <UserAvatar name={currentUser?.name || currentUser?.username || 'User'} avatarUrl={currentUser?.avatarUrl} size={isSidebarCollapsed ? 32 : 34} />
           {!isSidebarCollapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
-                {currentUser.name.split(' ').slice(0, 2).join(' ')}
+                {(currentUser?.name || currentUser?.username || 'User').split(' ').slice(0, 2).join(' ')}
               </div>
               <div style={{
                 fontSize: '0.65rem', color: 'var(--text-muted)',
                 display: 'flex', alignItems: 'center', gap: '4px',
               }}>
                 <Zap size={9} color="var(--accent-primary)" />
-                {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} · DNS/DHCP
+                {((currentUser?.role || 'engineer').charAt(0).toUpperCase() + (currentUser?.role || 'engineer').slice(1))} · DNS/DHCP
               </div>
             </div>
           )}

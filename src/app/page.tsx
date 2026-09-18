@@ -17,6 +17,10 @@ import AuditLogView from '@/components/admin/AuditLogView';
 import SettingsView from '@/components/settings/SettingsView';
 import LoginView from '@/components/auth/LoginView';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import PMScheduleView from '@/components/pm/PMScheduleView';
+import ShiftScheduleView from '@/components/shift/ShiftScheduleView';
+import IcareAttendanceView from '@/components/attendance/IcareAttendanceView';
+import ManageServicesDevicesView from '@/components/devices/ManageServicesDevicesView';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; onReset?: () => void },
@@ -63,7 +67,7 @@ class ErrorBoundary extends React.Component<
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
             {this.state.error?.message || 'Komponen mengalami kendala rendering.'}
           </p>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
@@ -72,6 +76,17 @@ class ErrorBoundary extends React.Component<
               className="btn btn-outline btn-sm"
             >
               Reset Filter & Coba Lagi
+            </button>
+            <button
+              onClick={() => {
+                if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
+                if (typeof localStorage !== 'undefined') localStorage.removeItem('ticketops_remember');
+                window.location.reload();
+              }}
+              className="btn btn-outline btn-sm"
+              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+            >
+              Reset Sesi & Login Ulang
             </button>
             <button
               onClick={() => window.location.reload()}
@@ -100,6 +115,14 @@ function AppContent() {
         return <DashboardView />;
       case 'tickets':
         return <TicketListView />;
+      case 'shift-schedule':
+        return <ShiftScheduleView />;
+      case 'pm-schedule':
+        return <PMScheduleView />;
+      case 'icare-attendance':
+        return <IcareAttendanceView />;
+      case 'ms-devices':
+        return <ManageServicesDevicesView />;
       case 'worklog':
         return <WorklogModuleView />;
       case 'sla':
@@ -155,7 +178,11 @@ function AppContent() {
 export default function Home() {
   return (
     <TicketOpsProvider>
-      <AppContent />
+      <ErrorBoundary onReset={() => {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
+      }}>
+        <AppContent />
+      </ErrorBoundary>
     </TicketOpsProvider>
   );
 }

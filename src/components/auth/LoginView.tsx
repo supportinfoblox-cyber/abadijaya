@@ -11,7 +11,6 @@ import {
   LogIn,
   AlertCircle,
   CheckCircle2,
-  Server,
 } from 'lucide-react';
 
 export default function LoginView() {
@@ -23,7 +22,7 @@ export default function LoginView() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
@@ -36,13 +35,16 @@ export default function LoginView() {
       }
     }
 
-    setTimeout(() => {
-      const res = login(username, password);
+    try {
+      const res = await login(username, password);
       if (!res.success) {
         setError(res.error || 'Username atau password tidak valid');
         setIsLoading(false);
       }
-    }, 400);
+    } catch (err: any) {
+      setError(err?.message || 'Terjadi kesalahan saat memproses login');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -105,7 +107,7 @@ export default function LoginView() {
             color: 'var(--text-secondary)',
             margin: '2px 0 0 0',
           }}>
-            Sistem Manajemen Operasional Tiket BSI Infoblox & iCare OTRS
+            Sistem tiket Manajemen Operasional
           </p>
 
           {/* Connected Badges */}
@@ -117,21 +119,6 @@ export default function LoginView() {
             marginTop: '12px',
             flexWrap: 'wrap',
           }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '3px 10px',
-              borderRadius: '20px',
-              backgroundColor: 'var(--accent-glow)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--accent-primary)',
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              fontFamily: 'var(--font-mono)',
-            }}>
-              <Server size={12} /> OP0899 & OP0968
-            </span>
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -364,26 +351,31 @@ export default function LoginView() {
               }}
             >
               <LogIn size={18} />
-              {isLoading ? 'Memverifikasi Kredensial...' : 'Masuk ke Dashboard'}
+              {isLoading ? 'Memvalidasi ke iCare OTRS...' : 'Masuk ke Dashboard'}
             </button>
           </form>
 
-          {/* Security Notice */}
+          {/* Security & Multi-Account Notice */}
           <div style={{
             marginTop: '22px',
             padding: '12px 14px',
-            borderRadius: '8px',
+            borderRadius: '10px',
             backgroundColor: 'var(--bg-elevated)',
             border: '1px solid var(--border-subtle)',
             fontSize: '0.74rem',
-            color: 'var(--text-muted)',
+            color: 'var(--text-secondary)',
             lineHeight: 1.5,
             display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            flexDirection: 'column',
+            gap: '6px',
           }}>
-            <Shield size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
-            <span>Akses sistem terbatas untuk personel terotorisasi. Aktivitas sesi dicatat untuk audit keamanan.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
+              <Shield size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+              <span>Dukungan Akun iCare OTRS & Akun Lokal</span>
+            </div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>
+              Anggota tim dapat masuk menggunakan username & kata sandi iCare masing-masing, atau menggunakan akun lokal TicketOps.
+            </div>
           </div>
         </div>
       </div>

@@ -50,7 +50,7 @@ import {
   deleteAllNotificationsFromDB,
 } from '@/services/supabaseService';
 
-const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
+const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
   admin: {
     dashboard: true,
     viewTicket: true,
@@ -81,7 +81,7 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     updateTicket: true,
     assignTicket: false,
     resolveTicket: true,
-    closeTicket: true, // Configurable in PRD: enabled for engineers with resolution validation
+    closeTicket: true, // Enabled for engineers with resolution validation
     reports: true,
     userManagement: false,
     integration: false,
@@ -99,6 +99,79 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     integration: false,
     auditLog: false,
   },
+  // Case aliases
+  Admin: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: true,
+    assignTicket: true,
+    resolveTicket: true,
+    closeTicket: true,
+    reports: true,
+    userManagement: true,
+    integration: true,
+    auditLog: true,
+  },
+  Supervisor: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: true,
+    assignTicket: true,
+    resolveTicket: true,
+    closeTicket: true,
+    reports: true,
+    userManagement: false,
+    integration: false,
+    auditLog: 'limited',
+  },
+  Engineer: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: true,
+    assignTicket: false,
+    resolveTicket: true,
+    closeTicket: true,
+    reports: true,
+    userManagement: false,
+    integration: false,
+    auditLog: false,
+  },
+  Viewer: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: false,
+    assignTicket: false,
+    resolveTicket: false,
+    closeTicket: false,
+    reports: true,
+    userManagement: false,
+    integration: false,
+    auditLog: false,
+  },
+  Operator: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: true,
+    assignTicket: false,
+    resolveTicket: true,
+    closeTicket: true,
+    reports: true,
+    userManagement: false,
+    integration: false,
+    auditLog: false,
+  },
+  operator: {
+    dashboard: true,
+    viewTicket: true,
+    updateTicket: true,
+    assignTicket: false,
+    resolveTicket: true,
+    closeTicket: true,
+    reports: true,
+    userManagement: false,
+    integration: false,
+    auditLog: false,
+  },
 };
 
 interface TicketOpsContextType {
@@ -108,7 +181,7 @@ interface TicketOpsContextType {
   
   // Authentication & Session
   isAuthenticated: boolean;
-  login: (username: string, password: string) => { success: boolean; error?: string };
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   
   tickets: Ticket[];
@@ -254,7 +327,16 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         try {
           const parsedAuth = JSON.parse(sessionAuth);
           if (parsedAuth && parsedAuth.id) {
-            setCurrentUser(parsedAuth);
+            const rawRole = String(parsedAuth.role || 'engineer').toLowerCase();
+            const normalizedRole: UserRole = ['admin', 'supervisor', 'engineer', 'viewer'].includes(rawRole)
+              ? (rawRole as UserRole)
+              : 'engineer';
+            const normalizedUser: User = {
+              ...parsedAuth,
+              name: parsedAuth.name || parsedAuth.username || 'User',
+              role: normalizedRole,
+            };
+            setCurrentUser(normalizedUser);
             setIsAuthenticated(true);
           }
         } catch {
@@ -580,10 +662,13 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Permission Checker
+  // Permission Checker (100% Defensive & Case-Insensitive)
   const can = (permission: keyof RolePermissions): boolean => {
-    const perm = ROLE_PERMISSIONS[currentUser.role][permission];
-    return Boolean(perm);
+    if (!currentUser) return false;
+    const rawRole = String(currentUser.role || 'engineer').toLowerCase().trim();
+    const roleKey = rawRole in ROLE_PERMISSIONS ? rawRole : 'engineer';
+    const perms = ROLE_PERMISSIONS[roleKey] || ROLE_PERMISSIONS['engineer'];
+    return Boolean(perms && perms[permission]);
   };
 
   // Helper to add audit log
@@ -1379,9 +1464,91 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Auth: Login & Logout
-  const login = (username: string, pass: string): { success: boolean; error?: string } => {
+  // Auth: Login & Logout (Live OTRS Auth with Local Fallback & Auto-Provisioning)
+  const login = async (username: string, pass: string): Promise<{ success: boolean; error?: string }> => {
     const cleanUser = username.trim().toLowerCase();
+    const cleanPass = pass.trim();
+
+    // 1. Coba Live OTRS Authentication via /api/otrs/login
+    try {
+      const liveRes = await fetch('/api/otrs/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUser, password: cleanPass }),
+      });
+
+      if (liveRes.ok) {
+        const liveData = await liveRes.json();
+        if (liveData.success && liveData.user) {
+          const otrsUser = liveData.user;
+          const nowStr = new Date().toISOString();
+
+          // Simpan session ID OTRS di sessionStorage untuk mempermudah menu Absen iCare
+          if (typeof sessionStorage !== 'undefined' && liveData.sessionId) {
+            sessionStorage.setItem('ticketops_otrs_session', liveData.sessionId);
+          }
+
+          // Cek apakah user sudah terdaftar di state users lokal
+          const existingUser = users.find(
+            u => u.username?.toLowerCase() === cleanUser || u.email?.toLowerCase() === otrsUser.email?.toLowerCase()
+          );
+
+          let activeUserToSet: User;
+
+          if (existingUser) {
+            if (!existingUser.isActive) {
+              return { success: false, error: 'Akun ini sedang dinonaktifkan oleh Administrator.' };
+            }
+            activeUserToSet = {
+              ...existingUser,
+              name: otrsUser.name || existingUser.name,
+              lastLoginAt: nowStr,
+            };
+            setUsers(prev => prev.map(u => u.id === existingUser.id ? activeUserToSet : u));
+          } else {
+            // Auto-provisioning akun baru yang belum ada di TicketOps
+            activeUserToSet = {
+              id: otrsUser.id || `usr-otrs-${cleanUser}`,
+              name: otrsUser.name || cleanUser,
+              username: cleanUser,
+              email: otrsUser.email || `${cleanUser}@lt-integra.com`,
+              role: (cleanUser === 'ismailak' ? 'admin' : 'engineer') as UserRole,
+              department: 'Network Operation Center',
+              isActive: true,
+              avatarUrl: '',
+              lastLoginAt: nowStr,
+            };
+            setUsers(prev => [activeUserToSet, ...prev]);
+          }
+
+          setCurrentUser(activeUserToSet);
+          setIsAuthenticated(true);
+
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('ticketops_auth_session', JSON.stringify(activeUserToSet));
+          }
+          if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('ticketops_auth_session');
+          }
+
+          // Catat audit log login
+          addAuditLogEntry({
+            action: 'LOGIN',
+            module: 'Auth',
+            entityId: cleanUser,
+            newValue: `Live OTRS Login: ${activeUserToSet.name} (${activeUserToSet.role})`,
+          });
+
+          return { success: true };
+        } else if (liveData.limitReached) {
+          return { success: false, error: liveData.error };
+        }
+      }
+    } catch (err: any) {
+      console.warn('Live OTRS Auth endpoint unreachable, falling back to local auth:', err?.message);
+    }
+
+    // 2. Fallback: Local Database Authentication (Offline or Local Admin)
     const found = users.find(
       u => (u.username?.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser) &&
            (u.password === pass || (!u.password && pass === 'ismailak1234'))
@@ -1400,7 +1567,7 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         }
         return { success: true };
       }
-      return { success: false, error: 'Username/Email atau Password salah.' };
+      return { success: false, error: 'Username atau password iCare / TicketOps salah.' };
     }
 
     if (!found.isActive) {
