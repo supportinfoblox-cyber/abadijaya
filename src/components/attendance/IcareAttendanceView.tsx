@@ -624,17 +624,18 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
               flexWrap: 'wrap',
               gap: '12px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: 0 }}>
                 <div style={{
-                  width: '34px', height: '34px', borderRadius: '50%',
+                  width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px',
+                  borderRadius: '50%', flexShrink: 0, aspectRatio: '1/1',
                   backgroundColor: opnumber && opnumber.length === 4 ? '#3b82f6' : '#f59e0b',
                   color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, fontSize: '0.82rem'
+                  fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', lineHeight: 1
                 }}>
                   {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'OP'}
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <span>Pelapor: <strong>{currentUser?.name || currentUser?.username || 'Engineer'}</strong></span>
                     <span style={{ fontSize: '0.74rem', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
                       @{currentUser?.username || 'user'}
@@ -662,15 +663,20 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
             {/* Quick Template Picker Bar */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', borderRadius: '12px',
+              padding: '12px 14px', borderRadius: '12px',
               backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)',
-              marginBottom: '20px', flexWrap: 'wrap', gap: '10px'
+              marginBottom: '20px', flexWrap: 'wrap', gap: '12px', width: '100%', boxSizing: 'border-box'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={16} style={{ color: 'var(--accent-primary)' }} />
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Pilih Template Cepat:
-                </span>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                flex: '1 1 240px', minWidth: 0, flexWrap: 'wrap'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <Sparkles size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                    Pilih Template Cepat:
+                  </span>
+                </div>
                 <select
                   value={selectedTemplateId}
                   onChange={e => {
@@ -678,9 +684,11 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                     if (tpl) applyTemplate(tpl);
                   }}
                   style={{
-                    padding: '6px 12px', borderRadius: '8px',
+                    padding: '6px 10px', borderRadius: '8px',
                     border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)', fontSize: '0.8rem', maxWidth: '280px'
+                    color: 'var(--text-primary)', fontSize: '0.8rem',
+                    flex: '1 1 180px', minWidth: 0, maxWidth: '100%', width: 'auto',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="">-- Pilih Template Tersimpan --</option>
@@ -696,7 +704,10 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                 type="button"
                 onClick={() => setIsSaveTemplateModalOpen(true)}
                 className="btn btn-outline btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '6px', fontSize: '0.78rem', flexShrink: 0, whiteSpace: 'nowrap'
+                }}
                 title="Simpan isian form ini sebagai template baru"
               >
                 <Save size={13} /> Simpan Jadi Template
