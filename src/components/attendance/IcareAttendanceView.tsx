@@ -510,11 +510,11 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
       {/* Top Banner */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '16px',
-        padding: '24px',
+        gap: '12px',
+        padding: '18px 20px',
         borderRadius: '16px',
         background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)',
         border: '1px solid var(--border-subtle)',
@@ -538,42 +538,42 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
         </div>
 
         {/* Tab switcher */}
-        <div style={{ display: 'flex', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '2px' }}>
           <button
             onClick={() => setActiveTab('form')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none',
-              fontSize: '0.82rem', fontWeight: activeTab === 'form' ? 600 : 400,
+              padding: '7px 12px', borderRadius: '8px', border: 'none',
+              fontSize: '0.78rem', fontWeight: activeTab === 'form' ? 600 : 400,
               backgroundColor: activeTab === 'form' ? 'var(--accent-glow)' : 'transparent',
               color: activeTab === 'form' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap'
             }}
           >
-            <FileText size={14} /> Formulir Absen
+            <FileText size={13} /> Formulir
           </button>
           <button
             onClick={() => setActiveTab('templates')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none',
-              fontSize: '0.82rem', fontWeight: activeTab === 'templates' ? 600 : 400,
+              padding: '7px 12px', borderRadius: '8px', border: 'none',
+              fontSize: '0.78rem', fontWeight: activeTab === 'templates' ? 600 : 400,
               backgroundColor: activeTab === 'templates' ? 'var(--accent-glow)' : 'transparent',
               color: activeTab === 'templates' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap'
             }}
           >
-            <Bookmark size={14} /> Kelola Template ({templates.length})
+            <Bookmark size={13} /> Template ({templates.length})
           </button>
           <button
             onClick={() => setActiveTab('history')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none',
-              fontSize: '0.82rem', fontWeight: activeTab === 'history' ? 600 : 400,
+              padding: '7px 12px', borderRadius: '8px', border: 'none',
+              fontSize: '0.78rem', fontWeight: activeTab === 'history' ? 600 : 400,
               backgroundColor: activeTab === 'history' ? 'var(--accent-glow)' : 'transparent',
               color: activeTab === 'history' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap'
             }}
           >
-            <History size={14} /> Riwayat Pengiriman ({history.length})
+            <History size={13} /> Riwayat ({history.length})
           </button>
         </div>
       </div>
@@ -603,7 +603,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
 
       {/* Main View Mode */}
       {activeTab === 'form' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '20px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '20px', alignItems: 'start' }}>
           {/* Main Form Column */}
           <div style={{
             backgroundColor: 'var(--bg-secondary)',
@@ -706,7 +706,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
             {/* FORM */}
             <form onSubmit={handleSubmitAttendance} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* Row 1: OP & Site Name */}
-              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(min(100%, 140px), 140px) 1fr', gap: '14px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -756,7 +756,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
               </div>
 
               {/* Row 2: Project Manager & Dates */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '14px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
                     Project Manager*
@@ -863,7 +863,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
                   Job Assignment* (Pilih aktivitas yang dikerjakan)
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 190px), 1fr))', gap: '6px' }}>
                   {JOB_ASSIGNMENTS.map(ja => {
                     const selected = asgjob.includes(ja.value);
                     return (
@@ -1153,7 +1153,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '16px' }}>
             {templates.map(item => (
               <div
                 key={item.id}
