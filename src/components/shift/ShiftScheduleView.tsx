@@ -81,7 +81,7 @@ export default function ShiftScheduleView() {
 
   // View Mode: Calendar vs Matrix (Format Excel) vs Table
   const [viewMode, setViewMode] = useState<'calendar' | 'matrix' | 'table'>('calendar');
-  const [matrixPreset, setMatrixPreset] = useState<'feb_apr_2026' | 'current_quarter' | 'single_month'>('feb_apr_2026');
+  const [matrixPreset, setMatrixPreset] = useState<'current_quarter' | 'single_month'>('current_quarter');
 
   // Modal States
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -544,13 +544,6 @@ export default function ShiftScheduleView() {
 
   // Memoize active matrix months to display
   const matrixMonths = useMemo(() => {
-    if (matrixPreset === 'feb_apr_2026') {
-      return [
-        { year: 2026, month: 1 }, // Februari
-        { year: 2026, month: 2 }, // Maret
-        { year: 2026, month: 3 }, // April
-      ];
-    }
     if (matrixPreset === 'current_quarter') {
       return [
         { year: currentYear, month: currentMonth },
@@ -561,8 +554,8 @@ export default function ShiftScheduleView() {
     return [{ year: currentYear, month: currentMonth }];
   }, [matrixPreset, currentYear, currentMonth]);
 
-  // Export 1: Sesuai Persis Gambar (Februari, Maret, April 2026)
-  const handleExportFebApr2026 = () => {
+  // Export 1: Matrix Template (Acuan Format 3 Bulan)
+  const handleExportMatrixTemplate = () => {
     if (!rosterConfig) return;
     exportRosterToExcelStyled(
       rosterConfig,
@@ -571,7 +564,7 @@ export default function ShiftScheduleView() {
         { year: 2026, month: 2 },
         { year: 2026, month: 3 },
       ],
-      'Jadwal_Shift_Februari_Maret_April_2026.xlsx'
+      'Matrix_Template_Roster_Shift_2026.xlsx'
     );
     setIsExportModalOpen(false);
   };
@@ -1016,26 +1009,22 @@ export default function ShiftScheduleView() {
           {/* Preset Controls Bar */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 18px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px',
+            padding: '14px 16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px',
             border: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '12px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 Rentang Bulan Matrix:
               </span>
-              <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', borderRadius: '8px', padding: '3px', border: '1px solid var(--border-subtle)' }}>
-                <button
-                  onClick={() => setMatrixPreset('feb_apr_2026')}
-                  style={{
-                    padding: '5px 12px', borderRadius: '6px', border: 'none', fontSize: '0.78rem',
-                    fontWeight: matrixPreset === 'feb_apr_2026' ? 600 : 400,
-                    backgroundColor: matrixPreset === 'feb_apr_2026' ? 'var(--accent-glow)' : 'transparent',
-                    color: matrixPreset === 'feb_apr_2026' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Feb - Mar - Apr 2026 (Sesuai Gambar)
-                </button>
+              <div style={{
+                display: 'inline-flex',
+                backgroundColor: 'var(--bg-primary)',
+                borderRadius: '8px',
+                padding: '3px',
+                border: '1px solid var(--border-subtle)',
+                flexWrap: 'wrap',
+                gap: '2px'
+              }}>
                 <button
                   onClick={() => setMatrixPreset('current_quarter')}
                   style={{
@@ -1043,7 +1032,8 @@ export default function ShiftScheduleView() {
                     fontWeight: matrixPreset === 'current_quarter' ? 600 : 400,
                     backgroundColor: matrixPreset === 'current_quarter' ? 'var(--accent-glow)' : 'transparent',
                     color: matrixPreset === 'current_quarter' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   3 Bulan Berjalan
@@ -1055,7 +1045,8 @@ export default function ShiftScheduleView() {
                     fontWeight: matrixPreset === 'single_month' ? 600 : 400,
                     backgroundColor: matrixPreset === 'single_month' ? 'var(--accent-glow)' : 'transparent',
                     color: matrixPreset === 'single_month' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   1 Bulan Saja ({INDONESIAN_MONTHS[currentMonth]} {currentYear})
@@ -1063,32 +1054,38 @@ export default function ShiftScheduleView() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap'
+            }}>
               <button
                 type="button"
                 onClick={handleOpenEditNames}
                 className="btn btn-outline btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
                 title="Ubah Nama Tim / Regu pada tabel jadwal"
               >
                 <Pencil size={13} /> Ubah Nama Tim
               </button>
               <button
-                onClick={handleExportFebApr2026}
+                onClick={handleExportMatrixTemplate}
                 className="btn btn-sm"
                 style={{
                   backgroundColor: '#059669', color: '#fff', border: 'none',
                   display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem',
-                  padding: '6px 14px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer'
+                  padding: '6px 14px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer',
+                  whiteSpace: 'nowrap'
                 }}
-                title="Langsung unduh file Excel persis seperti gambar contoh (Feb - Apr 2026)"
+                title="Unduh file Excel Matrix Template"
               >
-                <Download size={14} /> Download Excel Sesuai Gambar
+                <Download size={14} /> Download Matrix Template
               </button>
               <button
                 onClick={() => setIsExportModalOpen(true)}
                 className="btn btn-outline btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
                 title="Buka pilihan opsi download Excel lainnya"
               >
                 <FileSpreadsheet size={14} /> Pilihan Export...
@@ -1683,11 +1680,12 @@ export default function ShiftScheduleView() {
           <div style={{
             backgroundColor: 'var(--bg-secondary)', borderRadius: '18px',
             border: '1px solid var(--border-subtle)', width: '100%', maxWidth: '580px',
-            padding: '26px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', position: 'relative'
+            padding: 'clamp(16px, 4vw, 24px)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', position: 'relative',
+            boxSizing: 'border-box'
           }}>
             <button
               onClick={() => setIsExportModalOpen(false)}
-              style={{ position: 'absolute', top: '18px', right: '18px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
             >
               <X size={20} />
             </button>
@@ -1696,50 +1694,51 @@ export default function ShiftScheduleView() {
               <div style={{
                 width: '42px', height: '42px', borderRadius: '12px',
                 backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
               }}>
                 <FileSpreadsheet size={22} />
               </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              <div style={{ minWidth: 0 }}>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Unduh Jadwal Roster ke Excel
                 </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   Pilih format ekspor spreadsheet (.xlsx) yang diinginkan
                 </p>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-              {/* Option 1: Exact image template (Feb, Mar, Apr 2026) */}
+              {/* Option 1: Matrix Template Acuan */}
               <div style={{
-                padding: '16px', borderRadius: '12px',
+                padding: '14px 16px', borderRadius: '12px',
                 backgroundColor: 'var(--bg-primary)',
                 border: '2px solid #10b981',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                flexWrap: 'wrap'
               }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      Format Sesuai Gambar (Feb - Mar - Apr 2026)
+                <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                      Matrix Template (Format Acuan)
                     </span>
                     <span style={{
                       fontSize: '0.68rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
-                      backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981'
+                      backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981', whiteSpace: 'nowrap'
                     }}>
-                      Rekomendasi
+                      Template Acuan
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    Persis seperti template contoh: Header kuning, tanggal merah libur, blok shift S1/S2 putih, dan tabel Remark di bawah.
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
+                    Template acuan matrix jadwal 3 bulan (Feb - Apr 2026): Header kuning, tanggal libur, blok shift S1/S2 putih, dan tabel Remark.
                   </div>
                 </div>
                 <button
-                  onClick={handleExportFebApr2026}
+                  onClick={handleExportMatrixTemplate}
                   className="btn btn-primary btn-sm"
                   style={{
                     backgroundColor: '#10b981', borderColor: '#059669', color: '#fff',
-                    whiteSpace: 'nowrap', padding: '8px 14px', fontWeight: 600
+                    whiteSpace: 'nowrap', padding: '7px 14px', fontWeight: 600, flexShrink: 0
                   }}
                 >
                   Unduh .xlsx
@@ -1751,20 +1750,21 @@ export default function ShiftScheduleView() {
                 padding: '14px 16px', borderRadius: '12px',
                 backgroundColor: 'var(--bg-primary)',
                 border: '1px solid var(--border-subtle)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                flexWrap: 'wrap'
               }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.86rem', color: 'var(--text-primary)' }}>
                     Format Roster 3 Bulan (Kuartal Berjalan)
                   </div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: 1.4 }}>
                     Mulai dari {INDONESIAN_MONTHS[currentMonth]} {currentYear} + 2 bulan berikutnya.
                   </div>
                 </div>
                 <button
                   onClick={handleExportSelectedQuarter}
                   className="btn btn-outline btn-sm"
-                  style={{ whiteSpace: 'nowrap', padding: '6px 12px' }}
+                  style={{ whiteSpace: 'nowrap', padding: '6px 12px', flexShrink: 0 }}
                 >
                   Unduh .xlsx
                 </button>
@@ -1775,20 +1775,21 @@ export default function ShiftScheduleView() {
                 padding: '14px 16px', borderRadius: '12px',
                 backgroundColor: 'var(--bg-primary)',
                 border: '1px solid var(--border-subtle)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                flexWrap: 'wrap'
               }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.86rem', color: 'var(--text-primary)' }}>
                     Format Roster 1 Bulan Saja ({INDONESIAN_MONTHS[currentMonth]} {currentYear})
                   </div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: 1.4 }}>
                     Satu blok bulan terpilih lengkap dengan warna dan tabel Remark.
                   </div>
                 </div>
                 <button
                   onClick={handleExportCurrentMonthStyled}
                   className="btn btn-outline btn-sm"
-                  style={{ whiteSpace: 'nowrap', padding: '6px 12px' }}
+                  style={{ whiteSpace: 'nowrap', padding: '6px 12px', flexShrink: 0 }}
                 >
                   Unduh .xlsx
                 </button>
@@ -1799,20 +1800,21 @@ export default function ShiftScheduleView() {
                 padding: '14px 16px', borderRadius: '12px',
                 backgroundColor: 'var(--bg-primary)',
                 border: '1px solid var(--border-subtle)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                flexWrap: 'wrap'
               }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.86rem', color: 'var(--text-primary)' }}>
                     Format Tabel Baris per Hari (Raw Data)
                   </div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: 1.4 }}>
                     Data mentah per baris untuk rekap atau olah pivot table di Excel.
                   </div>
                 </div>
                 <button
                   onClick={exportToExcelTable}
                   className="btn btn-outline btn-sm"
-                  style={{ whiteSpace: 'nowrap', padding: '6px 12px' }}
+                  style={{ whiteSpace: 'nowrap', padding: '6px 12px', flexShrink: 0 }}
                 >
                   Unduh .xlsx
                 </button>

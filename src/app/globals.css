@@ -1890,6 +1890,64 @@ select.input option {
   }
 }
 
+/* === NOTIFICATIONS & NAVBAR RESPONSIVE ENGINE === */
+.notif-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+}
+
+.navbar-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 1000;
+  animation: slideDown 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* Light Theme Navigation Bars Guarantee */
+[data-theme="light"] .main-navbar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .mobile-bottom-nav {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-top: 1px solid #e2e8f0 !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .navbar-notif-dropdown {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Mobile viewport notification placement */
+@media (max-width: 640px) {
+  .navbar-notif-dropdown {
+    position: fixed !important;
+    top: calc(max(env(safe-area-inset-top, 0px), 36px) + 56px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    z-index: 1000 !important;
+  }
+}
+
 /* === PRINT UTILITY CLASSES (SCREEN) === */
 .print-only {
   display: none !important;

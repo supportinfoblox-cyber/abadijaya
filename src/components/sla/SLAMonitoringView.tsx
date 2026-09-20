@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { SLAPolicyConfig } from '@/types';
 import {
-  ShieldAlert,
   ShieldCheck,
   AlertTriangle,
   AlertOctagon,
@@ -12,6 +11,8 @@ import {
   Settings,
   CheckCircle,
   Save,
+  Activity,
+  Check,
 } from 'lucide-react';
 
 export default function SLAMonitoringView() {
@@ -115,52 +116,40 @@ export default function SLAMonitoringView() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* SLA Policy Header & Config Toggle */}
-      <div className="glass-panel" style={{ padding: '22px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Executive Header & Policy Control */}
+      <div className="glass-panel" style={{ padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
-                <ShieldAlert size={20} />
+                <ShieldCheck size={20} />
               </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                SLA Compliance Matrix & Policy Control (PRD Section 15)
-              </h3>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  Monitoring Kepatuhan & Batas Waktu SLA
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
+                  Pemantauan real-time ambang batas penanganan insiden berdasarkan prioritas tiket aktif
+                </p>
+              </div>
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Live threshold monitoring: SAFE &bull; WARNING (&lt;35% window) &bull; CRITICAL (&lt;15% window) &bull; BREACHED (Overdue)
-            </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-elevated)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Active Compliance Rate:</span>
-              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: compliantPct >= 95 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                {compliantPct}%
-              </span>
-            </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {can('dashboard') && (
               <button
                 onClick={() => setIsEditingPolicy(!isEditingPolicy)}
                 className="btn btn-secondary btn-sm"
               >
                 <Settings size={14} />
-                <span>{isEditingPolicy ? 'Close Config' : 'Configure SLA Policy'}</span>
+                <span>{isEditingPolicy ? 'Tutup Konfigurasi' : 'Konfigurasi Target SLA'}</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* SLA Policy Editor Card */}
+        {/* SLA Policy Editor */}
         {isEditingPolicy && (
           <form onSubmit={handleSavePolicy} style={{
             marginTop: '20px',
@@ -168,11 +157,16 @@ export default function SLAMonitoringView() {
             borderTop: '1px solid var(--border-subtle)',
           }}>
             <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
-              Edit Global SLA Target Hours by Priority (Default: 4h, 8h, 24h, 72h)
+              Ubah Target Waktu Penyelesaian SLA (Jam) per Prioritas
             </h4>
-            <div className="grid-cols-4" style={{ marginBottom: '14px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
               <div>
-                <label className="form-label" style={{ color: 'var(--color-danger)' }}>CRITICAL Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-danger)' }}>CRITICAL (Jam)</label>
                 <input
                   type="number"
                   min="1"
@@ -184,7 +178,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: 'var(--color-orange)' }}>HIGH Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-orange)' }}>HIGH (Jam)</label>
                 <input
                   type="number"
                   min="1"
@@ -196,7 +190,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: 'var(--color-warning)' }}>MEDIUM Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-warning)' }}>MEDIUM (Jam)</label>
                 <input
                   type="number"
                   min="1"
@@ -208,7 +202,7 @@ export default function SLAMonitoringView() {
                 />
               </div>
               <div>
-                <label className="form-label" style={{ color: 'var(--color-info)' }}>LOW Target (Hours)</label>
+                <label className="form-label" style={{ color: 'var(--color-info)' }}>LOW (Jam)</label>
                 <input
                   type="number"
                   min="1"
@@ -222,11 +216,11 @@ export default function SLAMonitoringView() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button type="button" onClick={() => setIsEditingPolicy(false)} className="btn btn-secondary btn-sm">
-                Cancel
+                Batal
               </button>
               <button type="submit" className="btn btn-primary btn-sm">
                 <Save size={14} />
-                Save & Recalculate Active Tickets
+                Simpan & Hitung Ulang SLA
               </button>
             </div>
           </form>
@@ -245,24 +239,127 @@ export default function SLAMonitoringView() {
             gap: '6px',
           }}>
             <CheckCircle size={14} />
-            SLA Policy updated successfully!
+            Target SLA berhasil diperbarui!
           </div>
         )}
       </div>
 
-      {/* 4-Column Realtime SLA Threat Board */}
+      {/* KPI Overview Summary Bar */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '14px',
+      }}>
+        <div className="glass-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            backgroundColor: compliantPct >= 90 ? 'var(--color-success-bg)' : 'var(--color-warning-bg)',
+            color: compliantPct >= 90 ? 'var(--color-success)' : 'var(--color-warning)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Activity size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Tingkat Kepatuhan SLA
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: compliantPct >= 90 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+              {compliantPct}%
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            color: 'var(--color-info)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Clock size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Total Tiket Terbuka
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              {totalActive}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--color-success-bg)',
+            color: 'var(--color-success)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Check size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Aman (Sesuai Target)
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-success)' }}>
+              {safeTickets.length}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            backgroundColor: (breachedTickets.length + criticalTickets.length) > 0 ? 'var(--color-danger-bg)' : 'var(--bg-elevated)',
+            color: (breachedTickets.length + criticalTickets.length) > 0 ? 'var(--color-danger)' : 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <AlertOctagon size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Kritis / Melewati Batas
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: (breachedTickets.length + criticalTickets.length) > 0 ? 'var(--color-danger)' : 'var(--text-primary)' }}>
+              {breachedTickets.length + criticalTickets.length}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Realtime Responsive SLA Threat Board */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
         gap: '16px',
       }}>
-        {/* Column 1: BREACHED */}
+        {/* Kolom 1: BREACHED */}
         <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-danger)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertOctagon size={16} color="var(--color-danger)" />
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-danger)' }}>
-                BREACHED
+                LEWAT SLA (BREACHED)
               </span>
             </div>
             <span style={{
@@ -280,7 +377,7 @@ export default function SLAMonitoringView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {breachedTickets.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                No breached tickets! Excellent SLA discipline.
+                Tidak ada tiket yang melewati batas SLA.
               </div>
             ) : (
               breachedTickets.map(t => renderTicketCard(t, 'var(--color-danger)'))
@@ -288,13 +385,13 @@ export default function SLAMonitoringView() {
           </div>
         </div>
 
-        {/* Column 2: CRITICAL */}
+        {/* Kolom 2: CRITICAL */}
         <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-orange)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertTriangle size={16} color="var(--color-orange)" />
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-orange)' }}>
-                CRITICAL (&lt;15% Time)
+                KRITIS (&lt;15% Waktu)
               </span>
             </div>
             <span style={{
@@ -312,7 +409,7 @@ export default function SLAMonitoringView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {criticalTickets.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                No tickets in critical countdown.
+                Tidak ada tiket dalam rentang kritis.
               </div>
             ) : (
               criticalTickets.map(t => renderTicketCard(t, 'var(--color-orange)'))
@@ -320,13 +417,13 @@ export default function SLAMonitoringView() {
           </div>
         </div>
 
-        {/* Column 3: WARNING */}
+        {/* Kolom 3: WARNING */}
         <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-warning)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Clock size={16} color="var(--color-warning)" />
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-warning)' }}>
-                WARNING (&lt;35% Time)
+                PERINGATAN (&lt;35% Waktu)
               </span>
             </div>
             <span style={{
@@ -344,7 +441,7 @@ export default function SLAMonitoringView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {warningTickets.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                No tickets in warning status.
+                Tidak ada tiket dalam rentang peringatan.
               </div>
             ) : (
               warningTickets.map(t => renderTicketCard(t, 'var(--color-warning)'))
@@ -352,13 +449,13 @@ export default function SLAMonitoringView() {
           </div>
         </div>
 
-        {/* Column 4: SAFE */}
+        {/* Kolom 4: SAFE */}
         <div className="glass-panel" style={{ padding: '16px', borderTop: '4px solid var(--color-success)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <ShieldCheck size={16} color="var(--color-success)" />
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-success)' }}>
-                SAFE (On Track)
+                AMAN (ON TRACK)
               </span>
             </div>
             <span style={{
@@ -376,7 +473,7 @@ export default function SLAMonitoringView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {safeTickets.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                No active tickets in safe window.
+                Tidak ada tiket dalam antrean aman.
               </div>
             ) : (
               safeTickets.map(t => renderTicketCard(t, 'var(--color-success)'))

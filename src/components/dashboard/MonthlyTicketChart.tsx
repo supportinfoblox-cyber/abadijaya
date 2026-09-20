@@ -156,6 +156,7 @@ export default function MonthlyTicketChart() {
       key: string;
       label: string;
       subLabel?: string;
+      fullLabel?: string;
       total: number;
       dns: number;
       reserve: number;
@@ -169,6 +170,7 @@ export default function MonthlyTicketChart() {
       let groupKey = '';
       let displayLabel = '';
       let subText = '';
+      let fullText = '';
 
       if (isDaily) {
         // Daily grouping
@@ -178,13 +180,15 @@ export default function MonthlyTicketChart() {
           const [, mo, dy] = dateStr.split('-');
           displayLabel = `Tgl ${parseInt(dy, 10)}`;
           subText = `${shortMonthNames[mo] || mo}`;
+          fullText = `${dateStr} (${parseInt(dy, 10)} ${monthNames[mo] || mo})`;
         } else {
           groupKey = `${selectedMonth}-01`;
           displayLabel = 'Tgl 01';
           subText = selectedMonth;
+          fullText = `${selectedMonth}-01`;
         }
       } else {
-        // Monthly grouping
+        // Monthly grouping - abbreviate month name (Jan, Feb, Mar...) so labels never overlap
         let monthKey = '2026-09';
         if (t.createdAt && t.createdAt.length >= 7) {
           monthKey = t.createdAt.substring(0, 7);
@@ -193,8 +197,9 @@ export default function MonthlyTicketChart() {
         }
         groupKey = monthKey;
         const [year, month] = monthKey.split('-');
-        displayLabel = monthNames[month] || month;
+        displayLabel = shortMonthNames[month] || month;
         subText = year;
+        fullText = `${monthNames[month] || month} ${year}`;
       }
 
       if (!map[groupKey]) {
@@ -202,6 +207,7 @@ export default function MonthlyTicketChart() {
           key: groupKey,
           label: displayLabel,
           subLabel: subText,
+          fullLabel: fullText,
           total: 0,
           dns: 0,
           reserve: 0,
@@ -558,7 +564,7 @@ export default function MonthlyTicketChart() {
                 </span>
               </div>
               <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px', letterSpacing: '-0.01em' }}>
-                {peakItem.label} {peakItem.subLabel || ''}
+                {peakItem.fullLabel || `${peakItem.label} ${peakItem.subLabel || ''}`}
               </div>
             </div>
           </div>
@@ -713,7 +719,7 @@ export default function MonthlyTicketChart() {
                       }}>
                         <div style={{ fontWeight: 800, marginBottom: '6px', color: isPeak ? 'var(--color-warning)' : 'var(--color-purple)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {isPeak && <Award size={13} />}
-                          <span>{m.label} {m.subLabel || ''} &bull; {m.total} Tiket Total</span>
+                          <span>{m.fullLabel || `${m.label} ${m.subLabel || ''}`} &bull; {m.total} Tiket Total</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -801,18 +807,21 @@ export default function MonthlyTicketChart() {
                     </div>
 
                     {/* Month Label below */}
-                    <div style={{
-                      marginTop: '12px',
-                      fontSize: '0.74rem',
-                      fontWeight: isSelected ? 800 : isPeak ? 800 : 500,
-                      color: isSelected ? 'var(--accent-primary)' : isPeak ? '#fbbf24' : 'var(--text-secondary)',
-                      textAlign: 'center',
-                      lineHeight: 1.25,
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {m.label}
+                    <div
+                      style={{
+                        marginTop: '10px',
+                        fontSize: '0.74rem',
+                        fontWeight: isSelected ? 800 : isPeak ? 800 : 600,
+                        color: isSelected ? 'var(--accent-primary)' : isPeak ? '#fbbf24' : 'var(--text-secondary)',
+                        textAlign: 'center',
+                        lineHeight: 1.25,
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={m.fullLabel || `${m.label} ${m.subLabel || ''}`}
+                    >
+                      <div>{m.label}</div>
                       {m.subLabel && (
-                        <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                           {m.subLabel}
                         </div>
                       )}

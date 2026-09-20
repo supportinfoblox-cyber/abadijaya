@@ -46,6 +46,8 @@ export interface IcareTemplate {
 export interface AttendanceHistoryItem {
   id: string;
   submittedAt: string;
+  engineerName?: string;
+  engineerUsername?: string;
   opnumber: string;
   sitename: string;
   epm: string;
@@ -361,8 +363,11 @@ export default function IcareAttendanceView() {
       .filter(Boolean)
       .join(', ');
 
+    const engineerName = currentUser?.name || currentUser?.username || 'Engineer';
+
     const text = `*DAILY REPORT ENGINEER (iCare LT Integra)*
 -------------------------------------------
+*Engineer / Pelapor:* ${engineerName}
 *OP:* ${opnumber}
 *Site:* ${sitename}
 *Project Manager:* ${epm}
@@ -375,7 +380,7 @@ export default function IcareAttendanceView() {
 *Summary:*
 ${summary}
 -------------------------------------------
-_Disubmit via TicketOps Portal Manajemen Operasional_`;
+_Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
 
     navigator.clipboard.writeText(text);
     setCopiedWA(true);
@@ -438,10 +443,12 @@ _Disubmit via TicketOps Portal Manajemen Operasional_`;
       console.warn('Backend proxy fetch error, saving to local history:', err);
     }
 
-    // Save to local submission history regardless
+    // Save to local submission history with engineer name
     const historyEntry: AttendanceHistoryItem = {
       id: `HIST-${Date.now()}`,
       submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      engineerName: currentUser?.name || currentUser?.username || 'Engineer',
+      engineerUsername: currentUser?.username || 'user',
       opnumber,
       sitename,
       epm,
@@ -596,7 +603,7 @@ _Disubmit via TicketOps Portal Manajemen Operasional_`;
 
       {/* Main View Mode */}
       {activeTab === 'form' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '20px', alignItems: 'start' }}>
           {/* Main Form Column */}
           <div style={{
             backgroundColor: 'var(--bg-secondary)',
@@ -1262,10 +1269,21 @@ _Disubmit via TicketOps Portal Manajemen Operasional_`;
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
                         OP {item.opnumber} • {item.sitename}
                       </span>
+                      {item.engineerName && (
+                        <span style={{
+                          fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px',
+                          backgroundColor: 'var(--accent-primary-light)',
+                          color: 'var(--accent-primary)',
+                          fontWeight: 600,
+                          border: '1px solid rgba(99, 102, 241, 0.25)'
+                        }}>
+                          👤 {item.engineerName}
+                        </span>
+                      )}
                       <span style={{
                         fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px',
                         backgroundColor: item.submissionStatus === 'SUCCESS' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',

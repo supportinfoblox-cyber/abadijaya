@@ -69,6 +69,12 @@ export default function Navbar() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    if (typeof document !== 'undefined') {
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', theme === 'dark' ? '#070a12' : '#ffffff');
+      }
+    }
   }, [theme]);
 
   const toggleTheme = () => {
@@ -515,21 +521,17 @@ export default function Navbar() {
             )}
           </button>
 
+          {/* Dismiss Backdrop */}
+          {isNotifOpen && (
+            <div
+              className="notif-backdrop"
+              onClick={() => setIsNotifOpen(false)}
+            />
+          )}
+
           {/* Notifications Panel */}
           {isNotifOpen && (
-            <div style={{
-              position: 'absolute',
-              top: 'calc(100% + 10px)',
-              right: 0,
-              width: '380px',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-medium)',
-              borderRadius: '16px',
-              boxShadow: 'var(--shadow-lg)',
-              overflow: 'hidden',
-              zIndex: 1000,
-              animation: 'slideDown 0.2s cubic-bezier(0.34,1.2,0.64,1)',
-            }}>
+            <div className="navbar-notif-dropdown">
               {/* Header */}
               <div style={{
                 padding: '16px 18px', display: 'flex', alignItems: 'center',
@@ -676,6 +678,14 @@ export default function Navbar() {
               transition: 'transform 0.2s ease',
             }} />
           </div>
+
+          {/* Profile Dismiss Backdrop */}
+          {isProfileOpen && (
+            <div
+              className="notif-backdrop"
+              onClick={() => setIsProfileOpen(false)}
+            />
+          )}
 
           {/* Profile Popup */}
           {isProfileOpen && (
