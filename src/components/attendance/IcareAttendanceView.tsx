@@ -631,7 +631,9 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                   borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                   backgroundColor: opnumber && opnumber.length === 4 ? '#3b82f6' : '#f59e0b',
                   color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', lineHeight: 1
+                  fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', lineHeight: 1,
+                  boxSizing: 'border-box', aspectRatio: '1/1',
+                  margin: 'auto 0'
                 }}>
                   {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'OP'}
                 </div>
