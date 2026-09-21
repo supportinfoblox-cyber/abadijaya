@@ -36,6 +36,7 @@ export default function Sidebar() {
     syncTicketsNow,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
+    disabledMenus,
   } = useTicketOps();
 
   const openTicketsCount = tickets.filter(t => t.status !== 'CLOSED' && t.status !== 'RESOLVED').length;
@@ -62,6 +63,9 @@ export default function Sidebar() {
     { id: 'audit', label: 'Audit Log', icon: FileSpreadsheet, perm: 'auditLog' as const },
     { id: 'settings', label: 'System Settings', icon: Settings, perm: 'dashboard' as const },
   ];
+
+  const visibleNavItems = navItems.filter(item => !disabledMenus.includes(item.id));
+  const visibleAdminItems = adminItems.filter(item => !disabledMenus.includes(item.id));
 
   // Detect current theme for color-aware badge backgrounds
   const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') !== 'light';
@@ -358,7 +362,7 @@ export default function Sidebar() {
             <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 6px 8px' }} />
           )}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: isSidebarCollapsed ? 'center' : 'stretch' }}>
-            {navItems.map(item => (
+            {visibleNavItems.map(item => (
               <NavButton key={item.id} item={item} />
             ))}
           </nav>
@@ -379,7 +383,7 @@ export default function Sidebar() {
             <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '10px 6px 8px' }} />
           )}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: isSidebarCollapsed ? 'center' : 'stretch' }}>
-            {adminItems.map(item => (
+            {visibleAdminItems.map(item => (
               <NavButton key={item.id} item={item} hasAccess={can(item.perm)} />
             ))}
           </nav>

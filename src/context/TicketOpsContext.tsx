@@ -250,6 +250,8 @@ interface TicketOpsContextType {
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (collapsed: boolean | ((prev: boolean) => boolean)) => void;
   toggleSidebar: () => void;
+  disabledMenus: string[];
+  toggleMenuDisabled: (menuId: string) => void;
 
   // Cloud Database (Supabase) Sync Status
   cloudSyncStatus: 'synced' | 'syncing' | 'offline' | 'error';
@@ -287,9 +289,6 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   // Sidebar collapse/hide state (default collapsed on mobile)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      if (window.innerWidth <= 1024) {
-        return true;
-      }
       return localStorage.getItem('ticketops_sidebar_collapsed') === 'true';
     }
     return false;
@@ -298,10 +297,34 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   // Ref to track the latest tickets state for use in async functions (avoids stale closures)
   const ticketsRef = useRef<Ticket[]>(SEED_TICKETS);
 
+  const [disabledMenus, setDisabledMenus] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('ticketops_disabled_menus');
+        return saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  const toggleMenuDisabled = (menuId: string) => {
+    setDisabledMenus(prev => {
+      const updated = prev.includes(menuId)
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ticketops_disabled_menus', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => {
       const next = !prev;
-      if (typeof window !== 'undefined' && window.innerWidth > 1024) {
+      if (typeof window !== 'undefined') {
         localStorage.setItem('ticketops_sidebar_collapsed', String(next));
       }
       return next;

@@ -28,6 +28,8 @@ export default function SettingsView() {
     users,
     currentUser,
     restoreFullBackup,
+    disabledMenus,
+    toggleMenuDisabled,
   } = useTicketOps();
 
   const [appName, setAppName] = useState('Portal Abadi Jaya');
@@ -408,6 +410,69 @@ export default function SettingsView() {
               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-purple)' }}>RPO &lt; 24h &bull; RTO &lt; 4h</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Menu Visibility Configuration */}
+      <div className="glass-panel" style={{ padding: '24px' }}>
+        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+          Konfigurasi Visibilitas Menu
+        </h4>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          Pilih menu mana saja yang ingin ditampilkan di sidebar. Menu System Settings tidak dapat disembunyikan.
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+          {[
+            { id: 'dashboard', label: 'Dashboard' },
+            { id: 'tickets', label: 'Ticket Management' },
+            { id: 'shift-schedule', label: 'Jadwal Shift Kerja' },
+            { id: 'pm-schedule', label: 'Jadwal Preventive Maintenance' },
+            { id: 'icare-attendance', label: 'Absen iCare' },
+            { id: 'ms-devices', label: 'Daftar Perangkat Manage Services' },
+            { id: 'worklog', label: 'Worklog' },
+            { id: 'sla', label: 'SLA Monitoring' },
+            { id: 'reports', label: 'Reports & Analytics' },
+            { id: 'notifications', label: 'Notifications' },
+            { id: 'users', label: 'User Management' },
+            { id: 'integration', label: 'Portal Integration' },
+            { id: 'audit', label: 'Audit Log' }
+          ].map(menu => {
+            const isVisible = !disabledMenus.includes(menu.id);
+            return (
+              <div key={menu.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ fontSize: '0.85rem', color: isVisible ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: isVisible ? 600 : 400 }}>
+                  {menu.label}
+                </span>
+                <button
+                  onClick={() => toggleMenuDisabled(menu.id)}
+                  style={{
+                    position: 'relative',
+                    width: '42px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: isVisible ? 'var(--color-success)' : 'var(--bg-glass)',
+                    border: isVisible ? 'none' : '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  title={isVisible ? "Sembunyikan menu ini" : "Tampilkan menu ini"}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: isVisible ? '2px' : '1px',
+                    left: isVisible ? '20px' : '2px',
+                    width: isVisible ? '20px' : '18px',
+                    height: isVisible ? '20px' : '18px',
+                    borderRadius: '50%',
+                    backgroundColor: isVisible ? '#fff' : 'var(--text-muted)',
+                    transition: 'all 0.2s',
+                    boxShadow: isVisible ? '0 1px 3px rgba(0,0,0,0.3)' : 'none'
+                  }} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
