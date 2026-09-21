@@ -662,21 +662,18 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
 
             {/* Quick Template Picker Bar */}
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              display: 'flex', flexDirection: 'column', gap: '10px',
               padding: '12px 14px', borderRadius: '12px',
               backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)',
-              marginBottom: '20px', flexWrap: 'wrap', gap: '12px', width: '100%', boxSizing: 'border-box'
+              marginBottom: '20px', width: '100%', boxSizing: 'border-box'
             }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                flex: '1 1 240px', minWidth: 0, flexWrap: 'wrap'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <Sparkles size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                    Pilih Template Cepat:
-                  </span>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Pilih Template Cepat:
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
                 <select
                   value={selectedTemplateId}
                   onChange={e => {
@@ -684,11 +681,10 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                     if (tpl) applyTemplate(tpl);
                   }}
                   style={{
-                    padding: '6px 10px', borderRadius: '8px',
+                    padding: '8px 10px', borderRadius: '8px',
                     border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-secondary)',
                     color: 'var(--text-primary)', fontSize: '0.8rem',
-                    flex: '1 1 180px', minWidth: 0, maxWidth: '100%', width: 'auto',
-                    boxSizing: 'border-box'
+                    flex: '1 1 200px', minWidth: 0, width: '100%', boxSizing: 'border-box'
                   }}
                 >
                   <option value="">-- Pilih Template Tersimpan --</option>
@@ -698,26 +694,26 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                     </option>
                   ))}
                 </select>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => setIsSaveTemplateModalOpen(true)}
-                className="btn btn-outline btn-sm"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  gap: '6px', fontSize: '0.78rem', flexShrink: 0, whiteSpace: 'nowrap'
-                }}
-                title="Simpan isian form ini sebagai template baru"
-              >
-                <Save size={13} /> Simpan Jadi Template
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSaveTemplateModalOpen(true)}
+                  className="btn btn-outline btn-sm"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    gap: '6px', fontSize: '0.78rem', flexShrink: 0, flex: '1 1 auto', whiteSpace: 'nowrap'
+                  }}
+                  title="Simpan isian form ini sebagai template baru"
+                >
+                  <Save size={13} /> Simpan Jadi Template
+                </button>
+              </div>
             </div>
 
             {/* FORM */}
             <form onSubmit={handleSubmitAttendance} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* Row 1: OP & Site Name */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(min(100%, 140px), 140px) 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '14px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
