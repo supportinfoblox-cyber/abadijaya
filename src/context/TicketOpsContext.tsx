@@ -1885,6 +1885,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         isSidebarCollapsed,
         setIsSidebarCollapsed,
         toggleSidebar,
+        disabledMenus,
+        toggleMenuDisabled,
       }}
     >
       {children}
