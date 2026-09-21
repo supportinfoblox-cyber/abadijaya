@@ -178,8 +178,6 @@ export default function Navbar() {
     <header className="main-navbar" style={{
       height: 'var(--navbar-height)',
       background: 'var(--bg-card)',
-      backdropFilter: 'blur(24px) saturate(1.6)',
-      WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
       borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
@@ -201,7 +199,7 @@ export default function Navbar() {
             width: '36px', height: '36px', borderRadius: '10px',
             background: isSidebarCollapsed 
               ? (isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)') 
-              : 'var(--bg-glass)',
+              : 'var(--bg-card)',
             border: isSidebarCollapsed 
               ? '1px solid rgba(99,102,241,0.35)' 
               : '1px solid var(--border-medium)',
@@ -220,7 +218,7 @@ export default function Navbar() {
           onMouseLeave={e => {
             e.currentTarget.style.background = isSidebarCollapsed 
               ? (isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)') 
-              : 'var(--bg-glass)';
+              : 'var(--bg-card)';
             e.currentTarget.style.color = isSidebarCollapsed 
               ? (isDark ? '#a5b4fc' : '#4f46e5') 
               : 'var(--text-secondary)';
@@ -450,7 +448,7 @@ export default function Navbar() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '34px', height: '34px', borderRadius: '9px',
-            background: 'var(--bg-glass)',
+            background: 'var(--bg-card)',
             border: '1px solid var(--border-medium)',
             color: theme === 'dark' ? '#fbbf24' : '#4f46e5',
             cursor: 'pointer',
@@ -461,7 +459,7 @@ export default function Navbar() {
             e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'var(--bg-glass)';
+            e.currentTarget.style.background = 'var(--bg-card)';
             e.currentTarget.style.borderColor = 'var(--border-medium)';
           }}
           title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
@@ -483,7 +481,7 @@ export default function Navbar() {
               position: 'relative',
               width: '36px', height: '36px', borderRadius: '9px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: isNotifOpen ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.12)') : 'var(--bg-glass)',
+              background: isNotifOpen ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.12)') : 'var(--bg-card)',
               border: `1px solid ${isNotifOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
               color: isNotifOpen ? 'var(--text-accent)' : 'var(--text-secondary)',
               cursor: 'pointer',
@@ -496,7 +494,7 @@ export default function Navbar() {
             }}
             onMouseLeave={e => {
               if (!isNotifOpen) {
-                e.currentTarget.style.background = 'var(--bg-glass)';
+                e.currentTarget.style.background = 'var(--bg-card)';
                 e.currentTarget.style.borderColor = 'var(--border-medium)';
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }
@@ -558,7 +556,7 @@ export default function Navbar() {
                 <button
                   onClick={clearAllNotifications}
                   style={{
-                    background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
                     fontSize: '0.7rem', color: 'var(--text-muted)', cursor: 'pointer',
                     padding: '3px 9px', borderRadius: '6px', transition: 'all 0.15s ease',
                   }}
@@ -644,7 +642,7 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', gap: '9px',
               padding: '5px 10px 5px 5px',
               borderRadius: '10px',
-              background: isProfileOpen ? (isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)') : 'var(--bg-glass)',
+              background: isProfileOpen ? (isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)') : 'var(--bg-card)',
               border: `1px solid ${isProfileOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
               cursor: 'pointer',
               transition: 'all 0.15s ease',
@@ -655,7 +653,7 @@ export default function Navbar() {
             }}
             onMouseLeave={e => {
               if (!isProfileOpen) {
-                e.currentTarget.style.background = 'var(--bg-glass)';
+                e.currentTarget.style.background = 'var(--bg-card)';
                 e.currentTarget.style.borderColor = 'var(--border-medium)';
               }
             }}

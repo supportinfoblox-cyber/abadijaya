@@ -306,7 +306,9 @@ export default function TicketListView() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Kriteria Filter Bar (User criteria: IPAM, Reserve IP, DNS Request, DRP) */}
-      <div className="glass-panel" style={{
+      <div style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
@@ -609,7 +611,7 @@ export default function TicketListView() {
       </div>
 
       {/* Filter and Control Bar (PRD Section 11.2) */}
-      <div className="glass-panel" style={{ padding: '16px 20px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '16px 20px' }}>
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -789,8 +791,7 @@ export default function TicketListView() {
           gap: '12px',
           padding: '12px 18px',
           borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'rgba(99, 102, 241, 0.95)',
-          backdropFilter: 'blur(12px)',
+          backgroundColor: 'rgba(99, 102, 241, 1)',
           border: '1px solid rgba(165, 180, 252, 0.4)',
           boxShadow: '0 8px 32px rgba(99, 102, 241, 0.35)',
           animation: 'slideDown 0.2s ease',
@@ -930,7 +931,7 @@ export default function TicketListView() {
       )}
 
       {/* Ticket List Table (PRD Section 11.1) */}
-      <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '0', overflow: 'hidden' }}>
         <div className="table-container" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
