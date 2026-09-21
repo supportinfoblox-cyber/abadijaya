@@ -626,8 +626,9 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: 0 }}>
                 <div style={{
-                  width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px',
-                  borderRadius: '50%', flexShrink: 0, aspectRatio: '1/1',
+                  flex: '0 0 36px', width: '36px', height: '36px',
+                  minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px',
+                  borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                   backgroundColor: opnumber && opnumber.length === 4 ? '#3b82f6' : '#f59e0b',
                   color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', lineHeight: 1

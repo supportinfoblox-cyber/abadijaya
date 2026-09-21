@@ -57,6 +57,7 @@ export default function UserAvatar({
       className={`user-avatar-root ${className}`}
       style={{
         position: 'relative',
+        flex: 'none',
         width: `${size}px`,
         height: `${size}px`,
         flexShrink: 0,
