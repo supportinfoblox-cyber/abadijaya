@@ -1787,7 +1787,7 @@ select.input option {
 
 @media (max-width: 480px) {
   .dashboard-metrics-grid {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr !important;
     gap: 8px !important;
   }
 

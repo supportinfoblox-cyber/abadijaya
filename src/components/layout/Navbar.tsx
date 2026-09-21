@@ -447,7 +447,7 @@ export default function Navbar() {
           onClick={toggleTheme}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '34px', height: '34px', borderRadius: '9px',
+            width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
             background: 'var(--bg-card)',
             border: '1px solid var(--border-medium)',
             color: theme === 'dark' ? '#fbbf24' : '#4f46e5',
@@ -479,7 +479,7 @@ export default function Navbar() {
             }}
             style={{
               position: 'relative',
-              width: '36px', height: '36px', borderRadius: '9px',
+              width: '36px', height: '36px', borderRadius: '9px', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: isNotifOpen ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.12)') : 'var(--bg-card)',
               border: `1px solid ${isNotifOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
@@ -641,7 +641,7 @@ export default function Navbar() {
             style={{
               display: 'flex', alignItems: 'center', gap: '9px',
               padding: '5px 10px 5px 5px',
-              borderRadius: '10px',
+              borderRadius: '10px', flexShrink: 0,
               background: isProfileOpen ? (isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)') : 'var(--bg-card)',
               border: `1px solid ${isProfileOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
               cursor: 'pointer',

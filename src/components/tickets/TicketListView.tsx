@@ -620,7 +620,7 @@ export default function TicketListView() {
           gap: '12px',
         }}>
           {/* Search Box */}
-          <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 280px' }}>
+          <div style={{ position: 'relative', minWidth: '200px', flex: '1 1 100%' }}>
             <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
@@ -1102,6 +1102,7 @@ export default function TicketListView() {
                               width: '22px',
                               height: '22px',
                               borderRadius: '50%',
+                              flexShrink: 0,
                               backgroundColor: 'var(--color-purple-bg)',
                               color: 'var(--color-purple)',
                               fontSize: '0.65rem',
