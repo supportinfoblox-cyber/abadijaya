@@ -60,10 +60,16 @@ export default function UserAvatar({
         flex: 'none',
         width: `${size}px`,
         height: `${size}px`,
+        minWidth: `${size}px`,
+        minHeight: `${size}px`,
+        maxWidth: `${size}px`,
+        maxHeight: `${size}px`,
+        aspectRatio: '1/1',
         flexShrink: 0,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
+        boxSizing: 'border-box',
         ...style,
       }}
     >
@@ -71,6 +77,9 @@ export default function UserAvatar({
         style={{
           width: '100%',
           height: '100%',
+          minWidth: '100%',
+          minHeight: '100%',
+          aspectRatio: '1/1',
           borderRadius: '50%',
           overflow: 'hidden',
           display: 'flex',
@@ -81,6 +90,7 @@ export default function UserAvatar({
           background: getGradient(name || 'User'),
           flexShrink: 0,
           position: 'relative',
+          boxSizing: 'border-box',
         }}
       >
         {shouldTryImage ? (

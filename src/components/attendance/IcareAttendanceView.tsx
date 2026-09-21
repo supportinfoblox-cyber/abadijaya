@@ -460,6 +460,9 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
       submissionStatus: serverSuccess ? 'SUCCESS' : 'SUBMITTED_LOCAL',
     };
 
+    // Tambahkan delay buatan agar state 'Mengirim...' terlihat oleh pengguna dan tombol tidak terasa 'kaku'
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     setHistory(prev => [historyEntry, ...prev]);
     setIsSubmitting(false);
 
@@ -578,28 +581,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
         </div>
       </div>
 
-      {/* Feedback Toast */}
-      {submitFeedback && (
-        <div style={{
-          padding: '14px 18px', borderRadius: '10px',
-          backgroundColor: submitFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-          border: submitFeedback.type === 'success' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
-          color: submitFeedback.type === 'success' ? '#10b981' : '#ef4444',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          fontSize: '0.85rem', fontWeight: 500
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {submitFeedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            <span>{submitFeedback.message}</span>
-          </div>
-          <button
-            onClick={() => setSubmitFeedback(null)}
-            style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+
 
       {/* Main View Mode */}
       {activeTab === 'form' && (
@@ -1045,6 +1027,34 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                   {isSubmitting ? 'Mengirim...' : 'Kirim Absen Sekarang'}
                 </button>
               </div>
+
+              <hr style={{ border: 'none', borderTop: '1px solid var(--border-subtle)', margin: '10px 0' }} />
+
+              {/* Feedback Toast moved here so it is near the submit button */}
+              {submitFeedback && (
+                <div style={{
+                  padding: '14px 18px', borderRadius: '10px',
+                  backgroundColor: submitFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: submitFeedback.type === 'success' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                  color: submitFeedback.type === 'success' ? '#10b981' : '#ef4444',
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px',
+                  fontSize: '0.85rem', fontWeight: 500
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <div style={{ marginTop: '2px' }}>
+                      {submitFeedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                    </div>
+                    <span>{submitFeedback.message}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSubmitFeedback(null)}
+                    style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0 }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
             </form>
           </div>
 
