@@ -779,126 +779,77 @@ export default function TicketListView() {
         </div>
       </div>
 
-      {/* Bulk Action Floating Bar */}
+      {/* Bulk Action Floating Bar (Responsive Mobile APK & Desktop) */}
       {selectedTicketIds.size > 0 && (
-        <div style={{
-          position: 'sticky',
-          top: '12px',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          padding: '12px 18px',
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'rgba(99, 102, 241, 1)',
-          border: '1px solid rgba(165, 180, 252, 0.4)',
-          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.35)',
-          animation: 'slideDown 0.2s ease',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CheckSquare size={18} color="#ffffff" />
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem' }}>
-              {selectedTicketIds.size} tiket terpilih
-            </span>
-            <button
-              onClick={() => {
-                // Select all filtered tickets
-                const allFilteredIds = filteredTickets
-                  .filter(t => t.status !== 'CLOSED')
-                  .map(t => t.id);
-                if (selectedTicketIds.size === allFilteredIds.length) {
-                  setSelectedTicketIds(new Set());
-                } else {
-                  setSelectedTicketIds(new Set(allFilteredIds));
-                }
-              }}
-              style={{
-                fontSize: '0.75rem',
-                padding: '3px 10px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.4)',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              {selectedTicketIds.size === filteredTickets.filter(t => t.status !== 'CLOSED').length
-                ? 'Batalkan Semua'
-                : `Pilih Semua ${filteredTickets.filter(t => t.status !== 'CLOSED').length} Tiket`}
-            </button>
+        <div className="ticket-bulk-floating-bar">
+          {/* Header Row: Count & Select All */}
+          <div className="ticket-bulk-header-row">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckSquare size={18} color="#ffffff" />
+              <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem' }}>
+                {selectedTicketIds.size} tiket terpilih
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const allFilteredIds = filteredTickets
+                    .filter(t => t.status !== 'CLOSED')
+                    .map(t => t.id);
+                  if (selectedTicketIds.size === allFilteredIds.length) {
+                    setSelectedTicketIds(new Set());
+                  } else {
+                    setSelectedTicketIds(new Set(allFilteredIds));
+                  }
+                }}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {selectedTicketIds.size === filteredTickets.filter(t => t.status !== 'CLOSED').length
+                  ? 'Batal Pilih'
+                  : 'Pilih Semua'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTicketIds(new Set())}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  backgroundColor: 'transparent',
+                  color: 'rgba(255,255,255,0.85)',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Batalkan pilihan tiket"
+              >
+                <XCircle size={14} />
+                <span>Batal</span>
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={() => {
-                setShowExportModal(true);
-              }}
-              style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.4)',
-                backgroundColor: '#059669',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-              title="Export tiket terpilih ke Excel (.xlsx) atau CSV"
-            >
-              <FileSpreadsheet size={15} />
-              <span>Export Tiket Terpilih ({selectedTicketIds.size})</span>
-            </button>
-
-            <button
-              onClick={() => {
-                const selectedList = filteredTickets.filter(t => selectedTicketIds.has(t.id));
-                exportTicketsToJson(selectedList, 'tiket_terpilih_icare_backup');
-              }}
-              style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.4)',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-              title="Backup tiket terpilih ke file format JSON"
-            >
-              <FileJson size={15} />
-              <span>JSON Terpilih ({selectedTicketIds.size})</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedTicketIds(new Set())}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.3)',
-                backgroundColor: 'transparent',
-                color: 'rgba(255,255,255,0.8)',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-              }}
-            >
-              <XCircle size={14} />
-              <span>Batal</span>
-            </button>
-
+          {/* Actions Group: Primary Close Button placed FIRST */}
+          <div className="ticket-bulk-actions-group">
             {can('closeTicket') && (
               <button
+                type="button"
+                className="ticket-bulk-btn-close"
                 onClick={() => {
                   const ticketsToClose = filteredTickets.filter(
                     t => selectedTicketIds.has(t.id) && t.status !== 'CLOSED'
@@ -907,25 +858,61 @@ export default function TicketListView() {
                     setCloseModalTickets(ticketsToClose);
                   }
                 }}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#10b981',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
-                }}
+                title={`Tutup ${selectedTicketIds.size} tiket yang dipilih`}
               >
-                <CheckCircle2 size={16} />
+                <CheckCircle2 size={17} />
                 <span>Tutup {selectedTicketIds.size} Tiket Sekaligus</span>
               </button>
             )}
+
+            <div className="ticket-bulk-secondary-actions">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(true)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                title="Export tiket terpilih ke Excel (.xlsx) atau CSV"
+              >
+                <FileSpreadsheet size={15} />
+                <span>Export ({selectedTicketIds.size})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const selectedList = filteredTickets.filter(t => selectedTicketIds.has(t.id));
+                  exportTicketsToJson(selectedList, 'tiket_terpilih_icare_backup');
+                }}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                title="Backup tiket terpilih ke file format JSON"
+              >
+                <FileJson size={15} />
+                <span>JSON ({selectedTicketIds.size})</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

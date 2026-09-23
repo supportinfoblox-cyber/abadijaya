@@ -508,21 +508,46 @@ export default function ManageServicesDevicesView() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const ext = file.name.toLowerCase();
+    if (!ext.endsWith('.xlsx') && !ext.endsWith('.xls') && !ext.endsWith('.csv')) {
+      alert('Format file tidak didukung. Harap unggah file .xlsx, .xls, atau .csv.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran file melebihi batas maksimum (5 MB).');
+      return;
+    }
+
     setUploadFileName(file.name);
     const reader = new FileReader();
 
     reader.onload = evt => {
       try {
         const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, {
+          type: 'array',
+          cellFormula: false, // Mitigate formula injection / Prototype Pollution
+          cellHTML: false,
+        });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet);
+        const rawJsonData = XLSX.utils.sheet_to_json<any>(worksheet);
 
-        if (!jsonData || jsonData.length === 0) {
+        if (!rawJsonData || rawJsonData.length === 0) {
           alert('File kosong atau format tidak sesuai.');
           return;
         }
+
+        // Sanitize row keys to prevent Prototype Pollution
+        const jsonData = rawJsonData.map((row: any) => {
+          const cleanRow: Record<string, any> = {};
+          for (const key of Object.keys(row)) {
+            if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+            cleanRow[key] = row[key];
+          }
+          return cleanRow;
+        });
 
         const parsedDevices: DeviceItem[] = jsonData.map((row: any, idx: number) => {
           // Normalize column keys

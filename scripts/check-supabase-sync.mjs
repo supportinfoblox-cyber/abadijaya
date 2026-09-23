@@ -2,9 +2,34 @@
  * Script to check Supabase ticket data and diagnose sync issues
  */
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const SUPABASE_URL = 'https://swetbrajtwfworcvgssh.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3ZXRicmFqdHdmd29yY3Znc3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4Njc3MjksImV4cCI6MjEwNDQ0MzcyOX0.LpW33pYy1RMJKLdZHCvz-a-4_1MqnOIZez-92E3gKTA';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envLocalPath = path.resolve(__dirname, '../.env.local');
+
+if (fs.existsSync(envLocalPath)) {
+  const lines = fs.readFileSync(envLocalPath, 'utf-8').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx > 0) {
+      const k = trimmed.slice(0, eqIdx).trim();
+      const v = trimmed.slice(eqIdx + 1).trim();
+      if (!process.env[k]) process.env[k] = v;
+    }
+  }
+}
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('[FATAL] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be provided via environment or .env.local');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

@@ -32,8 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2. Copy package manifests and .npmrc
 COPY package*.json .npmrc ./
 
-# 3. Install all dependencies (including vite & build plugins)
-RUN npm install --include=dev --ignore-scripts --prefer-offline --no-audit
+# 3. Install all dependencies (including vite & build plugins) via reproducible npm ci
+RUN npm ci --include=dev --ignore-scripts --prefer-offline
 
 # 4. Copy application source code & scripts
 COPY . .

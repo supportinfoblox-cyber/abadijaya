@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { UserRole } from '@/types';
+import { hashPassword } from '@/lib/passwordHash';
 import {
   Users,
   UserPlus,
@@ -41,34 +42,44 @@ export default function UserManagementView() {
     { module: 'Audit Log', admin: true, supervisor: 'Limited', engineer: false, viewer: false },
   ];
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     if (!name.trim() || !email.trim()) return;
 
-    const res = addUser({
-      name: name.trim(),
-      username: username.trim() || email.split('@')[0],
-      email: email.trim(),
-      role,
-      department: department.trim() || 'IT Operations',
-      password: password.trim() || 'user1234',
-      isActive: true,
-      avatarUrl: '',
-    });
-
-    if (!res.success) {
-      setErrorMessage(res.error || 'Gagal menambahkan pengguna.');
+    if (!password.trim() || password.trim().length < 8) {
+      setErrorMessage('Password awal wajib diisi minimal 8 karakter demi keamanan.');
       return;
     }
 
-    setName('');
-    setUsername('');
-    setPassword('');
-    setEmail('');
-    setShowAddUser(false);
-    setFeedback(`Pengguna ${name} berhasil didaftarkan sebagai ${role.toUpperCase()}!`);
-    setTimeout(() => setFeedback(null), 3500);
+    try {
+      const hashedPassword = await hashPassword(password.trim());
+      const res = addUser({
+        name: name.trim(),
+        username: username.trim() || email.split('@')[0],
+        email: email.trim(),
+        role,
+        department: department.trim() || 'IT Operations',
+        password: hashedPassword,
+        isActive: true,
+        avatarUrl: '',
+      });
+
+      if (!res.success) {
+        setErrorMessage(res.error || 'Gagal menambahkan pengguna.');
+        return;
+      }
+
+      setName('');
+      setUsername('');
+      setPassword('');
+      setEmail('');
+      setShowAddUser(false);
+      setFeedback(`Pengguna ${name} berhasil didaftarkan sebagai ${role.toUpperCase()}!`);
+      setTimeout(() => setFeedback(null), 3500);
+    } catch (err: any) {
+      setErrorMessage('Gagal memproses enkripsi password: ' + err.message);
+    }
   };
 
   const handleDeleteUser = (userId: string, userName: string) => {

@@ -753,6 +753,26 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setIsProfileOpen(false);
+                    setCurrentView('settings');
+                  }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: '8px', padding: '9px 14px', borderRadius: '10px',
+                    background: isDark ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.05)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.15s ease', marginBottom: '8px',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.12)'}
+                  onMouseLeave={e => e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.05)'}
+                >
+                  <Settings size={14} />
+                  Pengaturan Sistem (Settings)
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
                     if (window.confirm('Apakah Anda yakin ingin keluar dari sistem?')) logout();
                   }}
                   style={{

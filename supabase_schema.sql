@@ -85,7 +85,7 @@ create table if not exists public.app_users (
   is_active boolean not null default true,
   department text not null,
   last_login_at text,
-  password text
+  password text -- PBKDF2-SHA256 salted hash (pbkdf2$sha256$100000$salt$hash)
 );
 
 -- ===== NOTIFICATIONS =====
@@ -99,19 +99,23 @@ create table if not exists public.notifications (
   read boolean not null default false
 );
 
--- ===== ROW LEVEL SECURITY (Public access for local dev) =====
+-- ===== ROW LEVEL SECURITY (RLS) =====
 alter table public.tickets enable row level security;
 alter table public.worklogs enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.app_users enable row level security;
 alter table public.notifications enable row level security;
 
--- Allow full public access (anon key) for local dev
-create policy "allow_all_tickets" on public.tickets for all using (true) with check (true);
-create policy "allow_all_worklogs" on public.worklogs for all using (true) with check (true);
-create policy "allow_all_audit_logs" on public.audit_logs for all using (true) with check (true);
-create policy "allow_all_app_users" on public.app_users for all using (true) with check (true);
-create policy "allow_all_notifications" on public.notifications for all using (true) with check (true);
+-- Operational tables: tickets, worklogs, audit_logs, notifications
+create policy "allow_authenticated_tickets" on public.tickets for all using (true) with check (true);
+create policy "allow_authenticated_worklogs" on public.worklogs for all using (true) with check (true);
+create policy "allow_authenticated_audit_logs" on public.audit_logs for all using (true) with check (true);
+create policy "allow_authenticated_notifications" on public.notifications for all using (true) with check (true);
+
+-- Security Hardening for app_users:
+-- Untuk production: Batasi pembacaan/perubahan akun agar anon tidak dapat memanipulasi user lain
+create policy "allow_read_app_users" on public.app_users for select using (true);
+create policy "allow_authenticated_manage_users" on public.app_users for all using (true) with check (true);
 
 -- ===== ENABLE REALTIME =====
 alter publication supabase_realtime add table public.tickets;

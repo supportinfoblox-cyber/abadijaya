@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -47,10 +48,12 @@ next-env.d.ts
 __pycache__/
 *.py[cod]
 
-# local runtime caches
+# local runtime caches & logs
 scripts/otrs_session_cache.json
 scripts/otrs_tickets_cache.json
 scripts/.sync_daemon.pid
+scripts/sync_daemon.log
+*.log
 
 # ide
 .vscode/

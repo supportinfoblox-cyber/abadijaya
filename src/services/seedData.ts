@@ -12,7 +12,6 @@ export const SEED_USERS: User[] = [
     isActive: true,
     department: 'DNS & DHCP Infoblox Engineering',
     lastLoginAt: '2026-09-07T21:00:00Z',
-    password: 'ismailak1234',
   },
 ];
 

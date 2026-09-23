@@ -16,7 +16,15 @@ interface MobileBottomNavProps {
 }
 
 export default function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
-  const { currentView, setCurrentView, tickets, notifications, isSidebarCollapsed, setIsSidebarCollapsed } = useTicketOps();
+  const {
+    currentView,
+    setCurrentView,
+    tickets,
+    notifications,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    disabledMenus,
+  } = useTicketOps();
 
   // Active tickets count (open/in-progress)
   const activeTicketsCount = React.useMemo(() => {
@@ -74,6 +82,10 @@ export default function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavPro
     },
   ];
 
+  const visibleNavItems = navItems.filter(
+    item => item.id === 'menu' || !disabledMenus || !disabledMenus.includes(item.id)
+  );
+
   return (
     <nav
       className="mobile-bottom-nav"
@@ -97,7 +109,7 @@ export default function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavPro
         userSelect: 'none',
       }}
     >
-      {navItems.map(item => {
+      {visibleNavItems.map(item => {
         const Icon = item.icon;
         const isActive = currentView === item.id;
 

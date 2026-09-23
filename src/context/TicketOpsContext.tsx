@@ -25,6 +25,8 @@ import {
   SEED_NOTIFICATIONS,
   DEFAULT_SLA_POLICY,
 } from '@/services/seedData';
+import { verifyPassword, hashPassword } from '@/lib/passwordHash';
+import { logSecurityEvent } from '@/lib/securityLogger';
 import { analyzeTicketWithRuleEngine } from '@/services/ruleEngine';
 import { defaultTicketProvider, syncCloseToOtrs } from '@/services/providerIntegration';
 import { normalizeTicket } from '@/services/ticketClassifier';
@@ -1562,8 +1564,19 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
             newValue: `Live OTRS Login: ${activeUserToSet.name} (${activeUserToSet.role})`,
           });
 
+          logSecurityEvent({
+            event: 'auth.login_success',
+            userId: activeUserToSet.id,
+            details: { role: activeUserToSet.role, method: 'live_otrs' },
+          });
+
           return { success: true };
         } else if (liveData.limitReached) {
+          logSecurityEvent({
+            event: 'auth.login_failed',
+            userId: cleanUser,
+            details: { reason: 'limit_reached' },
+          });
           return { success: false, error: liveData.error };
         }
       }
@@ -1571,33 +1584,53 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       console.warn('Live OTRS Auth endpoint unreachable, falling back to local auth:', err?.message);
     }
 
-    // 2. Fallback: Local Database Authentication (Offline or Local Admin)
+    // 2. Local Database Authentication (Offline or Local Admin)
     const found = users.find(
-      u => (u.username?.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser) &&
-           (u.password === pass || (!u.password && pass === 'ismailak1234'))
+      u => (u.username?.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser)
     );
 
     if (!found) {
-      if ((cleanUser === 'ismailak' || cleanUser === 'ismailak@lt-integra.com') && pass === 'ismailak1234') {
-        const defaultAdmin = SEED_USERS[0];
-        setCurrentUser(defaultAdmin);
-        setIsAuthenticated(true);
-        if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem('ticketops_auth_session', JSON.stringify(defaultAdmin));
-        }
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem('ticketops_auth_session');
-        }
-        return { success: true };
-      }
-      return { success: false, error: 'Username atau password iCare / TicketOps salah.' };
+      logSecurityEvent({
+        event: 'auth.login_failed',
+        userId: cleanUser,
+        details: { reason: 'user_not_found' },
+      });
+      return { success: false, error: 'Username atau password salah.' };
     }
 
     if (!found.isActive) {
+      logSecurityEvent({
+        event: 'auth.login_failed',
+        userId: found.id,
+        details: { reason: 'account_inactive' },
+      });
       return { success: false, error: 'Akun ini sedang dinonaktifkan. Hubungi Administrator.' };
     }
 
-    const updatedUser = { ...found, lastLoginAt: new Date().toISOString() };
+    // Verify password securely using constant-time PBKDF2/migration check
+    const isPasswordValid = await verifyPassword(pass, found.password);
+    if (!isPasswordValid) {
+      logSecurityEvent({
+        event: 'auth.login_failed',
+        userId: found.id,
+        details: { reason: 'invalid_credentials' },
+      });
+      return { success: false, error: 'Username atau password salah.' };
+    }
+
+    // If password was stored in legacy plaintext format, upgrade to PBKDF2 hash upon successful login
+    let userToStore = found;
+    if (found.password && !found.password.startsWith('pbkdf2$sha256$')) {
+      try {
+        const upgradedHash = await hashPassword(pass);
+        userToStore = { ...found, password: upgradedHash };
+        upsertUser(userToStore).catch(err => console.warn('[Supabase] Auto-upgrade password hash failed:', err));
+      } catch (err) {
+        console.warn('Failed to upgrade password hash:', err);
+      }
+    }
+
+    const updatedUser = { ...userToStore, lastLoginAt: new Date().toISOString() };
     setCurrentUser(updatedUser);
     setIsAuthenticated(true);
     if (typeof sessionStorage !== 'undefined') {
@@ -1606,10 +1639,21 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ticketops_auth_session');
     }
+
+    logSecurityEvent({
+      event: 'auth.login_success',
+      userId: updatedUser.id,
+      details: { role: updatedUser.role, method: 'local_database' },
+    });
+
     return { success: true };
   };
 
   const logout = () => {
+    logSecurityEvent({
+      event: 'auth.logout',
+      userId: currentUser.id,
+    });
     setIsAuthenticated(false);
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('ticketops_auth_session');
@@ -1618,6 +1662,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('ticketops_auth_session');
       localStorage.removeItem('ticketops_remember');
     }
+    // Invalidate server-side auth cookie
+    fetch('/api/otrs/logout', { method: 'POST' }).catch(() => {});
   };
 
   // Bulk import / historical sync merge helper

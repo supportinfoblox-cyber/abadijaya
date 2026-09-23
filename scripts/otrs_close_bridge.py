@@ -56,14 +56,23 @@ def get_session():
         except Exception as e:
             pass
 
-    # 2. If cached session expired or invalid, authenticate with credentials
+    # 2. If cached session expired or invalid, authenticate with credentials from env
+    agent_user = os.environ.get("OTRS_AGENT_USER", "")
+    agent_password = os.environ.get("OTRS_AGENT_PASSWORD", "")
+    if not agent_user or not agent_password:
+        if cached_session_id:
+            s.cookies.clear(name="OTRSAgentInterface")
+            s.cookies.set("OTRSAgentInterface", cached_session_id)
+            return s, cached_session_id
+        return None, None
+
     login_payload = {
         "Action": "Login",
         "RequestedURL": "",
         "Lang": "en",
         "TimeZoneOffset": "-420",
-        "User": "ismailak",
-        "Password": "ismailak1234",
+        "User": agent_user,
+        "Password": agent_password,
     }
     s_new = requests.Session()
     r_login = s_new.post(BASE_URL, data=login_payload, headers=DEFAULT_HEADERS, timeout=15)

@@ -97,6 +97,9 @@ export default function Sidebar() {
         key={item.id}
         onClick={() => {
           setCurrentView(item.id);
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setIsSidebarCollapsed(true);
+          }
         }}
         title={tooltip}
         style={{

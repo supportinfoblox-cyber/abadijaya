@@ -79,6 +79,11 @@ export default function SettingsView() {
       return;
     }
 
+    if (file.size > 10 * 1024 * 1024) {
+      setParseError('Ukuran file maksimal 10 MB.');
+      return;
+    }
+
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = event => {
@@ -413,13 +418,18 @@ export default function SettingsView() {
         </div>
       </div>
 
-      {/* Menu Visibility Configuration */}
+      {/* Menu Visibility & Disable Menu Configuration */}
       <div className="glass-panel" style={{ padding: '24px' }}>
-        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-          Konfigurasi Visibilitas Menu
-        </h4>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            Konfigurasi Visibilitas & Nonaktifkan Menu (Disable Menu)
+          </h4>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', backgroundColor: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: '6px' }}>
+            Desktop & Mobile APK
+          </span>
+        </div>
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Pilih menu mana saja yang ingin ditampilkan di sidebar. Menu System Settings tidak dapat disembunyikan.
+          Atur menu yang aktif atau dinonaktifkan di Sidebar Desktop maupun Navigasi Mobile Android APK. Menu System Settings tetap selalu dapat diakses.
         </p>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
@@ -441,9 +451,22 @@ export default function SettingsView() {
             const isVisible = !disabledMenus.includes(menu.id);
             return (
               <div key={menu.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                <span style={{ fontSize: '0.85rem', color: isVisible ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: isVisible ? 600 : 400 }}>
-                  {menu.label}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.85rem', color: isVisible ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: isVisible ? 600 : 400 }}>
+                    {menu.label}
+                  </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: isVisible ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                    color: isVisible ? '#10b981' : '#ef4444',
+                    border: `1px solid ${isVisible ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+                  }}>
+                    {isVisible ? 'Aktif' : 'Nonaktif'}
+                  </span>
+                </div>
                 <button
                   onClick={() => toggleMenuDisabled(menu.id)}
                   style={{
@@ -456,7 +479,7 @@ export default function SettingsView() {
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
-                  title={isVisible ? "Sembunyikan menu ini" : "Tampilkan menu ini"}
+                  title={isVisible ? "Nonaktifkan menu ini" : "Aktifkan menu ini"}
                 >
                   <div style={{
                     position: 'absolute',
