@@ -11,10 +11,11 @@ import {
   LogIn,
   AlertCircle,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
 
 export default function LoginView() {
-  const { login } = useTicketOps();
+  const { login, sessionNotice, clearSessionNotice } = useTicketOps();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,7 @@ export default function LoginView() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (sessionNotice) clearSessionNotice();
     setIsLoading(true);
 
     if (typeof localStorage !== 'undefined') {
@@ -168,6 +170,25 @@ export default function LoginView() {
             </div>
           </div>
 
+          {sessionNotice && (
+            <div style={{
+              padding: '11px 14px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              color: '#f59e0b',
+              fontSize: '0.82rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '9px',
+              marginBottom: '18px',
+              lineHeight: 1.45,
+            }}>
+              <Clock size={16} style={{ flexShrink: 0 }} />
+              <span>{sessionNotice}</span>
+            </div>
+          )}
+
           {error && (
             <div style={{
               padding: '10px 14px',
@@ -213,7 +234,10 @@ export default function LoginView() {
                   type="text"
                   name="auth_usr_input"
                   value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={e => {
+                    setUsername(e.target.value);
+                    if (sessionNotice) clearSessionNotice();
+                  }}
                   placeholder="Username atau email"
                   autoComplete="off"
                   autoCapitalize="none"
@@ -263,7 +287,10 @@ export default function LoginView() {
                   type={showPassword ? 'text' : 'password'}
                   name="auth_pwd_input"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => {
+                    setPassword(e.target.value);
+                    if (sessionNotice) clearSessionNotice();
+                  }}
                   placeholder="Masukkan kata sandi"
                   autoComplete="new-password"
                   required

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import {
   Ticket,
   User,
@@ -185,8 +185,10 @@ interface TicketOpsContextType {
   
   // Authentication & Session
   isAuthenticated: boolean;
+  sessionNotice: string | null;
+  clearSessionNotice: () => void;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  logout: (reason?: string) => void;
   
   tickets: Ticket[];
   selectedTicket: Ticket | null;
@@ -266,6 +268,18 @@ interface TicketOpsContextType {
 const TicketOpsContext = createContext<TicketOpsContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'ticketops_state_v3';
+
+// Konfigurasi Inactivity Session Timeout (SOC 2 CC6.1 & UU PDP)
+export const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 menit
+export const ACTIVITY_STORAGE_KEY = 'ticketops_last_activity';
+const THROTTLE_ACTIVITY_MS = 15 * 1000; // Throttle write: 15 detik
+
+export const isSessionExpired = (): boolean => {
+  if (typeof localStorage === 'undefined') return false;
+  const stored = localStorage.getItem(ACTIVITY_STORAGE_KEY);
+  if (!stored) return false;
+  return Date.now() - Number(stored) >= INACTIVITY_TIMEOUT_MS;
+};
 
 export function TicketOpsProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
@@ -369,6 +383,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
 
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const clearSessionNotice = useCallback(() => setSessionNotice(null), []);
 
   // Load state from localStorage on client mount
   useEffect(() => {
@@ -379,52 +395,65 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     let localWorklogsSnapshot: Worklog[] = SEED_WORKLOGS;
 
     try {
-      // Check auth session securely via secureSessionStorage (JWE 256-bit encrypted)
-      const isRemembered = typeof localStorage !== 'undefined' ? localStorage.getItem('ticketops_remember') === 'true' : false;
-      const sessionAuth = secureSessionStorage.getItemSync('ticketops_auth_session')
-        || (isRemembered ? secureStorage.getItemSync('ticketops_auth_session') : null);
-      if (sessionAuth) {
-        try {
-          const parsedAuth = JSON.parse(sessionAuth);
-          if (parsedAuth && parsedAuth.id) {
-            const rawRole = String(parsedAuth.role || 'engineer').toLowerCase();
-            const normalizedRole: UserRole = ['admin', 'supervisor', 'engineer', 'viewer'].includes(rawRole)
-              ? (rawRole as UserRole)
-              : 'engineer';
-            const normalizedUser: User = {
-              ...parsedAuth,
-              name: parsedAuth.name || parsedAuth.username || 'User',
-              role: normalizedRole,
-            };
-            setCurrentUser(normalizedUser);
-            setIsAuthenticated(true);
-          }
-        } catch {
-          secureSessionStorage.removeItem('ticketops_auth_session');
-          secureStorage.removeItem('ticketops_auth_session');
+      // Cek apakah sesi telah kedaluwarsa karena tidak aktif > 30 menit
+      if (isSessionExpired()) {
+        secureSessionStorage.removeItem('ticketops_auth_session');
+        secureSessionStorage.removeItem('ticketops_otrs_session');
+        secureStorage.removeItem('ticketops_auth_session');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('ticketops_remember');
+          localStorage.removeItem(ACTIVITY_STORAGE_KEY);
         }
-      }
-
-      // Also ensure async JWE 256-bit decryption runs if needed
-      secureSessionStorage.getItem('ticketops_auth_session').then(decrypted => {
-        if (decrypted) {
+        setSessionNotice('Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan masuk kembali.');
+        setIsAuthenticated(false);
+      } else {
+        // Check auth session securely via secureSessionStorage (JWE 256-bit encrypted)
+        const isRemembered = typeof localStorage !== 'undefined' ? localStorage.getItem('ticketops_remember') === 'true' : false;
+        const sessionAuth = secureSessionStorage.getItemSync('ticketops_auth_session')
+          || (isRemembered ? secureStorage.getItemSync('ticketops_auth_session') : null);
+        if (sessionAuth) {
           try {
-            const parsed = JSON.parse(decrypted);
-            if (parsed && parsed.id) {
-              const rawRole = String(parsed.role || 'engineer').toLowerCase();
+            const parsedAuth = JSON.parse(sessionAuth);
+            if (parsedAuth && parsedAuth.id) {
+              const rawRole = String(parsedAuth.role || 'engineer').toLowerCase();
               const normalizedRole: UserRole = ['admin', 'supervisor', 'engineer', 'viewer'].includes(rawRole)
                 ? (rawRole as UserRole)
                 : 'engineer';
-              setCurrentUser({
-                ...parsed,
-                name: parsed.name || parsed.username || 'User',
+              const normalizedUser: User = {
+                ...parsedAuth,
+                name: parsedAuth.name || parsedAuth.username || 'User',
                 role: normalizedRole,
-              });
+              };
+              setCurrentUser(normalizedUser);
               setIsAuthenticated(true);
             }
-          } catch (_) {}
+          } catch {
+            secureSessionStorage.removeItem('ticketops_auth_session');
+            secureStorage.removeItem('ticketops_auth_session');
+          }
         }
-      }).catch(() => {});
+
+        // Also ensure async JWE 256-bit decryption runs if needed
+        secureSessionStorage.getItem('ticketops_auth_session').then(decrypted => {
+          if (decrypted && !isSessionExpired()) {
+            try {
+              const parsed = JSON.parse(decrypted);
+              if (parsed && parsed.id) {
+                const rawRole = String(parsed.role || 'engineer').toLowerCase();
+                const normalizedRole: UserRole = ['admin', 'supervisor', 'engineer', 'viewer'].includes(rawRole)
+                  ? (rawRole as UserRole)
+                  : 'engineer';
+                setCurrentUser({
+                  ...parsed,
+                  name: parsed.name || parsed.username || 'User',
+                  role: normalizedRole,
+                });
+                setIsAuthenticated(true);
+              }
+            } catch (_) {}
+          }
+        }).catch(() => {});
+      }
 
       const saved = secureStorage.getItemSync(STORAGE_KEY) || (typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null);
       if (saved) {
@@ -669,6 +698,57 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       channel?.unsubscribe();
     };
   }, []);
+
+  // Inactivity session timeout monitoring (30 menit tanpa aktivitas)
+  useEffect(() => {
+    if (!isAuthenticated || typeof window === 'undefined') return;
+
+    let lastSavedTime = Date.now();
+    if (!localStorage.getItem(ACTIVITY_STORAGE_KEY)) {
+      localStorage.setItem(ACTIVITY_STORAGE_KEY, String(lastSavedTime));
+    }
+
+    const recordActivity = () => {
+      const now = Date.now();
+      if (now - lastSavedTime >= THROTTLE_ACTIVITY_MS) {
+        lastSavedTime = now;
+        try {
+          localStorage.setItem(ACTIVITY_STORAGE_KEY, String(now));
+        } catch (_) {}
+      }
+    };
+
+    const checkTimeout = () => {
+      const now = Date.now();
+      const stored = localStorage.getItem(ACTIVITY_STORAGE_KEY);
+      const lastActive = stored ? Number(stored) : lastSavedTime;
+      if (now - lastActive >= INACTIVITY_TIMEOUT_MS) {
+        logout('inactivity_timeout');
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkTimeout();
+      }
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach(evt => {
+      window.addEventListener(evt, recordActivity, { passive: true });
+    });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const intervalId = setInterval(checkTimeout, 20000);
+
+    return () => {
+      activityEvents.forEach(evt => {
+        window.removeEventListener(evt, recordActivity);
+      });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
+    };
+  }, [isAuthenticated]);
 
 
   // Save state to localStorage (encrypted with secureStorage)
@@ -1716,6 +1796,11 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     secureSessionStorage.setItem('ticketops_auth_session', JSON.stringify(safeUser));
     secureStorage.removeItem('ticketops_auth_session');
 
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(ACTIVITY_STORAGE_KEY, String(Date.now()));
+    }
+    setSessionNotice(null);
+
     logSecurityEvent({
       event: 'auth.login_success',
       userId: updatedUser.id,
@@ -1725,10 +1810,12 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
-  const logout = () => {
+  const logout = (reason?: string) => {
+    const isTimeout = reason === 'inactivity_timeout';
     logSecurityEvent({
       event: 'auth.logout',
       userId: currentUser.id,
+      details: isTimeout ? { reason: 'inactivity_timeout', durationMinutes: 30 } : { reason: 'manual' },
     });
     setIsAuthenticated(false);
     secureSessionStorage.removeItem('ticketops_auth_session');
@@ -1736,6 +1823,10 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     secureStorage.removeItem('ticketops_auth_session');
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ticketops_remember');
+      localStorage.removeItem(ACTIVITY_STORAGE_KEY);
+    }
+    if (isTimeout) {
+      setSessionNotice('Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan masuk kembali.');
     }
     // Invalidate server-side auth cookie
     fetch('/api/otrs/logout', { method: 'POST' }).catch(() => {});
@@ -1989,6 +2080,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         toggleUserActive,
         deleteUser,
         isAuthenticated,
+        sessionNotice,
+        clearSessionNotice,
         login,
         logout,
         importSyncedTickets,
