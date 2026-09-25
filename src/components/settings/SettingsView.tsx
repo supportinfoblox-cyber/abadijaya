@@ -234,7 +234,7 @@ export default function SettingsView() {
                 </span>
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                Mengunduh seluruh snapshot data: <strong>{tickets.length} tiket</strong>, {worklogs.length} worklog, {auditLogs.length} riwayat audit, konfigurasi antrean BSI, dan akun pengguna ke dalam satu file JSON standar.
+                Mengunduh seluruh snapshot data: <strong>{tickets.length} tiket</strong>, {worklogs.length} worklog, {auditLogs.length} riwayat audit, konfigurasi antrean operasional, dan akun pengguna ke dalam satu file JSON standar.
               </p>
             </div>
 
@@ -439,7 +439,7 @@ export default function SettingsView() {
             { id: 'shift-schedule', label: 'Jadwal Shift Kerja' },
             { id: 'pm-schedule', label: 'Jadwal Preventive Maintenance' },
             { id: 'icare-attendance', label: 'Absen iCare' },
-            { id: 'ms-devices', label: 'Daftar Perangkat Manage Services' },
+            { id: 'ms-devices', label: 'Daftar Perangkat' },
             { id: 'worklog', label: 'Worklog' },
             { id: 'sla', label: 'SLA Monitoring' },
             { id: 'reports', label: 'Reports & Analytics' },

@@ -26,6 +26,7 @@ import {
   DEFAULT_SLA_POLICY,
 } from '@/services/seedData';
 import { verifyPassword, hashPassword } from '@/lib/passwordHash';
+import { secureStorage, secureSessionStorage } from '@/lib/secureStorage';
 import { logSecurityEvent } from '@/lib/securityLogger';
 import { analyzeTicketWithRuleEngine } from '@/services/ruleEngine';
 import { defaultTicketProvider, syncCloseToOtrs } from '@/services/providerIntegration';
@@ -42,7 +43,7 @@ import {
   fetchAuditLogs,
   insertAuditLog,
   fetchUsers,
-
+  fetchUserForAuth,
   upsertUser,
   upsertUsers,
   deleteUserById,
@@ -51,6 +52,7 @@ import {
   markNotificationReadInDB,
   deleteAllNotificationsFromDB,
 } from '@/services/supabaseService';
+import { getViewFromPathname, pushRoute, getTitleFromView } from '@/lib/router';
 
 const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
   admin: {
@@ -283,15 +285,47 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [lastCloudSync, setLastCloudSync] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentViewInternal] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return getViewFromPathname(window.location.pathname);
+    }
+    return 'dashboard';
+  });
+
+  const setCurrentView = (view: string) => {
+    setCurrentViewInternal(view);
+    pushRoute(view);
+  };
+
+  // Sync route saat navigasi Back / Forward browser ditekan
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const initialView = getViewFromPathname(window.location.pathname);
+    document.title = getTitleFromView(initialView);
+    pushRoute(initialView, true); // Canonicalize initial URL
+
+    const handlePopState = () => {
+      const view = getViewFromPathname(window.location.pathname);
+      setCurrentViewInternal(view);
+      document.title = getTitleFromView(view);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [activeFilterStatus, setActiveFilterStatus] = useState('ALL');
   const [activeKriteria, setActiveKriteria] = useState('ALL');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
-  // Sidebar collapse/hide state (default collapsed on mobile)
+  // Sidebar collapse/hide state (default collapsed on mobile/tablet <= 1024px so Dashboard is immediately visible)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('ticketops_sidebar_collapsed') === 'true';
+      const saved = localStorage.getItem('ticketops_sidebar_collapsed');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+      return window.innerWidth <= 1024;
     }
     return false;
   });
@@ -345,9 +379,10 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     let localWorklogsSnapshot: Worklog[] = SEED_WORKLOGS;
 
     try {
-      // Check auth session: only restore if rememberMe was explicitly enabled
+      // Check auth session securely via secureSessionStorage (JWE 256-bit encrypted)
       const isRemembered = typeof localStorage !== 'undefined' ? localStorage.getItem('ticketops_remember') === 'true' : false;
-      const sessionAuth = isRemembered && typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('ticketops_auth_session') : null;
+      const sessionAuth = secureSessionStorage.getItemSync('ticketops_auth_session')
+        || (isRemembered ? secureStorage.getItemSync('ticketops_auth_session') : null);
       if (sessionAuth) {
         try {
           const parsedAuth = JSON.parse(sessionAuth);
@@ -365,11 +400,33 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
             setIsAuthenticated(true);
           }
         } catch {
-          sessionStorage.removeItem('ticketops_auth_session');
+          secureSessionStorage.removeItem('ticketops_auth_session');
+          secureStorage.removeItem('ticketops_auth_session');
         }
       }
 
-      const saved = localStorage.getItem(STORAGE_KEY);
+      // Also ensure async JWE 256-bit decryption runs if needed
+      secureSessionStorage.getItem('ticketops_auth_session').then(decrypted => {
+        if (decrypted) {
+          try {
+            const parsed = JSON.parse(decrypted);
+            if (parsed && parsed.id) {
+              const rawRole = String(parsed.role || 'engineer').toLowerCase();
+              const normalizedRole: UserRole = ['admin', 'supervisor', 'engineer', 'viewer'].includes(rawRole)
+                ? (rawRole as UserRole)
+                : 'engineer';
+              setCurrentUser({
+                ...parsed,
+                name: parsed.name || parsed.username || 'User',
+                role: normalizedRole,
+              });
+              setIsAuthenticated(true);
+            }
+          } catch (_) {}
+        }
+      }).catch(() => {});
+
+      const saved = secureStorage.getItemSync(STORAGE_KEY) || (typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.tickets && Array.isArray(parsed.tickets)) {
@@ -380,14 +437,14 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
             const tid = String(t.id || '');
             const subj = String(t.subject || '');
 
-            if (num.startsWith('EXT-') || ext.startsWith('EXT-') || tid.startsWith('EXT-') || tid.startsWith('tkt-inbound-')) {
-              return false;
-            }
             if (
-              subj.includes('Core BGP Peering Route Flapping') ||
-              subj.includes('Database connection pool exhausted') ||
-              subj.includes('DNS Zone file update request') ||
-              subj.includes('DHCP Pool 10.24.16.0/22 95% full')
+              num.startsWith('EXT-') ||
+              ext.startsWith('EXT-') ||
+              tid.startsWith('EXT-') ||
+              tid.startsWith('tkt-inbound-') ||
+              tid.startsWith('mock-') ||
+              tid.startsWith('sim-') ||
+              num.startsWith('SIM-')
             ) {
               return false;
             }
@@ -456,15 +513,15 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         if (parsed.notifications) setNotifications(parsed.notifications);
         if (parsed.integrationConfig) setIntegrationConfig(parsed.integrationConfig);
         
-        // Clean legacy users: preserve only Ismail Akbar and any users created by Ismail
+        // Clean legacy demo users
         if (parsed.users && Array.isArray(parsed.users)) {
           const cleaned = parsed.users.filter((u: any) =>
             !['usr-01', 'usr-02', 'usr-04', 'usr-05'].includes(u.id) &&
             !['alex.mercer@ticketops.corp', 'sarah.chen@ticketops.corp', 'elena.rostova@ticketops.corp', 'marcus.vance@ticketops.corp'].includes(u.email)
           );
-          // Ensure Ismail is always present as Admin
-          const hasIsmail = cleaned.some((u: any) => u.username === 'ismailak' || u.id === 'usr-ismailak');
-          if (!hasIsmail) {
+          // Ensure an Administrator is always present
+          const hasAdmin = cleaned.some((u: any) => u.role === 'admin');
+          if (!hasAdmin && SEED_USERS[0]) {
             cleaned.unshift(SEED_USERS[0]);
           }
           setUsers(cleaned);
@@ -556,12 +613,12 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
           setAuditLogs(cloudAuditLogs);
         }
 
-        // 4. USERS (cloud wins, ensure ismailak always present)
+        // 4. USERS (cloud wins, ensure admin always present)
         if (cloudUsers.length > 0) {
-          const hasIsmail = cloudUsers.some(u => u.username === 'ismailak' || u.id === 'usr-ismailak');
-          if (!hasIsmail) {
+          const hasAdmin = cloudUsers.some(u => u.role === 'admin');
+          if (!hasAdmin && SEED_USERS[0]) {
             cloudUsers.unshift(SEED_USERS[0]);
-            upsertUser(SEED_USERS[0]).catch(err => console.warn('[Supabase] Push Ismail user failed:', err));
+            upsertUser(SEED_USERS[0]).catch(err => console.warn('[Supabase] Push admin user failed:', err));
           }
           setUsers(cloudUsers);
         } else {
@@ -614,24 +671,22 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
-  // Save state to localStorage
+  // Save state to localStorage (encrypted with secureStorage)
   useEffect(() => {
     if (!isClient) return;
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          tickets,
-          worklogs,
-          auditLogs,
-          notifications,
-          integrationConfig,
-          users,
-        })
-      );
-    } catch (e) {
-      console.error('Failed to save TicketOps state', e);
-    }
+    secureStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        tickets,
+        worklogs,
+        auditLogs,
+        notifications,
+        integrationConfig,
+        users,
+      })
+    ).catch(e => {
+      console.error('Failed to save TicketOps state securely', e);
+    });
   }, [isClient, tickets, worklogs, auditLogs, notifications, integrationConfig, users]);
 
   // Recalculate SLA statuses dynamically
@@ -1403,8 +1458,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     }
     const target = users.find(u => u.id === id);
     if (!target) return { success: false, error: 'Pengguna tidak ditemukan.' };
-    if (target.id === 'usr-ismailak' || target.username === 'ismailak') {
-      return { success: false, error: 'Akun Utama Administrator (Ismail Akbar) tidak dapat dihapus.' };
+    if (target.id === currentUser.id || target.id === 'usr-admin' || target.username === 'admin') {
+      return { success: false, error: 'Akun Utama Administrator tidak dapat dihapus.' };
     }
 
     setUsers(prev => prev.filter(u => u.id !== id));
@@ -1430,12 +1485,13 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       return next;
     });
 
-    // Also sync currentUser if editing themselves
+    // Also sync currentUser if editing themselves (encrypted)
     if (id === currentUser.id) {
       setCurrentUser(prev => {
         const updated = { ...prev, ...updates };
         try {
-          localStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
+          secureSessionStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
+          secureStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
         } catch (_) {}
         return updated;
       });
@@ -1463,7 +1519,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     setCurrentUser(prev => {
       const updated = { ...prev, ...updates };
       try {
-        localStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
+        secureSessionStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
+        secureStorage.setItem('ticketops_auth_session', JSON.stringify(updated));
       } catch (_) {}
       return updated;
     });
@@ -1508,9 +1565,9 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
           const otrsUser = liveData.user;
           const nowStr = new Date().toISOString();
 
-          // Simpan session ID OTRS di sessionStorage untuk mempermudah menu Absen iCare
-          if (typeof sessionStorage !== 'undefined' && liveData.sessionId) {
-            sessionStorage.setItem('ticketops_otrs_session', liveData.sessionId);
+          // Simpan session ID OTRS di secureSessionStorage (JWE 256-bit terenkripsi)
+          if (liveData.sessionId) {
+            secureSessionStorage.setItem('ticketops_otrs_session', liveData.sessionId);
           }
 
           // Cek apakah user sudah terdaftar di state users lokal
@@ -1536,8 +1593,8 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
               id: otrsUser.id || `usr-otrs-${cleanUser}`,
               name: otrsUser.name || cleanUser,
               username: cleanUser,
-              email: otrsUser.email || `${cleanUser}@lt-integra.com`,
-              role: (cleanUser === 'ismailak' ? 'admin' : 'engineer') as UserRole,
+              email: otrsUser.email || `${cleanUser}@system.local`,
+              role: (otrsUser.role || (cleanUser === 'admin' ? 'admin' : 'engineer')) as UserRole,
               department: 'Network Operation Center',
               isActive: true,
               avatarUrl: '',
@@ -1548,13 +1605,16 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
 
           setCurrentUser(activeUserToSet);
           setIsAuthenticated(true);
+          setCurrentViewInternal('dashboard');
+          pushRoute('dashboard', true);
+          if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+            setIsSidebarCollapsed(true);
+            localStorage.setItem('ticketops_sidebar_collapsed', 'true');
+          }
 
-          if (typeof sessionStorage !== 'undefined') {
-            sessionStorage.setItem('ticketops_auth_session', JSON.stringify(activeUserToSet));
-          }
-          if (typeof localStorage !== 'undefined') {
-            localStorage.removeItem('ticketops_auth_session');
-          }
+          // Simpan sesi autentikasi terenkripsi JWE 256-bit (Anti-DevTools leak)
+          secureSessionStorage.setItem('ticketops_auth_session', JSON.stringify(activeUserToSet));
+          secureStorage.removeItem('ticketops_auth_session');
 
           // Catat audit log login
           addAuditLogEntry({
@@ -1607,8 +1667,20 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Akun ini sedang dinonaktifkan. Hubungi Administrator.' };
     }
 
+    let userRecord = found;
+    if (!userRecord.password) {
+      try {
+        const cloudAuth = await fetchUserForAuth(cleanUser);
+        if (cloudAuth?.password) {
+          userRecord = { ...userRecord, password: cloudAuth.password };
+        }
+      } catch (err) {
+        console.warn('Could not fetch cloud auth credentials:', err);
+      }
+    }
+
     // Verify password securely using constant-time PBKDF2/migration check
-    const isPasswordValid = await verifyPassword(pass, found.password);
+    const isPasswordValid = await verifyPassword(pass, userRecord.password);
     if (!isPasswordValid) {
       logSecurityEvent({
         event: 'auth.login_failed',
@@ -1631,14 +1703,18 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
     }
 
     const updatedUser = { ...userToStore, lastLoginAt: new Date().toISOString() };
-    setCurrentUser(updatedUser);
+    const { password: _p, ...safeUser } = updatedUser;
+    setCurrentUser(safeUser as User);
     setIsAuthenticated(true);
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem('ticketops_auth_session', JSON.stringify(updatedUser));
+    setCurrentViewInternal('dashboard');
+    pushRoute('dashboard', true);
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+      setIsSidebarCollapsed(true);
+      localStorage.setItem('ticketops_sidebar_collapsed', 'true');
     }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('ticketops_auth_session');
-    }
+    // Simpan sesi autentikasi terenkripsi JWE 256-bit (Anti-DevTools leak)
+    secureSessionStorage.setItem('ticketops_auth_session', JSON.stringify(safeUser));
+    secureStorage.removeItem('ticketops_auth_session');
 
     logSecurityEvent({
       event: 'auth.login_success',
@@ -1655,11 +1731,10 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
       userId: currentUser.id,
     });
     setIsAuthenticated(false);
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem('ticketops_auth_session');
-    }
+    secureSessionStorage.removeItem('ticketops_auth_session');
+    secureSessionStorage.removeItem('ticketops_otrs_session');
+    secureStorage.removeItem('ticketops_auth_session');
     if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('ticketops_auth_session');
       localStorage.removeItem('ticketops_remember');
     }
     // Invalidate server-side auth cookie
@@ -1743,9 +1818,9 @@ export function TicketOpsProvider({ children }: { children: ReactNode }) {
         setUsers(backupData.users);
       }
 
-      // Immediate persist to localStorage
+      // Immediate persist to localStorage (encrypted)
       if (typeof window !== 'undefined') {
-        localStorage.setItem(
+        secureStorage.setItemSync(
           STORAGE_KEY,
           JSON.stringify({
             tickets: normalizedNew,

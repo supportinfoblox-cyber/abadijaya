@@ -11,11 +11,51 @@ import type {
   AuditLog,
   AppNotification,
   User,
+  DeviceItem,
 } from '@/types';
 
 // ─────────────────────────────────────────────
 // Type mappers: DB row <-> App type
 // ─────────────────────────────────────────────
+
+function rowToDevice(row: any): DeviceItem {
+  return {
+    id: row.id,
+    hostname: row.hostname,
+    model: row.model,
+    serialNumber: row.serial_number ?? '',
+    ipAddress: row.ip_address ?? '',
+    ipManagement: row.ip_management ?? undefined,
+    siteLocation: row.site_location ?? '',
+    role: row.role ?? 'Member',
+    licenseType: row.license_type ?? '',
+    licenseActiveDate: row.license_active_date ?? '',
+    licenseExpiredDate: row.license_expired_date ?? '',
+    status: (row.status as DeviceItem['status']) || 'ACTIVE',
+    notes: row.notes ?? undefined,
+    lastUpdated: row.last_updated ?? row.updated_at ?? new Date().toISOString().substring(0, 16).replace('T', ' '),
+  };
+}
+
+function deviceToRow(d: DeviceItem): Record<string, any> {
+  return {
+    id: d.id,
+    hostname: d.hostname,
+    model: d.model,
+    serial_number: d.serialNumber ?? null,
+    ip_address: d.ipAddress ?? null,
+    ip_management: d.ipManagement ?? null,
+    site_location: d.siteLocation ?? null,
+    role: d.role ?? null,
+    license_type: d.licenseType ?? null,
+    license_active_date: d.licenseActiveDate ?? null,
+    license_expired_date: d.licenseExpiredDate ?? null,
+    status: d.status ?? 'ACTIVE',
+    notes: d.notes ?? null,
+    last_updated: d.lastUpdated ?? new Date().toISOString().substring(0, 16).replace('T', ' '),
+    updated_at: new Date().toISOString(),
+  };
+}
 
 function rowToTicket(row: any): Ticket {
   return {
@@ -322,12 +362,23 @@ export async function fetchUsers(): Promise<User[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from('app_users')
-    .select('*');
+    .select('id, name, username, email, avatar_url, role, is_active, department, last_login_at');
   if (error) {
     console.error('[Supabase] fetchUsers error:', error.message);
     return [];
   }
   return (data ?? []).map(rowToUser);
+}
+
+export async function fetchUserForAuth(usernameOrEmail: string): Promise<User | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('app_users')
+    .select('*')
+    .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
+    .maybeSingle();
+  if (error || !data) return null;
+  return rowToUser(data);
 }
 
 export async function upsertUser(user: User): Promise<void> {
@@ -429,6 +480,79 @@ export async function isDbEmpty(): Promise<boolean> {
 }
 
 // ─────────────────────────────────────────────
+// DEVICES (MANAGE SERVICES)
+// ─────────────────────────────────────────────
+
+export async function fetchDevices(): Promise<DeviceItem[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('devices')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('[Supabase] fetchDevices error:', error.message);
+    return [];
+  }
+  return (data ?? []).map(rowToDevice);
+}
+
+export async function upsertDevice(device: DeviceItem): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('devices')
+    .upsert(deviceToRow(device), { onConflict: 'id' });
+  if (error) {
+    console.error('[Supabase] upsertDevice error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function upsertDevices(devices: DeviceItem[]): Promise<boolean> {
+  if (!supabase || devices.length === 0) return true;
+  const { error } = await supabase
+    .from('devices')
+    .upsert(devices.map(deviceToRow), { onConflict: 'id' });
+  if (error) {
+    console.error('[Supabase] upsertDevices error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function deleteDeviceById(id: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('devices')
+    .delete()
+    .eq('id', id);
+  if (error) {
+    console.error('[Supabase] deleteDeviceById error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+export function subscribeToDevices(onChange: () => void) {
+  if (!supabase) return null;
+  try {
+    return supabase
+      .channel('public:devices')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'devices' },
+        () => {
+          onChange();
+        }
+      )
+      .subscribe();
+  } catch (err) {
+    console.warn('[Supabase Realtime] Devices subscribe failed or unsupported:', err);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // REALTIME SUBSCRIPTIONS
 // ─────────────────────────────────────────────
 export function subscribeToTickets(
@@ -463,4 +587,5 @@ export function subscribeToTickets(
     return null;
   }
 }
+
 

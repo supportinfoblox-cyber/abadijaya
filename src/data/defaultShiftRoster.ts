@@ -48,14 +48,14 @@ export const DEFAULT_SHIFT_ROSTER_CONFIG: ShiftRosterConfig = {
   engineers: [
     {
       id: 'usr-team-1',
-      name: 'Djomy / Sonda',
-      username: 'djomy_sonda',
+      name: 'Regu 1',
+      username: 'regu_1',
       role: 'Regu 1',
     },
     {
       id: 'usr-team-2',
-      name: 'Wisnu / Ismail',
-      username: 'wisnu_ismail',
+      name: 'Regu 2',
+      username: 'regu_2',
       role: 'Regu 2',
     },
   ],

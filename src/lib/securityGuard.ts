@@ -203,7 +203,7 @@ class SecurityGuard {
           Akses Developer Tools Dinonaktifkan
         </h3>
         <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 20px;">
-          Demi keamanan dan kerahasiaan data operasional tiket BSI Infoblox, penggunaan Web Developer Tools dan inspeksi kode tidak diizinkan pada aplikasi ini.
+          Demi keamanan dan kerahasiaan data operasional tiket sistem, penggunaan Web Developer Tools dan inspeksi kode tidak diizinkan pada aplikasi ini.
         </p>
         <div style="
           font-size: 0.75rem;

@@ -136,7 +136,7 @@ export async function syncCloseToOtrs(
           message: 'Tiket berhasil ditutup di TicketOps & Cloud Database. Terjadwal sinkronisasi ke iCare OTRS.',
         })),
         syncedAt: new Date().toISOString(),
-        portalUrl: 'https://icare.lt-integra.com/otrs/index.pl',
+        portalUrl: '',
       };
     }
 
@@ -158,7 +158,7 @@ export async function syncCloseToOtrs(
         message: 'Tiket berhasil ditutup di TicketOps & Cloud Database. Terjadwal sinkronisasi ke iCare OTRS.',
       })),
       syncedAt: new Date().toISOString(),
-      portalUrl: 'https://icare.lt-integra.com/otrs/index.pl',
+      portalUrl: '',
     };
   }
 }

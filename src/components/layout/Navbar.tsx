@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
-  Search,
   Bell,
   Shield,
   X,
@@ -52,12 +51,14 @@ export default function Navbar() {
     cloudSyncStatus,
     lastCloudSync,
     syncWithCloudNow,
+    integrationConfig,
+    isSyncing,
+    syncTicketsNow,
   } = useTicketOps();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window !== 'undefined') {
@@ -84,15 +85,14 @@ export default function Navbar() {
     localStorage.setItem('ticketops-theme', next);
   };
 
-  // Keyboard shortcut Ctrl+K / Cmd+K to focus search
+  // Keyboard shortcut Ctrl+K / Cmd+K to navigate to ticket management
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (currentView !== 'tickets' && currentView !== 'dashboard') {
+        if (currentView !== 'tickets') {
           setCurrentView('tickets');
         }
-        setTimeout(() => searchInputRef.current?.focus(), 50);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -119,12 +119,12 @@ export default function Navbar() {
   };
 
   const viewMeta: Record<string, { title: string; subtitle: string }> = {
-    dashboard: { title: 'Operational Command Center', subtitle: 'Real-time monitoring • BSI Infoblox Ops' },
-    tickets: { title: 'Ticket Management', subtitle: 'OTRS/iCare queue · OP0899 & OP0968' },
-    'pm-schedule': { title: 'Jadwal Preventive Maintenance', subtitle: 'Kalender & checklist inspeksi pemeliharaan rutin perangkat BSI Infoblox' },
+    dashboard: { title: 'Operational Command Center', subtitle: 'Real-time monitoring • Enterprise DDI Ops' },
+    tickets: { title: 'Ticket Management', subtitle: 'Antrean Operasional & Manajemen Tiket' },
+    'pm-schedule': { title: 'Jadwal Preventive Maintenance', subtitle: 'Kalender & checklist inspeksi pemeliharaan rutin perangkat appliance' },
     'shift-schedule': { title: 'Jadwal Shift Kerja & Roster', subtitle: 'Manajemen rotasi shift mingguan, non-shift, & tukar shift real-time' },
     'icare-attendance': { title: 'Absen iCare Daily Report', subtitle: 'Pelaporan harian engineer terhubung portal iCare LT Integra' },
-    'ms-devices': { title: 'Daftar Perangkat Manage Services', subtitle: 'Inventarisasi hardware Infoblox & monitoring masa aktif lisensi' },
+    'ms-devices': { title: 'Daftar Perangkat', subtitle: 'Inventarisasi hardware Infoblox & monitoring masa aktif lisensi' },
     worklog: { title: 'Engineer Worklog', subtitle: 'Time tracking & work documentation' },
     sla: { title: 'SLA Monitoring', subtitle: 'Compliance matrix · SLA thresholds' },
     reports: { title: 'Analytics & Reporting', subtitle: 'Operational insights & data exports' },
@@ -166,6 +166,7 @@ export default function Navbar() {
   };
 
   const isDark = theme === 'dark';
+  const isConnected = integrationConfig?.connectionStatus === 'CONNECTED';
 
   const notifTypeColor = (type: string) => {
     if (type.includes('BREACHED') || type.includes('CRITICAL')) return 'var(--color-danger)';
@@ -272,72 +273,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Global Search */}
-        <div
-          className="hide-tablet"
-          style={{
-            position: 'relative',
-            maxWidth: '360px',
-            width: '100%',
-            display: currentView === 'tickets' || currentView === 'dashboard' ? 'block' : 'none',
-          }}
-        >
-          <Search size={14} color="var(--text-muted)" style={{
-            position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-          }} />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Cari tiket, subjek, pemohon... (⌘K)"
-            value={globalSearchQuery}
-            onChange={e => {
-              setGlobalSearchQuery(e.target.value);
-              if (currentView !== 'tickets' && e.target.value.trim().length > 0) {
-                setCurrentView('tickets');
-              }
-            }}
-            style={{
-              width: '100%',
-              padding: '8px 36px',
-              borderRadius: '9px',
-              border: '1px solid var(--border-medium)',
-              backgroundColor: 'var(--bg-input)',
-              color: 'var(--text-primary)',
-              fontSize: '0.82rem',
-              outline: 'none',
-              transition: 'all 0.15s ease',
-            }}
-            onFocus={e => {
-              e.target.style.borderColor = 'var(--border-focus)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.18)';
-            }}
-            onBlur={e => {
-              e.target.style.borderColor = 'var(--border-medium)';
-              e.target.style.boxShadow = 'none';
-            }}
-          />
-          {!globalSearchQuery ? (
-            <span className="kbd" style={{
-              position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-              pointerEvents: 'none',
-            }}>
-              ⌘K
-            </span>
-          ) : (
-            <button
-              onClick={() => setGlobalSearchQuery('')}
-              style={{
-                position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-subtle)',
-                color: 'var(--text-muted)', cursor: 'pointer',
-                borderRadius: '5px', padding: '2px', display: 'flex',
-              }}
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Right Controls */}
@@ -352,107 +287,177 @@ export default function Navbar() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            padding: '5px 10px',
-            borderRadius: '100px',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
             background: cloudSyncStatus === 'synced'
-              ? (isDark ? 'rgba(14, 165, 233, 0.09)' : 'rgba(14, 165, 233, 0.12)')
+              ? (isDark ? 'rgba(14, 165, 233, 0.12)' : 'rgba(14, 165, 233, 0.14)')
               : cloudSyncStatus === 'syncing'
-              ? (isDark ? 'rgba(99, 102, 241, 0.12)' : 'rgba(99, 102, 241, 0.12)')
-              : (isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.12)'),
+              ? (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.15)')
+              : (isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.14)'),
             border: `1px solid ${
               cloudSyncStatus === 'synced'
-                ? (isDark ? 'rgba(14, 165, 233, 0.3)' : 'rgba(14, 165, 233, 0.4)')
+                ? (isDark ? 'rgba(14, 165, 233, 0.35)' : 'rgba(14, 165, 233, 0.45)')
                 : cloudSyncStatus === 'syncing'
-                ? (isDark ? 'rgba(99, 102, 241, 0.35)' : 'rgba(99, 102, 241, 0.4)')
-                : (isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)')
+                ? (isDark ? 'rgba(99, 102, 241, 0.4)' : 'rgba(99, 102, 241, 0.45)')
+                : (isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.45)')
             }`,
-            fontSize: '0.7rem',
-            fontWeight: 700,
             color: cloudSyncStatus === 'synced'
               ? (isDark ? '#38bdf8' : '#0284c7')
               : cloudSyncStatus === 'syncing'
               ? 'var(--text-accent)'
               : (isDark ? '#f87171' : '#dc2626'),
-            letterSpacing: '0.03em',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
             flexShrink: 0,
+            padding: 0,
           }}
           title={
             lastCloudSync
-              ? `Database Cloud (Supabase): ${cloudSyncStatus.toUpperCase()} • Terakhir: ${new Date(lastCloudSync).toLocaleTimeString('id-ID')} • Klik untuk sync ulang sekarang`
-              : 'Database Cloud (Supabase) • Klik untuk sync ulang sekarang'
+              ? `Database Cloud (Supabase): ${cloudSyncStatus.toUpperCase()} • ${tickets.length} Tiket • Terakhir: ${new Date(lastCloudSync).toLocaleTimeString('id-ID')} • Klik untuk sync ulang sekarang`
+              : `Database Cloud (Supabase): ${tickets.length} Tiket • Klik untuk sync ulang sekarang`
           }
         >
           {cloudSyncStatus === 'syncing' ? (
-            <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
+            <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
           ) : cloudSyncStatus === 'offline' || cloudSyncStatus === 'error' ? (
-            <CloudOff size={13} />
+            <CloudOff size={15} />
           ) : (
-            <Cloud size={13} />
+            <Cloud size={15} />
           )}
-          <span className="hide-tablet" style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)' }}>
-            {cloudSyncStatus === 'syncing'
-              ? 'Syncing...'
-              : cloudSyncStatus === 'synced'
-              ? `Cloud: ${tickets.length}`
-              : 'Cloud: Offline'}
-          </span>
         </button>
 
-        {/* Live Ops Center Pill */}
-        <div className="hide-tablet" style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '4px 10px',
-          borderRadius: '100px',
-          background: isDark ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.12)',
-          border: isDark ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(16, 185, 129, 0.35)',
-          fontSize: '0.7rem',
-          fontWeight: 700,
-          color: 'var(--color-success)',
-          letterSpacing: '0.04em',
-          flexShrink: 0,
-        }}>
+        {/* iCare Portal Sync Badge (Moved beside Cloud Database Sync) */}
+        <button
+          onClick={async () => {
+            await syncTicketsNow();
+          }}
+          disabled={isSyncing}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
+            background: isConnected
+              ? (isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.14)')
+              : (isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.14)'),
+            border: `1px solid ${
+              isConnected
+                ? (isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.45)')
+                : (isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.45)')
+            }`,
+            color: isConnected
+              ? (isDark ? '#34d399' : '#059669')
+              : (isDark ? '#f87171' : '#dc2626'),
+            cursor: isSyncing ? 'not-allowed' : 'pointer',
+            transition: 'all 0.15s ease',
+            flexShrink: 0,
+            padding: 0,
+            position: 'relative',
+          }}
+          title={
+            integrationConfig?.lastSyncAt
+              ? `iCare Portal Sync: ${isConnected ? 'Connected' : 'Offline'} • Terakhir: ${new Date(integrationConfig.lastSyncAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • Klik untuk sync dari Portal`
+              : `iCare Portal Sync: ${isConnected ? 'Connected' : 'Offline'} • Klik untuk sync dari Portal`
+          }
+        >
+          <RefreshCw size={14} style={{ animation: isSyncing ? 'spin 1s linear infinite' : 'none' }} />
+          {/* Status Dot */}
+          <span
+            style={{
+              position: 'absolute',
+              top: '2px',
+              right: '2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: isConnected ? 'var(--color-success)' : 'var(--color-danger)',
+              boxShadow: isConnected ? '0 0 6px rgba(16, 185, 129, 0.8)' : '0 0 6px rgba(239, 68, 68, 0.8)',
+              border: '1.5px solid var(--bg-card)',
+            }}
+          />
+        </button>
+
+        {/* Live Ops Center Pill / Circle Badge */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
+            background: isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.14)',
+            border: isDark ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(16, 185, 129, 0.4)',
+            color: 'var(--color-success)',
+            flexShrink: 0,
+            position: 'relative',
+          }}
+          title="Live Operations: AKTIF • Telemetry & Antrean Real-time"
+        >
           <span className="live-pulse" style={{
-            width: '6px', height: '6px', borderRadius: '50%',
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
             backgroundColor: 'var(--color-success)',
+            boxShadow: '0 0 10px var(--color-success)',
           }} />
-          <span style={{ textTransform: 'uppercase', fontSize: '0.65rem' }}>
-            Live Ops
-          </span>
         </div>
 
-        {/* Role Chip */}
-        <div className="hide-tablet" style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '5px 11px',
-          background: 'var(--accent-primary-light)',
-          border: '1px solid rgba(99, 102, 241, 0.28)',
-          borderRadius: '8px',
-          color: 'var(--text-accent)',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          letterSpacing: '0.03em',
-          flexShrink: 0,
-        }}>
-          <Shield size={13} />
-          <span style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
-            {currentUser?.role || 'engineer'}
-          </span>
+        {/* Role Chip / Circle Badge */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
+            background: 'var(--accent-primary-light)',
+            border: '1px solid rgba(99, 102, 241, 0.3)',
+            color: 'var(--text-accent)',
+            flexShrink: 0,
+          }}
+          title={`Role Akses: ${(currentUser?.role || 'engineer').toUpperCase()}`}
+        >
+          <Shield size={15} />
         </div>
 
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
+            flexShrink: 0,
             background: 'var(--bg-card)',
             border: '1px solid var(--border-medium)',
             color: theme === 'dark' ? '#fbbf24' : '#4f46e5',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
+            padding: 0,
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)';
@@ -479,13 +484,22 @@ export default function Navbar() {
             }}
             style={{
               position: 'relative',
-              width: '36px', height: '36px', borderRadius: '9px', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '34px',
+              height: '34px',
+              minWidth: '34px',
+              minHeight: '34px',
+              borderRadius: '50%',
+              aspectRatio: '1 / 1',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               background: isNotifOpen ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.12)') : 'var(--bg-card)',
               border: `1px solid ${isNotifOpen ? 'rgba(99,102,241,0.35)' : 'var(--border-medium)'}`,
               color: isNotifOpen ? 'var(--text-accent)' : 'var(--text-secondary)',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
+              padding: 0,
             }}
             onMouseEnter={e => {
               e.currentTarget.style.background = isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)';
@@ -554,7 +568,10 @@ export default function Navbar() {
                   )}
                 </div>
                 <button
-                  onClick={clearAllNotifications}
+                  onClick={() => {
+                    clearAllNotifications();
+                    setIsNotifOpen(false);
+                  }}
                   style={{
                     background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
                     fontSize: '0.7rem', color: 'var(--text-muted)', cursor: 'pointer',

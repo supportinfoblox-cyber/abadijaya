@@ -243,8 +243,8 @@ async function runSyncOnce() {
             await supabase.from('audit_logs').insert({
               id: `audit-close-${Date.now()}-${item.ticket_number}`,
               timestamp: new Date().toISOString(),
-              user_id: 'usr-ismailak',
-              user_name: 'Ismail Akbar',
+              user_id: 'usr-sync-daemon',
+              user_name: 'Sync Daemon',
               action: 'CLOSE_TICKET_OTRS',
               module: 'Integration',
               entity_id: item.ticket_number,
@@ -281,8 +281,8 @@ async function runSyncOnce() {
       await supabase.from('audit_logs').insert({
         id: `audit-sync-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        user_id: 'usr-ismailak',
-        user_name: 'Ismail Akbar',
+        user_id: 'usr-sync-daemon',
+        user_name: 'Sync Daemon',
         action: 'PORTAL_SYNC',
         module: 'Integration',
         entity_id: 'iCare OTRS Bridge',

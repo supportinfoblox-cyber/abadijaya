@@ -15,7 +15,6 @@ import {
   Cpu,
   FileSpreadsheet,
   Settings,
-  RefreshCw,
   Zap,
   X,
   CalendarDays,
@@ -29,11 +28,8 @@ export default function Sidebar() {
     setCurrentView,
     tickets,
     notifications,
-    integrationConfig,
     can,
     currentUser,
-    isSyncing,
-    syncTicketsNow,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
     disabledMenus,
@@ -42,7 +38,6 @@ export default function Sidebar() {
   const openTicketsCount = tickets.filter(t => t.status !== 'CLOSED' && t.status !== 'RESOLVED').length;
   const breachedCount = tickets.filter(t => t.slaStatus === 'BREACHED' && t.status !== 'CLOSED' && t.status !== 'RESOLVED').length;
   const unreadNotifsCount = notifications.filter(n => !n.read).length;
-  const isConnected = integrationConfig.connectionStatus === 'CONNECTED';
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
@@ -50,7 +45,7 @@ export default function Sidebar() {
     { id: 'shift-schedule', label: 'Jadwal Shift Kerja', icon: CalendarDays, badge: null },
     { id: 'pm-schedule', label: 'Jadwal Preventive Maintenance', icon: CalendarCheck, badge: null },
     { id: 'icare-attendance', label: 'Absen iCare', icon: ClipboardCheck, badge: null },
-    { id: 'ms-devices', label: 'Daftar Perangkat Manage Services', icon: HardDrive, badge: null },
+    { id: 'ms-devices', label: 'Daftar Perangkat', icon: HardDrive, badge: null },
     { id: 'worklog', label: 'Worklog', icon: Clock, badge: null },
     { id: 'sla', label: 'SLA Monitoring', icon: ShieldAlert, badge: breachedCount > 0 ? `${breachedCount} Breached` : null, badgeColor: 'danger' },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3, badge: null },
@@ -317,7 +312,7 @@ export default function Sidebar() {
                 </span>
               </div>
               <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
-                BSI Infoblox Ops Center
+                Enterprise DDI Ops Center
               </p>
             </div>
           )}
@@ -393,75 +388,11 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Footer: User + Connection Status */}
+      {/* Footer: User Profile */}
       <div style={{
         borderTop: '1px solid var(--border-subtle)',
         background: 'var(--bg-glass)',
       }}>
-        {/* Connection Status */}
-        <div style={{
-          padding: isSidebarCollapsed ? '10px 4px' : '12px 16px',
-          display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <div
-              title={isConnected ? (integrationConfig.lastSyncAt ? `iCare Connected (Sync: ${new Date(integrationConfig.lastSyncAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})` : 'iCare Connected') : 'Portal Offline'}
-              style={{
-                position: 'relative', display: 'flex', alignItems: 'center',
-              }}
-            >
-              <span style={{
-                width: '8px', height: '8px', borderRadius: '50%', display: 'block',
-                backgroundColor: isConnected ? 'var(--color-success)' : 'var(--color-danger)',
-                boxShadow: isConnected ? '0 0 8px rgba(5,150,105,0.6)' : '0 0 8px rgba(220,38,38,0.6)',
-              }} />
-              {isConnected && (
-                <span style={{
-                  position: 'absolute', inset: '-2px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-success)',
-                  opacity: 0.25,
-                  animation: 'pulse-warning 2s ease-in-out infinite',
-                }} />
-              )}
-            </div>
-            {!isSidebarCollapsed && (
-              <div>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                  {isConnected ? 'iCare Connected' : 'Portal Offline'}
-                </div>
-                <div style={{ fontSize: '0.63rem', color: 'var(--text-muted)' }}>
-                  {integrationConfig.lastSyncAt
-                    ? `Sync: ${new Date(integrationConfig.lastSyncAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
-                    : 'Never synced'
-                  }
-                </div>
-              </div>
-            )}
-          </div>
-          {!isSidebarCollapsed && (
-            <button
-              onClick={() => syncTicketsNow()}
-              disabled={isSyncing}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
-                padding: '4px 9px', borderRadius: '7px',
-                fontSize: '0.68rem', fontWeight: 700,
-                color: isSyncing ? 'var(--text-muted)' : 'var(--text-accent)',
-                background: isSyncing ? 'transparent' : 'var(--accent-primary-light)',
-                border: `1px solid ${isSyncing ? 'var(--border-subtle)' : 'rgba(79,70,229,0.25)'}`,
-                cursor: isSyncing ? 'not-allowed' : 'pointer',
-                transition: 'all 0.15s ease',
-                opacity: isSyncing ? 0.6 : 1,
-              }}
-              title="Sync dari iCare Portal"
-            >
-              <RefreshCw size={11} style={{ animation: isSyncing ? 'spin 1s linear infinite' : 'none' }} />
-              {isSyncing ? 'Syncing' : 'Sync'}
-            </button>
-          )}
-        </div>
 
         {/* User Profile */}
         <div style={{

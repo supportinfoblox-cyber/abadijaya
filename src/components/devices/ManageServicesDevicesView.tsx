@@ -22,145 +22,95 @@ import {
   MapPin,
   Clock,
   Info,
+  RefreshCw,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveOrShareFile } from '@/services/exportExcel';
+import { DeviceItem } from '@/types';
+import {
+  fetchDevices,
+  upsertDevice,
+  upsertDevices,
+  deleteDeviceById,
+  subscribeToDevices,
+} from '@/services/supabaseService';
+import { secureStorage } from '@/lib/secureStorage';
 
-export interface DeviceItem {
-  id: string;
-  hostname: string;
-  model: string;
-  serialNumber: string;
-  ipAddress: string;
-  ipManagement?: string;
-  siteLocation: string;
-  role: string;
-  licenseType: string;
-  licenseActiveDate: string; // YYYY-MM-DD
-  licenseExpiredDate: string; // YYYY-MM-DD
-  status: 'ACTIVE' | 'STANDBY' | 'MAINTENANCE';
-  notes?: string;
-  lastUpdated: string;
-}
-
-const INITIAL_DEVICES: DeviceItem[] = [
-  {
-    id: 'DEV-001',
-    hostname: 'BSI-IBX-GM01',
-    model: 'Infoblox TE-2215',
-    serialNumber: 'IBX-2215-99821A',
-    ipAddress: '10.0.96.53',
-    ipManagement: '10.0.96.153',
-    siteLocation: 'BSI Kantor Pusat (Wisma Atlet)',
-    role: 'Grid Master',
-    licenseType: 'NIOS Grid + DNSone + Threat Insight',
-    licenseActiveDate: '2025-01-01',
-    licenseExpiredDate: '2027-01-01',
-    status: 'ACTIVE',
-    notes: 'Primary Grid Master untuk seluruh cluster BSI',
-    lastUpdated: '2026-09-18 10:00',
-  },
-  {
-    id: 'DEV-002',
-    hostname: 'BSI-IBX-GMC01',
-    model: 'Infoblox TE-2215',
-    serialNumber: 'IBX-2215-99822B',
-    ipAddress: '10.0.96.54',
-    ipManagement: '10.0.96.154',
-    siteLocation: 'BSI Menara Thamrin',
-    role: 'Grid Master Candidate',
-    licenseType: 'NIOS Grid + DNSone + Threat Insight',
-    licenseActiveDate: '2025-01-01',
-    licenseExpiredDate: '2027-01-01',
-    status: 'ACTIVE',
-    notes: 'Secondary GMC Failover cluster',
-    lastUpdated: '2026-09-18 10:00',
-  },
-  {
-    id: 'DEV-003',
-    hostname: 'BSI-IBX-MBR-SBY01',
-    model: 'Infoblox TE-1415',
-    serialNumber: 'IBX-1415-44210C',
-    ipAddress: '10.10.12.11',
-    ipManagement: '10.10.12.21',
-    siteLocation: 'Data Center Surabaya (DCS)',
-    role: 'Member DNS/DHCP',
-    licenseType: 'DNSone + Network Insight',
-    licenseActiveDate: '2025-06-01',
-    licenseExpiredDate: '2026-10-15', // Segera Expired (< 30 hari)
-    status: 'ACTIVE',
-    notes: 'Perlu pengajuan perpanjangan lisensi triwulan depan',
-    lastUpdated: '2026-09-17 11:30',
-  },
-  {
-    id: 'DEV-004',
-    hostname: 'BSI-IBX-MBR-BDG01',
-    model: 'Infoblox TE-1415',
-    serialNumber: 'IBX-1415-44211D',
-    ipAddress: '10.20.14.15',
-    ipManagement: '10.20.14.25',
-    siteLocation: 'Disaster Recovery Center Bandung (DRC)',
-    role: 'Member DNS',
-    licenseType: 'DNSone Enterprise',
-    licenseActiveDate: '2025-03-15',
-    licenseExpiredDate: '2026-11-20', // Segera Expired (< 90 hari)
-    status: 'ACTIVE',
-    notes: 'DRC Node replication cluster standby',
-    lastUpdated: '2026-09-15 09:15',
-  },
-  {
-    id: 'DEV-005',
-    hostname: 'BSI-IBX-EXT-DNS01',
-    model: 'Infoblox PT-4000',
-    serialNumber: 'IBX-4000-77192E',
-    ipAddress: '10.216.249.122',
-    ipManagement: '10.216.249.222',
-    siteLocation: 'BSI Gedung Landmark',
-    role: 'External DNS',
-    licenseType: 'Advanced DNS Protection (ADP)',
-    licenseActiveDate: '2024-08-01',
-    licenseExpiredDate: '2026-08-01', // Sudah Expired
-    status: 'MAINTENANCE',
-    notes: 'Lisensi ADP sedang dalam proses PO perpanjangan',
-    lastUpdated: '2026-09-10 16:40',
-  },
-  {
-    id: 'DEV-006',
-    hostname: 'BSI-IBX-MBR-MDN01',
-    model: 'Infoblox TE-815',
-    serialNumber: 'IBX-815-11029F',
-    ipAddress: '10.30.5.10',
-    ipManagement: '10.30.5.20',
-    siteLocation: 'BSI Regional Medan (KC Thamrin)',
-    role: 'Member DNS/DHCP',
-    licenseType: 'DNSone Branch Edition',
-    licenseActiveDate: '2025-05-10',
-    licenseExpiredDate: '2027-05-10',
-    status: 'ACTIVE',
-    notes: 'Local DNS caching & DHCP relay branch',
-    lastUpdated: '2026-09-12 14:20',
-  },
-];
+export type { DeviceItem };
 
 const LOCAL_STORAGE_KEY = 'ticketops_manage_services_devices';
 
 export default function ManageServicesDevicesView() {
   const [devices, setDevices] = useState<DeviceItem[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const saved = secureStorage.getItemSync(LOCAL_STORAGE_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse saved devices', e);
-        }
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
       }
     }
-    return INITIAL_DEVICES;
+    return [];
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLicenseStatus, setFilterLicenseStatus] = useState<string>('ALL');
+
+  // Load from Supabase Cloud on mount & listen to realtime updates across devices
+  const reloadFromCloud = async () => {
+    setIsCloudSyncing(true);
+    try {
+      const cloudDevices = await fetchDevices();
+      if (cloudDevices.length > 0) {
+        setDevices(cloudDevices);
+        await secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudDevices));
+      } else {
+        // Jika cloud kosong, cek cache lokal untuk inisialisasi cloud
+        const cached = await secureStorage.getItem(LOCAL_STORAGE_KEY);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setDevices(parsed);
+              await upsertDevices(parsed);
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.warn('[ManageServicesDevicesView] Cloud fetch error:', err);
+    } finally {
+      setIsLoading(false);
+      setIsCloudSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    reloadFromCloud();
+
+    // Realtime channel: sync otomatis saat device ditambahkan/diedit dari device/laptop/HP lain
+    const sub = subscribeToDevices(async () => {
+      try {
+        const refreshed = await fetchDevices();
+        if (isMounted && refreshed.length > 0) {
+          setDevices(refreshed);
+          await secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(refreshed));
+        }
+      } catch {}
+    });
+
+    return () => {
+      isMounted = false;
+      if (sub && typeof (sub as any).unsubscribe === 'function') {
+        (sub as any).unsubscribe();
+      }
+    };
+  }, []);
 
   // Modal State
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -169,7 +119,7 @@ export default function ManageServicesDevicesView() {
 
   // Form Fields
   const [formHostname, setFormHostname] = useState('');
-  const [formModel, setFormModel] = useState('Infoblox TE-1415');
+  const [formModel, setFormModel] = useState('');
   const [formSerialNumber, setFormSerialNumber] = useState('');
   const [formIpAddress, setFormIpAddress] = useState('');
   const [formIpManagement, setFormIpManagement] = useState('');
@@ -187,12 +137,6 @@ export default function ManageServicesDevicesView() {
   const [uploadFileName, setUploadFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Save to LocalStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(devices));
-    }
-  }, [devices]);
 
   // Helper: License Status & Days Remaining
   const getLicenseInfo = (expiredDateStr: string) => {
@@ -272,7 +216,7 @@ export default function ManageServicesDevicesView() {
   const handleOpenCreate = () => {
     setEditingDevice(null);
     setFormHostname('');
-    setFormModel('Infoblox TE-1415');
+    setFormModel('');
     setFormSerialNumber('');
     setFormIpAddress('');
     setFormIpManagement('');
@@ -308,61 +252,76 @@ export default function ManageServicesDevicesView() {
   };
 
   // Save Device Form (Create or Edit)
-  const handleSaveDevice = (e: React.FormEvent) => {
+  const handleSaveDevice = async (e: React.FormEvent) => {
     e.preventDefault();
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    let targetDevice: DeviceItem;
+    let nextList: DeviceItem[];
 
     if (editingDevice) {
-      setDevices(prev =>
-        prev.map(d =>
-          d.id === editingDevice.id
-            ? {
-                ...d,
-                hostname: formHostname,
-                model: formModel,
-                serialNumber: formSerialNumber,
-                ipAddress: formIpAddress,
-                ipManagement: formIpManagement.trim() || undefined,
-                siteLocation: formSiteLocation,
-                role: formRole,
-                licenseType: formLicenseType,
-                licenseActiveDate: formLicenseActiveDate,
-                licenseExpiredDate: formLicenseExpiredDate,
-                status: formStatus,
-                notes: formNotes,
-                lastUpdated: nowStr,
-              }
-            : d
-        )
-      );
-    } else {
-      const newId = `DEV-${String(devices.length + 1).padStart(3, '0')}`;
-      const newDev: DeviceItem = {
-        id: newId,
-        hostname: formHostname,
-        model: formModel,
-        serialNumber: formSerialNumber,
-        ipAddress: formIpAddress,
+      targetDevice = {
+        ...editingDevice,
+        hostname: formHostname.trim(),
+        model: formModel.trim(),
+        serialNumber: formSerialNumber.trim(),
+        ipAddress: formIpAddress.trim(),
         ipManagement: formIpManagement.trim() || undefined,
-        siteLocation: formSiteLocation,
-        role: formRole,
-        licenseType: formLicenseType,
+        siteLocation: formSiteLocation.trim(),
+        role: formRole.trim(),
+        licenseType: formLicenseType.trim(),
         licenseActiveDate: formLicenseActiveDate,
         licenseExpiredDate: formLicenseExpiredDate,
         status: formStatus,
-        notes: formNotes,
+        notes: formNotes.trim(),
         lastUpdated: nowStr,
       };
-      setDevices(prev => [newDev, ...prev]);
+      nextList = devices.map(d => d.id === editingDevice.id ? targetDevice : d);
+    } else {
+      const newId = `DEV-${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 90 + 10)}`;
+      targetDevice = {
+        id: newId,
+        hostname: formHostname.trim(),
+        model: formModel.trim(),
+        serialNumber: formSerialNumber.trim(),
+        ipAddress: formIpAddress.trim(),
+        ipManagement: formIpManagement.trim() || undefined,
+        siteLocation: formSiteLocation.trim(),
+        role: formRole.trim(),
+        licenseType: formLicenseType.trim(),
+        licenseActiveDate: formLicenseActiveDate,
+        licenseExpiredDate: formLicenseExpiredDate,
+        status: formStatus,
+        notes: formNotes.trim(),
+        lastUpdated: nowStr,
+      };
+      nextList = [targetDevice, ...devices];
     }
 
+    setDevices(nextList);
     setIsFormModalOpen(false);
+
+    // Persist ke Supabase Cloud (sehingga sinkron ke semua device lain) & JWE 256-bit cache
+    try {
+      await upsertDevice(targetDevice);
+      await secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextList));
+    } catch (err) {
+      console.error('[ManageDevices] Failed to persist device:', err);
+    }
   };
 
   // Delete Device
-  const handleDeleteDevice = (id: string, hostname: string) => {
+  const handleDeleteDevice = async (id: string, hostname: string) => {
     if (confirm(`Hapus perangkat ${hostname} (${id}) dari daftar Manage Services?`)) {
-      setDevices(prev => prev.filter(d => d.id !== id));
+      const nextList = devices.filter(d => d.id !== id);
+      setDevices(nextList);
+
+      // Hapus dari Supabase Cloud & JWE 256-bit cache
+      try {
+        await deleteDeviceById(id);
+        await secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextList));
+      } catch (err) {
+        console.error('[ManageDevices] Failed to delete device:', err);
+      }
     }
   };
 
@@ -370,18 +329,18 @@ export default function ManageServicesDevicesView() {
   const handleDownloadTemplateExcel = async () => {
     const templateData = [
       {
-        'Hostname*': 'BSI-IBX-EXAMPLE01',
-        'Model*': 'Infoblox TE-1415',
-        'SerialNumber*': 'IBX-1415-12345X',
-        'IPAddress*': '10.0.96.100',
-        'IPAddressManagement': '10.0.96.200',
-        'SiteLocation*': 'BSI Cabang Surabaya',
-        'Role': 'Member DNS/DHCP',
-        'LicenseType': 'NIOS Grid + DNSone',
+        'Hostname*': 'DEV-01',
+        'Model*': 'Model Perangkat',
+        'SerialNumber*': 'SN-123456',
+        'IPAddress*': '192.168.1.10',
+        'IPAddressManagement': '192.168.1.20',
+        'SiteLocation*': 'Lokasi Site',
+        'Role': 'Role Perangkat',
+        'LicenseType': 'Tipe Lisensi',
         'LicenseActiveDate (YYYY-MM-DD)*': '2025-01-01',
         'LicenseExpiredDate (YYYY-MM-DD)*': '2027-01-01',
         'Status (ACTIVE/STANDBY/MAINTENANCE)': 'ACTIVE',
-        'Notes': 'Catatan khusus perangkat',
+        'Notes': 'Catatan khusus',
       },
     ];
 
@@ -405,18 +364,18 @@ export default function ManageServicesDevicesView() {
   const handleDownloadTemplateCsv = async () => {
     const templateData = [
       {
-        'Hostname*': 'BSI-IBX-EXAMPLE01',
-        'Model*': 'Infoblox TE-1415',
-        'SerialNumber*': 'IBX-1415-12345X',
-        'IPAddress*': '10.0.96.100',
-        'IPAddressManagement': '10.0.96.200',
-        'SiteLocation*': 'BSI Cabang Surabaya',
-        'Role': 'Member DNS/DHCP',
-        'LicenseType': 'NIOS Grid + DNSone',
+        'Hostname*': 'DEV-01',
+        'Model*': 'Model Perangkat',
+        'SerialNumber*': 'SN-123456',
+        'IPAddress*': '192.168.1.10',
+        'IPAddressManagement': '192.168.1.20',
+        'SiteLocation*': 'Lokasi Site',
+        'Role': 'Role Perangkat',
+        'LicenseType': 'Tipe Lisensi',
         'LicenseActiveDate (YYYY-MM-DD)*': '2025-01-01',
         'LicenseExpiredDate (YYYY-MM-DD)*': '2027-01-01',
         'Status (ACTIVE/STANDBY/MAINTENANCE)': 'ACTIVE',
-        'Notes': 'Catatan khusus perangkat',
+        'Notes': 'Catatan khusus',
       },
     ];
 
@@ -464,7 +423,7 @@ export default function ManageServicesDevicesView() {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    const filename = `Daftar_Perangkat_Manage_Services_BSI_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `Daftar_Perangkat_Manage_Services_${new Date().toISOString().slice(0, 10)}.xlsx`;
     await saveOrShareFile({
       filename,
       blob,
@@ -494,7 +453,7 @@ export default function ManageServicesDevicesView() {
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const filename = `Daftar_Perangkat_Manage_Services_BSI_${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `Daftar_Perangkat_Manage_Services_${new Date().toISOString().slice(0, 10)}.csv`;
 
     await saveOrShareFile({
       filename,
@@ -552,11 +511,11 @@ export default function ManageServicesDevicesView() {
         const parsedDevices: DeviceItem[] = jsonData.map((row: any, idx: number) => {
           // Normalize column keys
           const hostname = row['Hostname*'] || row['Hostname'] || row['hostname'] || `HOST-${idx + 1}`;
-          const model = row['Model*'] || row['Model'] || row['model'] || 'Infoblox Appliance';
+          const model = row['Model*'] || row['Model'] || row['model'] || 'Perangkat';
           const serialNumber = row['SerialNumber*'] || row['SerialNumber'] || row['Serial Number'] || row['serial_number'] || '-';
           const ipAddress = row['IPAddress*'] || row['IPAddress'] || row['IP Address'] || row['ip'] || '-';
           const ipManagement = row['IPAddressManagement'] || row['IP Address Management'] || row['IP Management'] || row['ip_management'] || row['ipManagement'] || '';
-          const siteLocation = row['SiteLocation*'] || row['SiteLocation'] || row['Site Location'] || row['Lokasi'] || 'BSI Site';
+          const siteLocation = row['SiteLocation*'] || row['SiteLocation'] || row['Site Location'] || row['Lokasi'] || 'Site Lokasi';
           const role = row['Role'] || row['role'] || 'Member';
           const licenseType = row['LicenseType'] || row['License Type'] || row['Tipe Lisensi'] || 'NIOS License';
           
@@ -604,25 +563,35 @@ export default function ManageServicesDevicesView() {
   };
 
   // Confirm Import
-  const handleConfirmImport = () => {
+  const handleConfirmImport = async () => {
     if (uploadedPreview.length === 0) return;
+    let nextList: DeviceItem[];
 
     if (uploadMode === 'replace') {
-      setDevices(uploadedPreview);
+      nextList = uploadedPreview;
     } else {
       // Append, avoid exact duplicate serial number
-      setDevices(prev => {
-        const existingSerials = new Set(prev.map(p => p.serialNumber.toLowerCase()));
-        const newOnes = uploadedPreview.filter(u => !existingSerials.has(u.serialNumber.toLowerCase()) || u.serialNumber === '-');
-        return [...prev, ...newOnes];
-      });
+      const existingSerials = new Set(devices.map(p => p.serialNumber.toLowerCase()));
+      const newOnes = uploadedPreview.filter(u => !existingSerials.has(u.serialNumber.toLowerCase()) || u.serialNumber === '-');
+      nextList = [...devices, ...newOnes];
     }
 
-    alert(`Berhasil mengimpor ${uploadedPreview.length} perangkat Manage Services!`);
+    setDevices(nextList);
     setIsUploadModalOpen(false);
+    const count = uploadedPreview.length;
     setUploadedPreview([]);
     setUploadFileName('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+
+    // Persist ke Supabase Cloud Database & JWE 256-bit cache
+    try {
+      await upsertDevices(nextList);
+      await secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextList));
+      alert(`Berhasil mengimpor ${count} perangkat Manage Services ke cloud database!`);
+    } catch (err) {
+      console.error('[ManageDevices] Error during import persistence:', err);
+      alert(`Berhasil diimpor lokal, sinkronisasi cloud akan dilanjutkan di background.`);
+    }
   };
 
   return (
@@ -650,10 +619,10 @@ export default function ManageServicesDevicesView() {
             </div>
             <div>
               <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                Daftar Perangkat Manage Services
+                Daftar Perangkat
               </h1>
               <p style={{ margin: '3px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Manajemen inventaris perangkat Infoblox, status operasional, serta monitoring masa aktif & expired date lisensi
+                Manajemen inventaris perangkat, status operasional, serta monitoring masa aktif & expired date lisensi
               </p>
             </div>
           </div>
@@ -661,6 +630,22 @@ export default function ManageServicesDevicesView() {
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={reloadFromCloud}
+            disabled={isCloudSyncing}
+            className="btn btn-outline"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}
+            title="Sinkronisasi data perangkat dengan Supabase Cloud"
+          >
+            <RefreshCw
+              size={14}
+              style={{
+                animation: isCloudSyncing ? 'spin 1s linear infinite' : 'none',
+                color: isCloudSyncing ? '#10b981' : 'currentColor',
+              }}
+            />
+            {isCloudSyncing ? 'Menyinkronkan...' : 'Sync Cloud'}
+          </button>
           <button
             onClick={handleDownloadTemplateExcel}
             className="btn btn-outline"
@@ -712,7 +697,7 @@ export default function ManageServicesDevicesView() {
           <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
             {totalDevices}
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>Grid & Cluster Infoblox</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>Inventaris Terdaftar</div>
         </div>
 
         <div style={{
@@ -833,7 +818,7 @@ export default function ManageServicesDevicesView() {
               <tr style={{ backgroundColor: 'var(--bg-primary)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
                 <th style={{ padding: '14px 16px' }}>Hostname & Model</th>
                 <th style={{ padding: '14px 16px' }}>Serial Number & IP</th>
-                <th style={{ padding: '14px 16px' }}>Lokasi / Site BSI</th>
+                <th style={{ padding: '14px 16px' }}>Lokasi / Site Perangkat</th>
                 <th style={{ padding: '14px 16px' }}>Role & Tipe Lisensi</th>
                 <th style={{ padding: '14px 16px' }}>Periode Lisensi</th>
                 <th style={{ padding: '14px 16px' }}>Status Lisensi</th>
@@ -844,7 +829,7 @@ export default function ManageServicesDevicesView() {
               {filteredDevices.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Tidak ada perangkat yang sesuai dengan filter pencarian.
+                    {isLoading ? 'Memuat data perangkat dari cloud database...' : 'Tidak ada perangkat yang sesuai dengan filter pencarian.'}
                   </td>
                 </tr>
               ) : (
@@ -983,7 +968,7 @@ export default function ManageServicesDevicesView() {
               position: 'sticky', top: 0, backgroundColor: 'var(--bg-secondary)', zIndex: 1
             }}>
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {editingDevice ? 'Perbaiki Data Perangkat Manage Services' : 'Tambah Perangkat Manage Services'}
+                {editingDevice ? 'Perbaiki Data Perangkat' : 'Tambah Perangkat'}
               </h3>
               <button
                 onClick={() => setIsFormModalOpen(false)}
@@ -1002,7 +987,7 @@ export default function ManageServicesDevicesView() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: BSI-IBX-GM01"
+                    placeholder="Contoh: HOST-01"
                     value={formHostname}
                     onChange={e => setFormHostname(e.target.value)}
                     style={{
@@ -1020,7 +1005,7 @@ export default function ManageServicesDevicesView() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Infoblox TE-1415 / TE-2215"
+                    placeholder="Contoh: Model / Tipe"
                     value={formModel}
                     onChange={e => setFormModel(e.target.value)}
                     style={{
@@ -1040,7 +1025,7 @@ export default function ManageServicesDevicesView() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: IBX-1415-44210C"
+                    placeholder="Contoh: SN-XXXXXXXX"
                     value={formSerialNumber}
                     onChange={e => setFormSerialNumber(e.target.value)}
                     style={{
@@ -1053,12 +1038,12 @@ export default function ManageServicesDevicesView() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                    Lokasi / Site BSI *
+                    Lokasi / Site Perangkat *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: BSI Kantor Pusat (Wisma Atlet), BSI Menara Thamrin"
+                    placeholder="Contoh: Lokasi / Site / Ruangan"
                     value={formSiteLocation}
                     onChange={e => setFormSiteLocation(e.target.value)}
                     style={{
@@ -1078,7 +1063,7 @@ export default function ManageServicesDevicesView() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: 10.0.96.53"
+                    placeholder="Contoh: 192.168.1.10"
                     value={formIpAddress}
                     onChange={e => setFormIpAddress(e.target.value)}
                     style={{
@@ -1095,7 +1080,7 @@ export default function ManageServicesDevicesView() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Contoh: 10.0.96.153 (MGMT / OOB)"
+                    placeholder="Contoh: 192.168.1.20 (MGMT / OOB)"
                     value={formIpManagement}
                     onChange={e => setFormIpManagement(e.target.value)}
                     style={{
@@ -1114,7 +1099,7 @@ export default function ManageServicesDevicesView() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Grid Master, GMC, Member DNS/DHCP"
+                    placeholder="Contoh: Master, Member, Core"
                     value={formRole}
                     onChange={e => setFormRole(e.target.value)}
                     style={{
@@ -1270,7 +1255,7 @@ export default function ManageServicesDevicesView() {
             }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  Upload Data Perangkat Manage Services
+                  Upload Data Perangkat
                 </h3>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   Unggah file Excel (.xlsx, .xls) atau CSV sesuai template format lisensi

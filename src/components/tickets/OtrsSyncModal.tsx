@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import {
   Download,
@@ -34,7 +35,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     breakdown: Record<string, number>;
   } | null>(null);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const handleStartSync = async () => {
     setIsLoading(true);
@@ -151,7 +152,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
     }
   };
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed',
       inset: 0,
@@ -195,10 +196,10 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
             </div>
             <div>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                Tarik Data Tiket dari iCare OTRS
+                Tarik Data Tiket dari Portal Eksternal
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                Antrean OP0899 & OP0968 Bank Syariah Indonesia (BSI)
+                Sinkronisasi Antrean Tiket Operasional
               </p>
             </div>
           </div>
@@ -234,15 +235,15 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Server size={13} color="var(--color-purple)" /> Server Portal:
               </span>
-              <strong style={{ color: 'var(--text-primary)' }}>https://icare.lt-integra.com/otrs/</strong>
+              <strong style={{ color: 'var(--text-primary)' }}>Endpoint Terintegrasi</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-              <span>Antrean Terdaftar:</span>
-              <span style={{ color: 'var(--color-info)', fontWeight: 600 }}>OP0899 (ID 72) & OP0968 (ID 121)</span>
+              <span>Status Antrean:</span>
+              <span style={{ color: 'var(--color-info)', fontWeight: 600 }}>Terkonfigurasi Aktif</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-              <span>Akun Sinkronisasi:</span>
-              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>ismailak (Administrator)</span>
+              <span>Otorisasi:</span>
+              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Administrator Terverifikasi</span>
             </div>
           </div>
 
@@ -456,7 +457,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
                     <Calendar size={13} color="var(--color-purple)" style={{ flexShrink: 0 }} />
                     <span>
                       {timeRange === '1-year'
-                        ? 'Tersedia ~898 tiket OP0899 & OP0968 dalam 1 tahun terakhir. Pilih batas 1.000 untuk menarik seluruhnya.'
+                        ? 'Tersedia tiket dalam 1 tahun terakhir. Pilih batas 1.000 untuk menarik seluruhnya.'
                         : timeRange === 'all'
                         ? 'Memindai seluruh riwayat tiket antrean tanpa batasan tanggal dibuat.'
                         : `Memindai tiket yang dibuat dalam rentang ${timeRange === '6-months' ? '6 bulan' : timeRange === '3-months' ? '3 bulan' : '1 bulan'} terakhir.`}
@@ -555,6 +556,7 @@ export default function OtrsSyncModal({ isOpen, onClose }: OtrsSyncModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

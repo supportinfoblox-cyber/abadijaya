@@ -36,7 +36,7 @@ export interface ShiftRosterConfig {
   workdays: number[]; // 1 = Monday, 2 = Tuesday, ..., 5 = Friday, 6 = Saturday, 0 = Sunday
   engineers: EngineerProfile[];
   baseWeekMonday: string; // YYYY-MM-DD of a known Monday reference
-  baseAssignments: { [engineerId: string]: string }; // e.g. { "ismailak": "shift-1", "rekan": "shift-2" }
+  baseAssignments: { [engineerId: string]: string }; // e.g. { "eng-1": "shift-1", "eng-2": "shift-2" }
   overrides: { [overrideKey: string]: DayOverride }; // key: `${date}_${engineerId}`
   holidays?: { [dateStr: string]: string }; // YYYY-MM-DD -> Holiday Name
   lastUpdatedAt: string;

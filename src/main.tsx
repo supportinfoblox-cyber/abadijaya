@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import Home from './app/page';
 import './app/globals.css';
 import { securityGuard } from './lib/securityGuard';
+import { scrubLegacyPlaintextStorage } from './lib/secureStorage';
+
+// Scrub any legacy plaintext storage in DevTools immediately
+scrubLegacyPlaintextStorage();
 
 // Initialize anti-inspect and DevTools protection
 securityGuard.init();

@@ -192,7 +192,7 @@ export default function UserManagementView() {
       {showAddUser && (
         <div className="glass-panel" style={{ padding: '24px' }}>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
-            Tambah Pengguna Baru (Khusus Administrator Ismail)
+            Tambah Pengguna Baru (Khusus Administrator)
           </h4>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
             Daftarkan user baru untuk tim operasional Anda. Kredensial ini dapat digunakan untuk login ke portal.
@@ -224,13 +224,13 @@ export default function UserManagementView() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email Perusahaan / BSI *</label>
+                <label className="form-label">Email Perusahaan *</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="form-control"
-                  placeholder="e.g. ahmad.fauzi@bankbsi.co.id"
+                  placeholder="e.g. engineer@ticketops.local"
                   required
                 />
               </div>
@@ -377,13 +377,13 @@ export default function UserManagementView() {
                       </button>
                       <button
                         onClick={() => toggleUserActive(u.id)}
-                        disabled={u.id === currentUser.id || u.username === 'ismailak'}
+                        disabled={u.id === currentUser.id || u.id === 'usr-admin' || u.username === 'admin'}
                         className={`btn btn-sm ${u.isActive ? 'btn-outline' : 'btn-success'}`}
                         style={{ padding: '3px 8px', fontSize: '0.72rem' }}
                       >
                         {u.isActive ? 'Disable' : 'Enable'}
                       </button>
-                      {u.id !== currentUser.id && u.username !== 'ismailak' && u.id !== 'usr-ismailak' && (
+                      {u.id !== currentUser.id && u.id !== 'usr-admin' && u.username !== 'admin' && (
                         <button
                           onClick={() => handleDeleteUser(u.id, u.name)}
                           className="btn btn-outline btn-sm"

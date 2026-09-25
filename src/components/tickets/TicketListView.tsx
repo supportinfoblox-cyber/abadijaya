@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import CloseTicketModal from './CloseTicketModal';
@@ -42,6 +42,8 @@ export default function TicketListView() {
   const [selectedTech, setSelectedTech] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt' | 'priority' | 'sla'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isSearchOpen, setIsSearchOpen] = useState(() => Boolean(globalSearchQuery));
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Bulk selection state
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
@@ -619,21 +621,87 @@ export default function TicketListView() {
           justifyContent: 'space-between',
           gap: '12px',
         }}>
-          {/* Search Box */}
-          <div style={{ position: 'relative', minWidth: '200px', flex: '1 1 100%' }}>
-            <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              placeholder="Search by ticket #, subject, requester, assignee..."
-              value={globalSearchQuery}
-              onChange={e => setGlobalSearchQuery(e.target.value)}
-              className="form-control"
-              style={{ paddingLeft: '36px', height: '38px', fontSize: '0.825rem' }}
-            />
-          </div>
-
-          {/* Dropdown Filters */}
+          {/* Dropdown Filters & Minimalist Search */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Minimalist Search - Expands on click */}
+            {isSearchOpen ? (
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                width: '260px',
+                maxWidth: '100%',
+                transition: 'all 0.2s ease',
+              }}>
+                <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Cari tiket, subjek, pemohon..."
+                  value={globalSearchQuery}
+                  onChange={e => setGlobalSearchQuery(e.target.value)}
+                  className="form-control"
+                  style={{
+                    paddingLeft: '32px',
+                    paddingRight: '28px',
+                    height: '38px',
+                    fontSize: '0.8rem',
+                    width: '100%',
+                    borderRadius: '8px',
+                  }}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (globalSearchQuery) {
+                      setGlobalSearchQuery('');
+                      searchInputRef.current?.focus();
+                    } else {
+                      setIsSearchOpen(false);
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    display: 'flex',
+                  }}
+                  title={globalSearchQuery ? 'Hapus teks pencarian' : 'Tutup pencarian'}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSearchOpen(true);
+                  setTimeout(() => searchInputRef.current?.focus(), 50);
+                }}
+                className="btn btn-outline btn-sm"
+                style={{
+                  height: '38px',
+                  width: '38px',
+                  minWidth: '38px',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  color: 'var(--text-secondary)',
+                }}
+                title="Cari tiket..."
+              >
+                <Search size={16} />
+              </button>
+            )}
             {/* Priority Filter */}
             <select
               value={selectedPriority}
@@ -734,6 +802,49 @@ export default function TicketListView() {
               <span>Tarik Data iCare</span>
             </button>
 
+            {/* Tombol Tutup Tiket Sekaligus (Desktop & Mobile) */}
+            {can('closeTicket') && (
+              <button
+                type="button"
+                onClick={() => {
+                  const nonClosed = filteredTickets.filter(t => t.status !== 'CLOSED');
+                  if (nonClosed.length === 0) {
+                    alert('Semua tiket pada filter saat ini sudah berstatus CLOSED.');
+                    return;
+                  }
+                  if (selectedTicketIds.size > 0) {
+                    const selectedNonClosed = filteredTickets.filter(
+                      t => selectedTicketIds.has(t.id) && t.status !== 'CLOSED'
+                    );
+                    setCloseModalTickets(selectedNonClosed.length > 0 ? selectedNonClosed : nonClosed);
+                  } else {
+                    setCloseModalTickets(nonClosed);
+                  }
+                }}
+                className="btn btn-sm"
+                style={{
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#e11d48',
+                  borderColor: '#f43f5e',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 10px rgba(225, 29, 72, 0.35)',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+                title="Tutup tiket yang dipilih atau seluruh tiket aktif saat ini sekaligus"
+              >
+                <CheckCircle2 size={15} />
+                <span>
+                  {selectedTicketIds.size > 0
+                    ? `Tutup ${selectedTicketIds.size} Tiket Sekaligus`
+                    : `Tutup Tiket Sekaligus (${filteredTickets.filter(t => t.status !== 'CLOSED').length})`}
+                </span>
+              </button>
+            )}
+
             {/* Tarik & Export Tiket (Excel & CSV) */}
             <button
               onClick={() => setShowExportModal(true)}
@@ -757,7 +868,7 @@ export default function TicketListView() {
 
             {/* Backup JSON Button */}
             <button
-              onClick={() => exportTicketsToJson(filteredTickets, 'tiket_icare_bsi_backup')}
+              onClick={() => exportTicketsToJson(filteredTickets, 'tiket_backup')}
               className="btn btn-outline btn-sm"
               style={{
                 height: '38px',
@@ -846,24 +957,41 @@ export default function TicketListView() {
 
           {/* Actions Group: Primary Close Button placed FIRST */}
           <div className="ticket-bulk-actions-group">
-            {can('closeTicket') && (
-              <button
-                type="button"
-                className="ticket-bulk-btn-close"
-                onClick={() => {
-                  const ticketsToClose = filteredTickets.filter(
-                    t => selectedTicketIds.has(t.id) && t.status !== 'CLOSED'
-                  );
-                  if (ticketsToClose.length > 0) {
-                    setCloseModalTickets(ticketsToClose);
+            {can('closeTicket') && (() => {
+              const nonClosedSelected = filteredTickets.filter(
+                t => selectedTicketIds.has(t.id) && t.status !== 'CLOSED'
+              );
+              const isAllClosed = nonClosedSelected.length === 0;
+
+              return (
+                <button
+                  type="button"
+                  className="ticket-bulk-btn-close"
+                  disabled={isAllClosed}
+                  onClick={() => {
+                    if (nonClosedSelected.length > 0) {
+                      setCloseModalTickets(nonClosedSelected);
+                    }
+                  }}
+                  style={{
+                    opacity: isAllClosed ? 0.65 : 1,
+                    cursor: isAllClosed ? 'not-allowed' : 'pointer',
+                  }}
+                  title={
+                    isAllClosed
+                      ? 'Semua tiket terpilih sudah dalam status CLOSED'
+                      : `Tutup ${nonClosedSelected.length} tiket aktif yang dipilih`
                   }
-                }}
-                title={`Tutup ${selectedTicketIds.size} tiket yang dipilih`}
-              >
-                <CheckCircle2 size={17} />
-                <span>Tutup {selectedTicketIds.size} Tiket Sekaligus</span>
-              </button>
-            )}
+                >
+                  <CheckCircle2 size={17} />
+                  <span>
+                    {isAllClosed
+                      ? 'Tiket Terpilih Sudah Ditutup'
+                      : `Tutup ${nonClosedSelected.length} Tiket Sekaligus`}
+                  </span>
+                </button>
+              );
+            })()}
 
             <div className="ticket-bulk-secondary-actions">
               <button
@@ -916,6 +1044,96 @@ export default function TicketListView() {
           </div>
         </div>
       )}
+
+      {/* Mobile Dedicated Quick Action Bar (Khusus Android Smartphone APK) */}
+      <div className="ticket-mobile-action-card">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {selectedTicketIds.size > 0
+                ? `${selectedTicketIds.size} tiket terpilih`
+                : `${filteredTickets.filter(t => t.status !== 'CLOSED').length} Tiket Aktif`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Toggle Select All on Mobile */}
+            <button
+              type="button"
+              onClick={() => {
+                const activeIds = filteredTickets.filter(t => t.status !== 'CLOSED').map(t => t.id);
+                if (selectedTicketIds.size === activeIds.length && activeIds.length > 0) {
+                  setSelectedTicketIds(new Set());
+                } else {
+                  setSelectedTicketIds(new Set(activeIds));
+                }
+              }}
+              className="btn btn-outline btn-sm"
+              style={{
+                padding: '6px 10px',
+                fontSize: '0.78rem',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600,
+              }}
+            >
+              <CheckSquare size={14} />
+              <span>
+                {selectedTicketIds.size > 0 && selectedTicketIds.size === filteredTickets.filter(t => t.status !== 'CLOSED').length
+                  ? 'Batal'
+                  : 'Pilih Semua'}
+              </span>
+            </button>
+
+            {/* Direct Tutup Tiket Sekaligus on Mobile */}
+            {can('closeTicket') && (
+              <button
+                type="button"
+                onClick={() => {
+                  const nonClosed = filteredTickets.filter(t => t.status !== 'CLOSED');
+                  if (nonClosed.length === 0) {
+                    alert('Semua tiket pada filter saat ini sudah berstatus CLOSED.');
+                    return;
+                  }
+                  if (selectedTicketIds.size > 0) {
+                    const selectedNonClosed = filteredTickets.filter(
+                      t => selectedTicketIds.has(t.id) && t.status !== 'CLOSED'
+                    );
+                    setCloseModalTickets(selectedNonClosed.length > 0 ? selectedNonClosed : nonClosed);
+                  } else {
+                    setCloseModalTickets(nonClosed);
+                  }
+                }}
+                className="btn btn-sm"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  backgroundColor: '#e11d48',
+                  borderColor: '#f43f5e',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 8px rgba(225, 29, 72, 0.4)',
+                  borderRadius: '8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  whiteSpace: 'nowrap',
+                }}
+                title="Tutup tiket terpilih atau seluruh tiket aktif saat ini sekaligus"
+              >
+                <CheckCircle2 size={15} />
+                <span>
+                  {selectedTicketIds.size > 0
+                    ? `Tutup (${selectedTicketIds.size})`
+                    : 'Tutup Sekaligus'}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Ticket List Table (PRD Section 11.1) */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '0', overflow: 'hidden' }}>
@@ -992,22 +1210,25 @@ export default function TicketListView() {
                         outlineOffset: '-1px',
                       }}
                     >
-                      {/* Checkbox cell */}
+                      {/* Checkbox cell with generous touch target for mobile APK */}
                       <td
-                        style={{ textAlign: 'center', width: '40px' }}
-                        onClick={e => e.stopPropagation()}
+                        style={{ textAlign: 'center', width: '48px', minWidth: '48px', cursor: 'pointer', padding: '10px 4px' }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (!isClosedOrResolved) {
+                            const next = new Set(selectedTicketIds);
+                            if (isSelected) next.delete(ticket.id);
+                            else next.add(ticket.id);
+                            setSelectedTicketIds(next);
+                          }
+                        }}
                       >
                         {!isClosedOrResolved && (
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={e => {
-                              const next = new Set(selectedTicketIds);
-                              if (e.target.checked) next.add(ticket.id);
-                              else next.delete(ticket.id);
-                              setSelectedTicketIds(next);
-                            }}
-                            style={{ accentColor: '#6366f1', cursor: 'pointer', width: '15px', height: '15px' }}
+                            readOnly
+                            style={{ accentColor: '#6366f1', cursor: 'pointer', width: '18px', height: '18px', pointerEvents: 'none' }}
                           />
                         )}
                       </td>

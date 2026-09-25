@@ -100,7 +100,7 @@ export async function exportTicketsToExcel(
   }
 
   const {
-    filenamePrefix = 'tiket_icare_bsi',
+    filenamePrefix = 'tiket_export',
     filterLabel = 'Semua Tiket',
     dateRange,
   } = options;
@@ -121,29 +121,39 @@ export async function exportTicketsToExcel(
     }
   };
 
+  // Sanitize cell values against formula injection (CWE-1236 / Data leakage prevention)
+  const sanitizeCell = (val: any, fallback = '-'): string => {
+    if (val === null || val === undefined || val === '') return fallback;
+    let str = String(val).trim();
+    if (/^[=+@\-\t\r]/.test(str) && !/^-?\d+(\.\d+)?$/.test(str)) {
+      str = "'" + str;
+    }
+    return str;
+  };
+
   // 1. Build Ticket Table Rows
   const ticketRows = tickets.map((t, index) => {
-    const queue = t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'OP0899');
+    const queue = t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'General');
     return {
       'No.': index + 1,
-      'No. Tiket': t.ticketNumber || t.id,
-      'ID Sistem': t.externalId || t.id,
-      'Antrean (Queue)': queue,
-      'Judul Tiket (Subject)': t.subject || '-',
-      'Kriteria Utama': t.kriteria || t.mainCategory || 'Other',
-      'Sub-Kriteria / Detail Tipe': t.subKriteria || t.subTipe || t.technicalCategory || '-',
+      'No. Tiket': sanitizeCell(t.ticketNumber || t.id),
+      'ID Sistem': sanitizeCell(t.externalId || t.id),
+      'Antrean (Queue)': sanitizeCell(queue),
+      'Judul Tiket (Subject)': sanitizeCell(t.subject),
+      'Kriteria Utama': sanitizeCell(t.kriteria || t.mainCategory || 'Other'),
+      'Sub-Kriteria / Detail Tipe': sanitizeCell(t.subKriteria || t.subTipe || t.technicalCategory),
       'Status Tiket': t.status,
       'Prioritas': t.priority,
       'Status SLA': t.slaStatus || 'SAFE',
-      'Pelapor (Requester)': t.requester || t.requesterName || 'Bank Syariah Indonesia',
-      'Email Pelapor': t.requesterEmail || '-',
-      'PIC / Assignee': t.assigneeName || 'Ismail Akbar',
-      'Unit Kerja': t.department || 'DNS & DHCP Infoblox Engineering',
+      'Pelapor (Requester)': sanitizeCell(t.requester || t.requesterName || 'Pengguna'),
+      'Email Pelapor': sanitizeCell(t.requesterEmail),
+      'PIC / Assignee': sanitizeCell(t.assigneeName || 'Petugas'),
+      'Unit Kerja': sanitizeCell(t.department || 'Network Operations'),
       'Tanggal Dibuat': formatDate(t.createdAt),
       'Tanggal Diperbarui': formatDate(t.updatedAt),
       'Tanggal Selesai / Tutup': formatDate(t.closedAt),
-      'Catatan Resolusi': t.resolutionNote || '-',
-      'Tautan Portal iCare': t.otrsUrl || `https://icare.lt-integra.com/otrs/index.pl?Action=AgentTicketZoom;TicketID=${t.id.replace('tkt-otrs-', '')}`,
+      'Catatan Resolusi': sanitizeCell(t.resolutionNote),
+      'Tautan Portal': t.otrsUrl || '',
     };
   });
 

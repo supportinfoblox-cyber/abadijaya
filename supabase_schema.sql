@@ -99,23 +99,90 @@ create table if not exists public.notifications (
   read boolean not null default false
 );
 
+-- ===== DEVICES (MANAGE SERVICES) =====
+create table if not exists public.devices (
+  id text primary key,
+  hostname text not null,
+  model text not null,
+  serial_number text,
+  ip_address text,
+  ip_management text,
+  site_location text,
+  role text,
+  license_type text,
+  license_active_date text,
+  license_expired_date text,
+  status text not null default 'ACTIVE',
+  notes text,
+  last_updated text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ===== ROW LEVEL SECURITY (RLS) =====
 alter table public.tickets enable row level security;
 alter table public.worklogs enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.app_users enable row level security;
 alter table public.notifications enable row level security;
+alter table public.devices enable row level security;
 
--- Operational tables: tickets, worklogs, audit_logs, notifications
+-- Operational tables: tickets, worklogs, audit_logs, notifications, devices (Idempotent)
+drop policy if exists "allow_authenticated_tickets" on public.tickets;
 create policy "allow_authenticated_tickets" on public.tickets for all using (true) with check (true);
+
+drop policy if exists "allow_authenticated_worklogs" on public.worklogs;
 create policy "allow_authenticated_worklogs" on public.worklogs for all using (true) with check (true);
+
+drop policy if exists "allow_authenticated_audit_logs" on public.audit_logs;
 create policy "allow_authenticated_audit_logs" on public.audit_logs for all using (true) with check (true);
+
+drop policy if exists "allow_authenticated_notifications" on public.notifications;
 create policy "allow_authenticated_notifications" on public.notifications for all using (true) with check (true);
 
--- Security Hardening for app_users:
--- Untuk production: Batasi pembacaan/perubahan akun agar anon tidak dapat memanipulasi user lain
-create policy "allow_read_app_users" on public.app_users for select using (true);
+drop policy if exists "allow_authenticated_devices" on public.devices;
+create policy "allow_authenticated_devices" on public.devices for all using (true) with check (true);
+
+-- Security Hardening for app_users (Idempotent)
+drop policy if exists "allow_read_app_users" on public.app_users;
+create policy "allow_read_app_users" on public.app_users for select using (is_active = true);
+
+drop policy if exists "allow_authenticated_manage_users" on public.app_users;
 create policy "allow_authenticated_manage_users" on public.app_users for all using (true) with check (true);
 
--- ===== ENABLE REALTIME =====
-alter publication supabase_realtime add table public.tickets;
+-- Performance & Security Indexes
+create index if not exists idx_tickets_status on public.tickets(status);
+create index if not exists idx_tickets_created_at on public.tickets(created_at desc);
+create index if not exists idx_tickets_ticket_number on public.tickets(ticket_number);
+create index if not exists idx_worklogs_ticket_id on public.worklogs(ticket_id);
+create index if not exists idx_audit_logs_timestamp on public.audit_logs(timestamp desc);
+create index if not exists idx_app_users_username on public.app_users(username);
+create index if not exists idx_app_users_email on public.app_users(email);
+create index if not exists idx_devices_hostname on public.devices(hostname);
+create index if not exists idx_devices_serial_number on public.devices(serial_number);
+create index if not exists idx_devices_site_location on public.devices(site_location);
+
+-- Safe Public View (Excluding password column for secure external querying)
+create or replace view public.safe_app_users as
+  select id, name, username, email, avatar_url, role, is_active, department, last_login_at
+  from public.app_users
+  where is_active = true;
+
+-- ===== ENABLE REALTIME (IDEMPOTENT) =====
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tickets'
+  ) then
+    alter publication supabase_realtime add table public.tickets;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'devices'
+  ) then
+    alter publication supabase_realtime add table public.devices;
+  end if;
+end $$;
+

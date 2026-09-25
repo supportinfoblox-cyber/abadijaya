@@ -105,6 +105,15 @@ class ErrorBoundary extends React.Component<
 function AppContent() {
   const { currentView, isAuthenticated, isSidebarCollapsed, setIsSidebarCollapsed, setGlobalSearchQuery, setActiveKriteria } = useTicketOps();
 
+  React.useEffect(() => {
+    // Scroll to top saat berpindah halaman menu
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const mainEl = document.querySelector('.main-content');
+      if (mainEl) mainEl.scrollTop = 0;
+    }
+  }, [currentView]);
+
   if (!isAuthenticated) {
     return <LoginView />;
   }
@@ -159,9 +168,11 @@ function AppContent() {
 
       <div className={`main-content ${isSidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
         <Navbar />
-        <main className="page-body">
+        <main className="page-body" role="main" aria-label={`Halaman ${currentView}`}>
           <ErrorBoundary onReset={() => { setGlobalSearchQuery(''); setActiveKriteria('ALL'); }}>
-            {renderActiveView()}
+            <div key={currentView} id={`page-${currentView}`} className="animate-fade-in" style={{ width: '100%' }}>
+              {renderActiveView()}
+            </div>
           </ErrorBoundary>
         </main>
       </div>

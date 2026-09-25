@@ -21,7 +21,7 @@ export default function UserAvatar({
 }: UserAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Clean initial letters (e.g. "Ismail Akbar" -> "IA", "testing" -> "T")
+  // Clean initial letters (e.g. "John Doe" -> "JD", "testing" -> "T")
   const getInitials = (n: string) => {
     if (!n) return '?';
     const parts = n.trim().split(/\s+/).filter(Boolean);

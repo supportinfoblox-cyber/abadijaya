@@ -36,8 +36,8 @@ export function exportRosterToExcelStyled(
   const wb = XLSX.utils.book_new();
   const ws: Record<string, unknown> = {};
 
-  const eng1 = config.engineers[0] || { id: 'usr-team-1', name: 'Djomy / Sonda' };
-  const eng2 = config.engineers[1] || { id: 'usr-team-2', name: 'Wisnu / Ismail' };
+  const eng1 = config.engineers[0] || { id: 'usr-team-1', name: 'Regu 1' };
+  const eng2 = config.engineers[1] || { id: 'usr-team-2', name: 'Regu 2' };
 
   // Styles
   const blackBorder = {
@@ -189,7 +189,7 @@ export function exportRosterToExcelStyled(
     }
     currentRow++;
 
-    // 3. Team 1 Row (e.g. Djomy / Sonda)
+    // 3. Team 1 Row (Regu 1)
     rowHeights[currentRow] = { hpt: 19 };
     const t1NameRef = XLSX.utils.encode_cell({ r: currentRow, c: 0 });
     ws[t1NameRef] = { v: ` ${eng1.name}`, t: 's', s: styleNameCell };
@@ -207,7 +207,7 @@ export function exportRosterToExcelStyled(
     }
     currentRow++;
 
-    // 4. Team 2 Row (e.g. Wisnu / Ismail)
+    // 4. Team 2 Row (Regu 2)
     rowHeights[currentRow] = { hpt: 19 };
     const t2NameRef = XLSX.utils.encode_cell({ r: currentRow, c: 0 });
     ws[t2NameRef] = { v: ` ${eng2.name}`, t: 's', s: styleNameCell };

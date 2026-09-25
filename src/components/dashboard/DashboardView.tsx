@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import MonthlyTicketChart from './MonthlyTicketChart';
@@ -100,15 +101,17 @@ export default function DashboardView() {
     }
   };
 
+  const [activeMetric, setActiveMetric] = useState<string | null>(null);
+
   const cardMetrics = [
-    { label: 'Total Tickets', count: total, color: 'var(--accent-primary)', glow: 'rgba(99, 102, 241, 0.25)', filter: 'ALL', icon: TicketIcon, trend: '+100% indexed' },
-    { label: 'New Inbound', count: newCount, color: 'var(--color-info)', glow: 'rgba(6, 182, 212, 0.25)', filter: 'NEW', icon: ArrowUpRight, trend: 'Awaiting triage' },
-    { label: 'Open Active', count: openCount, color: 'var(--color-purple)', glow: 'rgba(129, 140, 248, 0.25)', filter: 'OPEN', icon: Activity, trend: 'Assigned queue' },
-    { label: 'In Progress', count: inProgressCount, color: 'var(--color-warning)', glow: 'rgba(245, 158, 11, 0.25)', filter: 'IN PROGRESS', icon: Clock, trend: 'Working active' },
-    { label: 'Pending / Hold', count: pendingCount, color: 'var(--color-purple)', glow: 'rgba(168, 85, 247, 0.25)', filter: 'PENDING', icon: Hourglass, trend: 'Waiting input' },
-    { label: 'Resolved OK', count: resolvedCount, color: 'var(--color-success)', glow: 'rgba(16, 185, 129, 0.25)', filter: 'RESOLVED', icon: CheckCircle2, trend: 'Ready to close' },
-    { label: 'Closed Ledger', count: closedCount, color: 'var(--text-muted)', glow: 'rgba(100, 116, 139, 0.25)', filter: 'CLOSED', icon: ShieldCheck, trend: 'Archived records' },
-    { label: 'Overdue Breached', count: overdueCount, color: 'var(--color-danger)', glow: 'rgba(244, 63, 94, 0.25)', filter: 'OVERDUE', icon: AlertOctagon, trend: overdueCount > 0 ? 'Urgent action' : 'Zero breach' },
+    { label: 'Total Tickets', count: total, color: 'var(--accent-primary)', glow: 'rgba(99, 102, 241, 0.35)', filter: 'ALL', icon: TicketIcon, trend: '+100% indexed', desc: 'Total seluruh tiket dalam basis data operasional DDI' },
+    { label: 'New Inbound', count: newCount, color: 'var(--color-info)', glow: 'rgba(6, 182, 212, 0.35)', filter: 'NEW', icon: ArrowUpRight, trend: 'Awaiting triage', desc: 'Tiket baru masuk yang menunggu penanganan awal' },
+    { label: 'Open Active', count: openCount, color: 'var(--color-purple)', glow: 'rgba(129, 140, 248, 0.35)', filter: 'OPEN', icon: Activity, trend: 'Assigned queue', desc: 'Tiket aktif yang telah dialokasikan ke antrean engineer' },
+    { label: 'In Progress', count: inProgressCount, color: 'var(--color-warning)', glow: 'rgba(245, 158, 11, 0.35)', filter: 'IN PROGRESS', icon: Clock, trend: 'Working active', desc: 'Tiket yang sedang dalam proses pengerjaan teknis' },
+    { label: 'Pending / Hold', count: pendingCount, color: 'var(--color-purple)', glow: 'rgba(168, 85, 247, 0.35)', filter: 'PENDING', icon: Hourglass, trend: 'Waiting input', desc: 'Tiket menunggu input pemohon atau pihak ketiga' },
+    { label: 'Resolved OK', count: resolvedCount, color: 'var(--color-success)', glow: 'rgba(16, 185, 129, 0.35)', filter: 'RESOLVED', icon: CheckCircle2, trend: 'Ready to close', desc: 'Tiket telah selesai ditangani dan siap diverifikasi' },
+    { label: 'Closed Ledger', count: closedCount, color: 'var(--text-muted)', glow: 'rgba(100, 116, 139, 0.35)', filter: 'CLOSED', icon: ShieldCheck, trend: 'Archived records', desc: 'Arsip tiket yang telah selesai dan ditutup resmi' },
+    { label: 'Overdue Breached', count: overdueCount, color: 'var(--color-danger)', glow: 'rgba(244, 63, 94, 0.35)', filter: 'OVERDUE', icon: AlertOctagon, trend: overdueCount > 0 ? 'Urgent action' : 'Zero breach', desc: 'Tiket yang telah melewati batas toleransi SLA' },
   ];
 
   return (
@@ -145,10 +148,14 @@ export default function DashboardView() {
           }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', minWidth: 0 }}>
             <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
+              width: '40px',
+              height: '40px',
+              minWidth: '40px',
+              minHeight: '40px',
+              borderRadius: '50%',
+              aspectRatio: '1 / 1',
               backgroundColor: overdueCount > 0 ? 'rgba(244, 63, 94, 0.18)' : 'rgba(245, 158, 11, 0.18)',
+              border: `1px solid ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -156,7 +163,7 @@ export default function DashboardView() {
               boxShadow: `0 0 16px ${overdueCount > 0 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
               flexShrink: 0,
             }}>
-              <AlertTriangle size={22} className="animate-pulse" />
+              <AlertTriangle size={20} className="animate-pulse" />
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -219,8 +226,12 @@ export default function DashboardView() {
             <div style={{
               width: '32px',
               height: '32px',
-              borderRadius: '8px',
+              minWidth: '32px',
+              minHeight: '32px',
+              borderRadius: '50%',
+              aspectRatio: '1 / 1',
               backgroundColor: 'var(--color-success-bg)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -245,122 +256,265 @@ export default function DashboardView() {
         </div>
       )}
 
-      {/* Summary Cards Grid (PRD Section 10) */}
+      {/* Status Icons Row & Animated Count Display (Gambar 3) */}
       <div
-        className="dashboard-metrics-grid"
+        className="glass-panel"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '16px',
+          padding: '16px 20px',
+          borderRadius: 'var(--radius-lg)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
         }}
       >
-        {cardMetrics.map(m => {
-          const Icon = m.icon;
-          return (
-            <div
-              key={m.label}
-              onClick={() => {
-                setActiveFilterStatus(m.filter);
-                setCurrentView('tickets');
-              }}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Status Distribusi Tiket
+            </span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              (Klik icon lingkaran untuk melihat jumlah)
+            </span>
+          </div>
+          {activeMetric && (
+            <button
+              onClick={() => setActiveMetric(null)}
               style={{
-                padding: '20px 18px',
-                borderRadius: 'var(--radius-lg)',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                backdropFilter: 'blur(20px)',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: '0.75rem',
                 cursor: 'pointer',
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: 'var(--shadow-card)',
+                alignItems: 'center',
+                gap: '4px',
               }}
-              className="hover-elevate"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = m.color;
-                e.currentTarget.style.boxShadow = `0 10px 30px ${m.glow}, 0 0 0 1px ${m.color}`;
-                e.currentTarget.style.transform = 'translateY(-3px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
+              className="hover-underline"
             >
-              {/* Top ambient color glow */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '2px',
-                background: `linear-gradient(90deg, transparent, ${m.color}, transparent)`,
-              }} />
+              Tutup detail
+            </button>
+          )}
+        </div>
 
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    {m.label}
-                  </span>
-                  <div style={{
-                    padding: '7px',
-                    borderRadius: '8px',
-                    backgroundColor: `${m.color}18`,
-                    color: m.color,
+        {/* Circular Icons Row */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {cardMetrics.map(m => {
+            const Icon = m.icon;
+            const isSelected = activeMetric === m.filter;
+            return (
+              <div
+                key={m.label}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  flex: '1 1 0px',
+                  minWidth: '58px',
+                }}
+                onClick={() => {
+                  setActiveMetric(activeMetric === m.filter ? null : m.filter);
+                }}
+                title={`${m.label}: Klik untuk melihat animasi jumlah (${m.count})`}
+              >
+                <button
+                  type="button"
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    minWidth: '46px',
+                    minHeight: '46px',
+                    borderRadius: '50%',
+                    aspectRatio: '1 / 1',
+                    backgroundColor: isSelected ? `${m.color}25` : 'var(--bg-tertiary)',
+                    border: isSelected ? `2px solid ${m.color}` : '1px solid var(--border-subtle)',
+                    color: isSelected ? m.color : 'var(--text-secondary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
-                    <Icon size={16} />
+                    cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isSelected ? `0 0 16px ${m.glow}` : 'var(--shadow-sm)',
+                    position: 'relative',
+                    transform: isSelected ? 'scale(1.12)' : 'scale(1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = m.color;
+                      e.currentTarget.style.color = m.color;
+                      e.currentTarget.style.transform = 'scale(1.08)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                >
+                  <Icon size={20} />
+                  {/* Small dot badge if count > 0 */}
+                  {m.count > 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        right: '2px',
+                        width: '9px',
+                        height: '9px',
+                        borderRadius: '50%',
+                        backgroundColor: m.color,
+                        boxShadow: `0 0 6px ${m.color}`,
+                        border: '1.5px solid var(--bg-card)',
+                      }}
+                    />
+                  )}
+                </button>
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    color: isSelected ? m.color : 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '72px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    textAlign: 'center',
+                  }}
+                >
+                  {m.label.split(' ')[0]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Animated Count Reveal Display */}
+        {activeMetric && (() => {
+          const selected = cardMetrics.find(m => m.filter === activeMetric);
+          if (!selected) return null;
+          const SelectedIcon = selected.icon;
+          const pct = total > 0 ? Math.round((selected.count / total) * 100) : 0;
+
+          return (
+            <div
+              className="animate-slide-down-fade"
+              style={{
+                marginTop: '4px',
+                padding: '16px 20px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: `${selected.color}0d`,
+                border: `1px solid ${selected.color}35`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+                boxShadow: `0 8px 24px ${selected.glow}`,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
+                <div
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    minWidth: '50px',
+                    minHeight: '50px',
+                    borderRadius: '50%',
+                    backgroundColor: `${selected.color}20`,
+                    border: `1.5px solid ${selected.color}`,
+                    color: selected.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 0 16px ${selected.glow}`,
+                    flexShrink: 0,
+                  }}
+                >
+                  <SelectedIcon size={24} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      {selected.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        backgroundColor: `${selected.color}25`,
+                        color: selected.color,
+                        border: `1px solid ${selected.color}45`,
+                      }}
+                    >
+                      {selected.trend} &bull; {pct}% dari total
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                    {selected.desc}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Jumlah Tiket
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '2.4rem',
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      color: selected.count > 0 ? selected.color : 'var(--text-muted)',
+                      fontFamily: 'var(--font-mono)',
+                      animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {selected.count}
                   </div>
                 </div>
 
-                <div style={{
-                  fontSize: '2rem',
-                  fontWeight: 800,
-                  color: m.count > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
-                  marginTop: '10px',
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.03em',
-                  fontFamily: 'var(--font-mono)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {m.count}
-                </div>
-              </div>
-
-              <div style={{ marginTop: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                  <span>{m.trend}</span>
-                  <span style={{ fontWeight: 600, color: m.color, fontFamily: 'var(--font-mono)' }}>
-                    {total > 0 ? `${Math.round((m.count / total) * 100)}%` : '0%'}
-                  </span>
-                </div>
-                <div style={{
-                  height: '4px',
-                  width: '100%',
-                  backgroundColor: 'var(--border-subtle)',
-                  borderRadius: '2px',
-                  overflow: 'hidden',
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: total > 0 ? `${Math.min(100, (m.count / total) * 100)}%` : '0%',
-                    background: `linear-gradient(90deg, ${m.color}88, ${m.color})`,
-                    borderRadius: '2px',
-                    transition: 'width 0.5s ease',
-                  }} />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveFilterStatus(selected.filter);
+                    setCurrentView('tickets');
+                  }}
+                  className="btn btn-sm hover-glow"
+                  style={{
+                    backgroundColor: selected.color,
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    padding: '8px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: `0 4px 14px ${selected.glow}`,
+                  }}
+                >
+                  <span>Buka Tiket</span>
+                  <ChevronRight size={15} />
+                </button>
               </div>
             </div>
           );
-        })}
+        })()}
       </div>
 
-      {/* Kriteria Tiket OTRS Breakdown Section (BSI Infoblox) */}
+      {/* Kriteria Tiket Portal Breakdown Section */}
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -380,7 +534,7 @@ export default function DashboardView() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
-                  Klasifikasi Kriteria Tiket OTRS (BSI Infoblox)
+                  Klasifikasi Kriteria Tiket Operasional
                 </h3>
                 <span style={{
                   fontSize: '0.68rem',
@@ -391,11 +545,11 @@ export default function DashboardView() {
                   color: '#a5b4fc',
                   border: '1px solid rgba(99, 102, 241, 0.3)',
                 }}>
-                  OP0899 &bull; OP0968
+                  Antrean Aktif
                 </span>
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '3px 0 0 0' }}>
-                Pemetaan tiket operasional DDI (DNS, DHCP, IPAM) & Standby DRP Bank Syariah Indonesia
+                Pemetaan tiket operasional DDI (DNS, DHCP, IPAM) & Standby DRP Pemeliharaan Sistem
               </p>
             </div>
           </div>
@@ -560,7 +714,7 @@ export default function DashboardView() {
               </span>
             </div>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '12px', minHeight: '34px' }}>
-              Pendampingan teknis & standby deployment sistem kritis BSI
+              Pendampingan teknis & standby deployment sistem kritis
             </p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)', border: '1px solid rgba(168, 85, 247, 0.25)' }}>

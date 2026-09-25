@@ -48,7 +48,7 @@ trap cleanup EXIT INT TERM
 
 # Jalankan server
 echo "🌐 Menjalankan server aplikasi di http://localhost:3000..."
-echo "👤 Akun Login: ismailak / ismailak1234 (Administrator)"
+echo "👤 Akun Login: admin (Administrator)"
 echo "========================================================"
 npm run dev
 

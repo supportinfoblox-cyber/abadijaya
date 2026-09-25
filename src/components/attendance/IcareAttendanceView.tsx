@@ -24,6 +24,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useTicketOps } from '@/context/TicketOpsContext';
+import { secureStorage, secureSessionStorage } from '@/lib/secureStorage';
 
 export interface IcareTemplate {
   id: string;
@@ -95,49 +96,49 @@ const JOB_ASSIGNMENTS = [
 
 const DEFAULT_TEMPLATES: IcareTemplate[] = [
   {
-    id: 'tpl-bsi-rutin',
-    templateName: 'Support Rutin OP0899 BSI Infoblox',
+    id: 'tpl-ops-rutin',
+    templateName: 'Aktivitas Harian',
     isDefault: true,
-    opnumber: '0899',
-    sitename: 'BSI Kantor Pusat (Wisma Atlet)',
-    epm: 'Bambang',
+    opnumber: '',
+    sitename: '',
+    epm: '',
     asgproject: ['4'], // Manage Services
     actdeploy: '',
     asgjob: ['7'], // Network Monitoring
     actstatus: '1', // Done
     techissue: 'NO',
     troubleticket: '',
-    summary: 'Melakukan monitoring rutin stabilitas Grid Infoblox BSI, pengecekan utilisasi CPU & storage disk, verifikasi status sinkronisasi NTP server, dan verifikasi resolusi query DNS external & internal tanpa anomali.',
+    summary: 'Melakukan monitoring stabilitas sistem operasional dan verifikasi status layanan.',
   },
   {
-    id: 'tpl-bsi-pm',
-    templateName: 'Preventive Maintenance OP0899 Onsite BSI',
+    id: 'tpl-ops-pm',
+    templateName: 'Pemeliharaan Berkala',
     isDefault: false,
-    opnumber: '0899',
-    sitename: 'BSI Menara Thamrin',
-    epm: 'Bambang',
+    opnumber: '',
+    sitename: '',
+    epm: '',
     asgproject: ['3', '4'], // Maintenance Support + Manage Services
     actdeploy: '',
     asgjob: ['4', '10'], // Software Update + Re-Configuration
     actstatus: '1', // Done
     techissue: 'NO',
     troubleticket: '',
-    summary: 'Pelaksanaan kegiatan Preventive Maintenance (PM) hardware Infoblox TE-2215: Backup database konfigurasi grid master, pengecekan fan & power supply redundan, uji failover HA, pembersihan cache DNS, dan rotasi log audit.',
+    summary: 'Pelaksanaan pemeliharaan berkala sistem, backup konfigurasi, dan verifikasi performa layanan.',
   },
   {
-    id: 'tpl-bsi-drp',
-    templateName: 'Support DRP & Relokasi DNS OP0968',
+    id: 'tpl-ops-drp',
+    templateName: 'Pendampingan Teknis',
     isDefault: false,
-    opnumber: '0968',
-    sitename: 'Data Center Surabaya / DRC Bandung',
-    epm: 'Ady Kurniawan',
+    opnumber: '',
+    sitename: '',
+    epm: '',
     asgproject: ['1', '4'], // Deployment Support + Manage Services
     actdeploy: '3', // Test & Commissioning
     asgjob: ['6', '9'], // Change Request + Re-Location
     actstatus: '1', // Done
     techissue: 'NO',
     troubleticket: '',
-    summary: 'Mendampingi aktivitas DRP (Disaster Recovery Plan) Bank BSI: Verifikasi switchover pointing DNS service, pengecekan replication link antara DC Surabaya dan DRC Bandung, monitoring latency respon DNS.',
+    summary: 'Melakukan pendampingan teknis operasional dan verifikasi konektivitas sistem.',
   },
 ];
 
@@ -151,8 +152,8 @@ export default function IcareAttendanceView() {
 
   // Form Fields
   const [opnumber, setOpnumber] = useState('');
-  const [sitename, setSitename] = useState('BSI Kantor Pusat (Wisma Atlet)');
-  const [epm, setEpm] = useState('Bambang');
+  const [sitename, setSitename] = useState('');
+  const [epm, setEpm] = useState('');
   const [asgdate1, setAsgdate1] = useState(todayStr);
   const [asgdate2, setAsgdate2] = useState(todayStr);
   const [asgproject, setAsgproject] = useState<string[]>(['4']);
@@ -167,7 +168,7 @@ export default function IcareAttendanceView() {
   // Templates & History State
   const [templates, setTemplates] = useState<IcareTemplate[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+      const saved = secureStorage.getItemSync(TEMPLATES_STORAGE_KEY);
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -181,7 +182,7 @@ export default function IcareAttendanceView() {
 
   const [history, setHistory] = useState<AttendanceHistoryItem[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+      const saved = secureStorage.getItemSync(HISTORY_STORAGE_KEY);
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -207,15 +208,13 @@ export default function IcareAttendanceView() {
     const userKey = currentUser?.username || 'default';
     let userOp = '';
     if (typeof window !== 'undefined') {
-      const savedOp = localStorage.getItem(`ticketops_icare_op_${userKey}`);
+      const savedOp = secureStorage.getItemSync(`ticketops_icare_op_${userKey}`);
       if (savedOp) {
         userOp = savedOp;
-      } else if (currentUser?.username === 'ismailak') {
-        userOp = '0899';
       }
 
-      const liveOtrsSession = sessionStorage.getItem('ticketops_otrs_session');
-      const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
+      const liveOtrsSession = secureSessionStorage.getItemSync('ticketops_otrs_session');
+      const savedSession = secureStorage.getItemSync(SESSION_STORAGE_KEY);
       if (liveOtrsSession) {
         setSessionToken(liveOtrsSession);
       } else if (savedSession) {
@@ -239,21 +238,21 @@ export default function IcareAttendanceView() {
     const clean = val.replace(/\D/g, '').slice(0, 4);
     setOpnumber(clean);
     if (currentUser?.username && typeof window !== 'undefined') {
-      localStorage.setItem(`ticketops_icare_op_${currentUser.username}`, clean);
+      secureStorage.setItem(`ticketops_icare_op_${currentUser.username}`, clean);
     }
   };
 
-  // Save templates to localStorage
+  // Save templates to localStorage (encrypted)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+      secureStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
     }
   }, [templates]);
 
-  // Save history to localStorage
+  // Save history to localStorage (encrypted)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+      secureStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
     }
   }, [history]);
 
@@ -392,7 +391,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
     e.preventDefault();
 
     if (opnumber.length !== 4) {
-      alert('Nomor OP harus tepat 4 karakter (misal: 0899 atau 0968).');
+      alert('Nomor OP harus tepat 4 karakter (misal: 1001 atau 2002).');
       return;
     }
     if (asgjob.length === 0) {
@@ -478,7 +477,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
   const handleDirectPostToIcare = () => {
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = 'https://icare.lt-integra.com/daily_report/input.php';
+    form.action = (typeof window !== 'undefined' && localStorage.getItem('ticketops_portal_daily_report_url')) || '/daily_report/input.php';
     form.target = '_blank';
 
     const addInput = (name: string, value: string) => {
@@ -713,7 +712,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                     required
                     minLength={4}
                     maxLength={4}
-                    placeholder="0899 / 0968"
+                    placeholder="Contoh: 1001"
                     value={opnumber}
                     onChange={e => handleOpChange(e.target.value)}
                     style={{
@@ -735,7 +734,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                   </label>
                   <input
                     type="text"
-                    placeholder="Contoh: BSI Wisma Atlet / Menara Thamrin"
+                    placeholder="Masukkan nama site / lokasi"
                     value={sitename}
                     onChange={e => setSitename(e.target.value)}
                     style={{
@@ -1076,7 +1075,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                 value={sessionToken}
                 onChange={e => {
                   setSessionToken(e.target.value);
-                  if (typeof window !== 'undefined') localStorage.setItem(SESSION_STORAGE_KEY, e.target.value);
+                  if (typeof window !== 'undefined') secureStorage.setItem(SESSION_STORAGE_KEY, e.target.value);
                 }}
                 style={{
                   width: '100%', padding: '8px 10px', borderRadius: '6px',
@@ -1387,7 +1386,7 @@ _Disubmit oleh ${engineerName} via TicketOps Portal Manajemen Operasional_`;
                   type="text"
                   required
                   autoFocus
-                  placeholder="Contoh: Rutin BSI Landmark, Onsite PM DC Surabaya"
+                  placeholder="Contoh: Monitoring Rutin, Onsite Maintenance"
                   value={newTemplateName}
                   onChange={e => setNewTemplateName(e.target.value)}
                   style={{

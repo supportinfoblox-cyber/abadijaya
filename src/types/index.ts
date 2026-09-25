@@ -176,3 +176,21 @@ export interface RolePermissions {
   integration: boolean;
   auditLog: boolean | 'limited';
 }
+
+export interface DeviceItem {
+  id: string;
+  hostname: string;
+  model: string;
+  serialNumber: string;
+  ipAddress: string;
+  ipManagement?: string;
+  siteLocation: string;
+  role: string;
+  licenseType: string;
+  licenseActiveDate: string; // YYYY-MM-DD
+  licenseExpiredDate: string; // YYYY-MM-DD
+  status: 'ACTIVE' | 'STANDBY' | 'MAINTENANCE';
+  notes?: string;
+  lastUpdated: string;
+}
+

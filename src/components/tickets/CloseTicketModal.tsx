@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket } from '@/types';
 import {
@@ -45,19 +46,19 @@ export default function CloseTicketModal({
       const k = ticketsToClose[0].kriteria;
       const sub = ticketsToClose[0].subKriteria;
       if (k === 'DNS Request') {
-        return `Penambahan konfigurasi DNS (${sub || 'A Record / CNAME'}) telah berhasil dibuat pada Grid Infoblox BSI. Pengujian resolusi nama domain normal. Tiket diselesaikan.`;
+        return `Konfigurasi (${sub || 'Permintaan'}) telah selesai diproses dan diverifikasi normal. Tiket diselesaikan.`;
       }
       if (k === 'Reserve IP') {
-        return `Reservasi IP Address / Fixed Address telah sukses dialokasikan pada subnet Infoblox BSI. Dokumentasi IPAM terupdate. Tiket ditutup.`;
+        return `Permintaan alokasi parameter telah selesai diproses dan didokumentasikan. Tiket ditutup.`;
       }
       if (k === 'DRP') {
-        return `Standby dan pendampingan engineer selama kegiatan DRP BSI telah selesai dilaksanakan dengan baik. Tiket ditutup.`;
+        return `Kegiatan pendampingan dan pemeliharaan telah selesai dilaksanakan. Tiket ditutup.`;
       }
       if (k === 'IPAM') {
-        return `Update database IPAM dan alokasi subnet telah diselesaikan pada appliance Infoblox BSI. Tiket diselesaikan.`;
+        return `Pembaruan data operasional telah selesai dilaksanakan. Tiket diselesaikan.`;
       }
     }
-    return 'Permohonan telah selesai dikerjakan dan diverifikasi pada appliance Infoblox BSI. Tiket ditutup melalui TicketOps Automation.';
+    return 'Permintaan telah selesai dikerjakan dan diverifikasi. Tiket ditutup.';
   }, [ticketsToClose]);
 
   const [resolutionNote, setResolutionNote] = useState(defaultNote);
@@ -193,7 +194,9 @@ export default function CloseTicketModal({
 
   const isSingle = ticketsToClose.length === 1;
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="modal-overlay" onClick={() => !isProcessing && onClose()}>
       <div
         className="modal-content"
@@ -638,7 +641,7 @@ export default function CloseTicketModal({
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleApplyTemplate('Penambahan konfigurasi DNS (A Record / CNAME) telah berhasil diimplementasikan pada Infoblox BSI. Tiket diselesaikan.')}
+                    onClick={() => handleApplyTemplate('Konfigurasi permintaan telah selesai diproses dan diverifikasi normal. Tiket diselesaikan.')}
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#3b82f6', color: 'var(--color-info)' }}
                   >
@@ -646,7 +649,7 @@ export default function CloseTicketModal({
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleApplyTemplate('Reservasi IP Address / Fixed Address telah sukses dialokasikan pada subnet Infoblox Grid Manager BSI. Tiket ditutup.')}
+                    onClick={() => handleApplyTemplate('Permintaan alokasi parameter telah selesai diproses dan didokumentasikan. Tiket ditutup.')}
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#f59e0b', color: 'var(--color-warning)' }}
                   >
@@ -654,7 +657,7 @@ export default function CloseTicketModal({
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleApplyTemplate('Standby dan pendampingan engineer selama aktivitas DRP BSI telah selesai dilaksanakan dengan lancar. Tiket ditutup.')}
+                    onClick={() => handleApplyTemplate('Kegiatan pendampingan dan pemeliharaan telah selesai dilaksanakan. Tiket ditutup.')}
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#a855f7', color: 'var(--color-purple)' }}
                   >
@@ -662,7 +665,7 @@ export default function CloseTicketModal({
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleApplyTemplate('Pembaruan data IPAM dan alokasi subnet telah selesai dikonfigurasi pada Infoblox. Tiket diselesaikan.')}
+                    onClick={() => handleApplyTemplate('Pembaruan data operasional telah selesai dilaksanakan. Tiket diselesaikan.')}
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', borderColor: '#10b981', color: 'var(--color-success)' }}
                   >
@@ -710,7 +713,7 @@ export default function CloseTicketModal({
                       Sinkronisasi Langsung ke Portal iCare OTRS
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                      https://icare.lt-integra.com/otrs/index.pl (Queue OP0899 & OP0968)
+                      Portal Tiket & Antrean Terintegrasi
                     </div>
                   </div>
                 </div>
@@ -832,6 +835,7 @@ export default function CloseTicketModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

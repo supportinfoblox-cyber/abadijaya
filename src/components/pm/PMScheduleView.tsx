@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveOrShareFile } from '@/services/exportExcel';
+import { secureStorage } from '@/lib/secureStorage';
 
 export interface PMChecklistItem {
   id: string;
@@ -47,81 +48,13 @@ export interface PMSchedule {
 }
 
 const DEFAULT_CHECKLIST_TEMPLATE: PMChecklistItem[] = [
-  { id: 'chk-1', task: 'Backup Database Grid & Ekspor Konfigurasi Terkini', done: false },
-  { id: 'chk-2', task: 'Pemeriksaan Kapasitas Storage & Partisi Disk (/storage, /var)', done: false },
-  { id: 'chk-3', task: 'Pemeriksaan Utilisasi CPU, Memori RAM & System Load', done: false },
-  { id: 'chk-4', task: 'Verifikasi Sinkronisasi NTP & Deviasi Waktu Server', done: false },
-  { id: 'chk-5', task: 'Pemeriksaan Status Replikasi Grid & Pasangan High Availability (HA)', done: false },
-  { id: 'chk-6', task: 'Uji Resolusi Layanan DNS, DHCP Binding & Loopback Anycast', done: false },
-  { id: 'chk-7', task: 'Pemeriksaan Fisik Hardware, Indikator LED, Redundansi Power Supply & Kipas', done: false },
-];
-
-const INITIAL_PM_SCHEDULES: PMSchedule[] = [
-  {
-    id: 'PM-2026-001',
-    siteName: 'BSI Kantor Pusat (Wisma Atlet)',
-    deviceName: 'BSI-IBX-GM01',
-    deviceType: 'Infoblox TE-2215 (Grid Master)',
-    scheduledDate: '2026-09-22',
-    scheduledTime: '10:00',
-    picEngineer: 'Ismail Akbar',
-    status: 'SCHEDULED',
-    checklist: DEFAULT_CHECKLIST_TEMPLATE.map(c => ({ ...c })),
-    notes: 'Pemeliharaan triwulan Q3: Health check grid master & rotasi database log.',
-    lastUpdated: '2026-09-18 14:00',
-  },
-  {
-    id: 'PM-2026-002',
-    siteName: 'BSI Menara Thamrin',
-    deviceName: 'BSI-IBX-GMC01',
-    deviceType: 'Infoblox TE-2215 (Grid Master Candidate)',
-    scheduledDate: '2026-09-24',
-    scheduledTime: '13:30',
-    picEngineer: 'Ady Kurniawan',
-    status: 'SCHEDULED',
-    checklist: DEFAULT_CHECKLIST_TEMPLATE.map(c => ({ ...c })),
-    notes: 'Uji sinkronisasi failover HA & pengecekan power supply redundan.',
-    lastUpdated: '2026-09-18 15:30',
-  },
-  {
-    id: 'PM-2026-003',
-    siteName: 'Data Center Surabaya (DCS)',
-    deviceName: 'BSI-IBX-MBR-SBY01',
-    deviceType: 'Infoblox TE-1415 (Member DNS/DHCP)',
-    scheduledDate: '2026-09-15',
-    scheduledTime: '09:00',
-    picEngineer: 'Haykal Atthoriq',
-    status: 'COMPLETED',
-    checklist: DEFAULT_CHECKLIST_TEMPLATE.map(c => ({ ...c, done: true })),
-    notes: 'PM rutin selesai tanpa kendala. Utilisasi memori 32%, disk space aman 45%.',
-    lastUpdated: '2026-09-15 11:45',
-  },
-  {
-    id: 'PM-2026-004',
-    siteName: 'Disaster Recovery Center Bandung (DRC)',
-    deviceName: 'BSI-IBX-MBR-BDG01',
-    deviceType: 'Infoblox TE-1415 (Member DNS)',
-    scheduledDate: '2026-09-29',
-    scheduledTime: '14:00',
-    picEngineer: 'Ismail Akbar',
-    status: 'SCHEDULED',
-    checklist: DEFAULT_CHECKLIST_TEMPLATE.map(c => ({ ...c })),
-    notes: 'Inspeksi konektivitas sinkronisasi WAN dan backup konfigurasi offline.',
-    lastUpdated: '2026-09-17 10:00',
-  },
-  {
-    id: 'PM-2026-005',
-    siteName: 'BSI Gedung Landmark',
-    deviceName: 'BSI-IBX-EXT-DNS01',
-    deviceType: 'Infoblox PT-4000 (External DNS)',
-    scheduledDate: '2026-09-12',
-    scheduledTime: '15:00',
-    picEngineer: 'Evelio Excellenta',
-    status: 'COMPLETED',
-    checklist: DEFAULT_CHECKLIST_TEMPLATE.map(c => ({ ...c, done: true })),
-    notes: 'Pengecekan performa query DNS eksternal dan response time Anycast.',
-    lastUpdated: '2026-09-12 17:00',
-  },
+  { id: 'chk-1', task: 'Backup database sistem & ekspor konfigurasi', done: false },
+  { id: 'chk-2', task: 'Pemeriksaan kapasitas storage & partisi disk', done: false },
+  { id: 'chk-3', task: 'Pemeriksaan utilisasi CPU, memori RAM & system load', done: false },
+  { id: 'chk-4', task: 'Verifikasi sinkronisasi waktu server', done: false },
+  { id: 'chk-5', task: 'Pemeriksaan status replikasi & redundansi sistem', done: false },
+  { id: 'chk-6', task: 'Uji resolusi layanan & konektivitas jaringan', done: false },
+  { id: 'chk-7', task: 'Pemeriksaan fisik hardware, indikator LED & power supply', done: false },
 ];
 
 const LOCAL_STORAGE_KEY = 'ticketops_pm_schedules';
@@ -129,16 +62,17 @@ const LOCAL_STORAGE_KEY = 'ticketops_pm_schedules';
 export default function PMScheduleView() {
   const [schedules, setSchedules] = useState<PMSchedule[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const saved = secureStorage.getItemSync(LOCAL_STORAGE_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
         } catch (e) {
           console.error('Failed to parse saved PM schedules', e);
         }
       }
     }
-    return INITIAL_PM_SCHEDULES;
+    return [];
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -154,17 +88,17 @@ export default function PMScheduleView() {
   // Form State
   const [formSiteName, setFormSiteName] = useState('');
   const [formDeviceName, setFormDeviceName] = useState('');
-  const [formDeviceType, setFormDeviceType] = useState('Infoblox TE-1415');
+  const [formDeviceType, setFormDeviceType] = useState('Appliance Member');
   const [formDate, setFormDate] = useState('');
   const [formTime, setFormTime] = useState('09:00');
-  const [formPic, setFormPic] = useState('Ismail Akbar');
+  const [formPic, setFormPic] = useState('Petugas');
   const [formStatus, setFormStatus] = useState<PMSchedule['status']>('SCHEDULED');
   const [formNotes, setFormNotes] = useState('');
 
-  // Save to LocalStorage
+  // Save to secureStorage (JWE 256-bit encrypted)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(schedules));
+      secureStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(schedules));
     }
   }, [schedules]);
 
@@ -191,10 +125,10 @@ export default function PMScheduleView() {
     setEditingSchedule(null);
     setFormSiteName('');
     setFormDeviceName('');
-    setFormDeviceType('Infoblox TE-1415');
+    setFormDeviceType('Appliance Member');
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormTime('09:00');
-    setFormPic('Ismail Akbar');
+    setFormPic('Petugas');
     setFormStatus('SCHEDULED');
     setFormNotes('');
     setIsModalOpen(true);
@@ -321,7 +255,7 @@ export default function PMScheduleView() {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    const filename = `Jadwal_Preventive_Maintenance_BSI_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `Jadwal_Preventive_Maintenance_${new Date().toISOString().slice(0, 10)}.xlsx`;
     await saveOrShareFile({
       filename,
       blob,
@@ -347,7 +281,7 @@ export default function PMScheduleView() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const csvContent = XLSX.utils.sheet_to_csv(worksheet);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const filename = `Jadwal_Preventive_Maintenance_BSI_${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `Jadwal_Preventive_Maintenance_${new Date().toISOString().slice(0, 10)}.csv`;
 
     await saveOrShareFile({
       filename,
@@ -430,7 +364,7 @@ export default function PMScheduleView() {
                 Jadwal Preventive Maintenance
               </h1>
               <p style={{ margin: '3px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Perencanaan pemeliharaan berkala, inspeksi teknis hardware, dan verifikasi grid Infoblox BSI
+                Perencanaan pemeliharaan berkala dan inspeksi teknis sistem operasional
               </p>
             </div>
           </div>
@@ -878,12 +812,12 @@ export default function PMScheduleView() {
             <form onSubmit={handleSaveSchedule} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                  Nama Site / Lokasi BSI *
+                  Nama Site / Lokasi Perangkat *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: BSI KC Hasanuddin, BSI Menara Thamrin, DC Surabaya"
+                  placeholder="Contoh: Lokasi / Site / Data Center"
                   value={formSiteName}
                   onChange={e => setFormSiteName(e.target.value)}
                   style={{
@@ -902,7 +836,7 @@ export default function PMScheduleView() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: BSI-IBX-GM01"
+                    placeholder="Contoh: DEV-01"
                     value={formDeviceName}
                     onChange={e => setFormDeviceName(e.target.value)}
                     style={{
@@ -925,11 +859,11 @@ export default function PMScheduleView() {
                       color: 'var(--text-primary)', fontSize: '0.85rem'
                     }}
                   >
-                    <option value="Infoblox TE-1415">Infoblox TE-1415 (Member)</option>
-                    <option value="Infoblox TE-2215">Infoblox TE-2215 (Grid Master)</option>
-                    <option value="Infoblox PT-4000">Infoblox PT-4000 (External DNS)</option>
-                    <option value="Infoblox Trinzic 815">Infoblox Trinzic 815</option>
-                    <option value="Virtual Appliance NIOS">Virtual Appliance NIOS (VM)</option>
+                    <option value="Appliance Member">Appliance Member</option>
+                    <option value="Appliance Master">Appliance Master</option>
+                    <option value="Gateway Service">Gateway Service</option>
+                    <option value="Virtual Appliance">Virtual Appliance (VM)</option>
+                    <option value="Lainnya">Lainnya</option>
                   </select>
                 </div>
               </div>

@@ -940,22 +940,22 @@ body {
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.97) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-16px); }
-  to { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes spin {
@@ -2258,25 +2258,29 @@ select.input option {
   gap: 8px;
 }
 
-@keyframes slideUpMobile {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Mobile dedicated quick action card for tickets */
+.ticket-mobile-action-card {
+  display: none;
 }
 
 @media (max-width: 768px) {
+  .ticket-mobile-action-card {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
   .ticket-bulk-floating-bar {
     position: fixed !important;
-    bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     left: 10px !important;
     right: 10px !important;
     top: auto !important;
-    z-index: 996 !important;
+    z-index: 9999 !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -2329,5 +2333,28 @@ select.input option {
   }
 }
 
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
 
+@keyframes slideDownFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
 
+.animate-slide-down-fade {
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

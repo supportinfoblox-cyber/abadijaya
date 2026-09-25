@@ -19,7 +19,7 @@ export function normalizeTicketText(text?: string): string {
 }
 
 /**
- * Robust classification function matching BSI Infoblox Operations rules.
+ * Robust classification function matching Enterprise Operations rules.
  * Handles non-breaking spaces and all known variations of ticket subjects.
  */
 export function classifyTicketText(subject?: string, description?: string): TicketClassification {
@@ -163,12 +163,12 @@ export function isTimeString(s?: string): boolean {
  * Cleans an engineer name, strictly filtering out any age/time strings.
  */
 export function cleanAssigneeName(rawName?: string): string {
-  if (!rawName || isTimeString(rawName)) return 'Ismail Akbar';
+  if (!rawName || isTimeString(rawName)) return 'Unassigned';
   let name = rawName.split('/')[0].trim();
   name = name.replace(/\(.*?\)/g, '').replace(/<.*?>/g, '').replace(/["']/g, '').trim();
   name = name.replace(/\s+/g, ' ');
   if (!name || name.toLowerCase().includes('admin otrs') || isTimeString(name)) {
-    return 'Ismail Akbar';
+    return 'Unassigned';
   }
   return name;
 }

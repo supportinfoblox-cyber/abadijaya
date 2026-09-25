@@ -1086,7 +1086,7 @@ export default function MonthlyTicketChart() {
                         {t.createdAt ? t.createdAt.substring(0, 16).replace('T', ' ') : '-'}
                       </td>
                       <td style={{ color: 'var(--text-secondary)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.requester || t.requesterName || 'BSI User'}
+                        {t.requester || t.requesterName || 'Pengguna'}
                       </td>
                     </tr>
                   );

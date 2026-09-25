@@ -23,6 +23,7 @@ import { exportRosterToExcelStyled } from '@/services/exportShiftRosterExcel';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { ShiftRosterConfig } from '@/types/shiftRoster';
 import { DEFAULT_SHIFT_ROSTER_CONFIG } from '@/data/defaultShiftRoster';
+import { secureStorage } from '@/lib/secureStorage';
 
 const INDONESIAN_MONTHS = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -62,7 +63,7 @@ export default function ShiftScheduleView() {
   const [rosterConfig, setRosterConfig] = useState<ShiftRosterConfig>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const local = localStorage.getItem('ticketops_shift_roster');
+        const local = secureStorage.getItemSync('ticketops_shift_roster');
         if (local) {
           const parsed = JSON.parse(local);
           if (parsed && Array.isArray(parsed.engineers) && Array.isArray(parsed.shifts)) {
@@ -102,27 +103,21 @@ export default function ShiftScheduleView() {
     return JSON.parse(JSON.stringify(rosterConfig));
   });
 
-  // Helper to load roster config from network with fallback chain:
-  // 1. /api/shift/roster (Node/Vite server)
-  // 2. /data/shift_roster.json (Static file on Cloudflare Pages / dist)
-  // 3. /shift_roster.json (Root static fallback)
+  // Helper to load roster config from secure backend API (if available)
   const fetchRosterData = useCallback(async (): Promise<ShiftRosterConfig | null> => {
-    const endpoints = ['/api/shift/roster', '/data/shift_roster.json', '/shift_roster.json'];
-    for (const ep of endpoints) {
-      try {
-        const res = await fetch(ep);
-        if (res.ok) {
-          const contentType = res.headers.get('content-type') || '';
-          if (contentType.includes('application/json') || ep.endsWith('.json')) {
-            const data = await res.json();
-            if (data && Array.isArray(data.shifts) && Array.isArray(data.engineers)) {
-              return data as ShiftRosterConfig;
-            }
+    try {
+      const res = await fetch('/api/shift/roster');
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && Array.isArray(data.shifts) && Array.isArray(data.engineers)) {
+            return data as ShiftRosterConfig;
           }
         }
-      } catch {
-        // continue to next endpoint
       }
+    } catch {
+      // offline / client-side storage
     }
     return null;
   }, []);
@@ -134,7 +129,7 @@ export default function ShiftScheduleView() {
       try {
         const networkData = await fetchRosterData();
         if (networkData && active) {
-          const localStr = typeof window !== 'undefined' ? localStorage.getItem('ticketops_shift_roster') : null;
+          const localStr = secureStorage.getItemSync('ticketops_shift_roster');
           if (localStr) {
             try {
               const localData = JSON.parse(localStr);
@@ -143,7 +138,7 @@ export default function ShiftScheduleView() {
               if (networkTime > localTime) {
                 setRosterConfig(networkData);
                 setDraftConfig(JSON.parse(JSON.stringify(networkData)));
-                localStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
+                secureStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
               }
             } catch {
               setRosterConfig(networkData);
@@ -152,9 +147,7 @@ export default function ShiftScheduleView() {
           } else {
             setRosterConfig(networkData);
             setDraftConfig(JSON.parse(JSON.stringify(networkData)));
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
-            }
+            secureStorage.setItem('ticketops_shift_roster', JSON.stringify(networkData));
           }
         }
       } catch (err: unknown) {
@@ -176,9 +169,7 @@ export default function ShiftScheduleView() {
       if (data) {
         setRosterConfig(data);
         setDraftConfig(JSON.parse(JSON.stringify(data)));
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ticketops_shift_roster', JSON.stringify(data));
-        }
+        secureStorage.setItem('ticketops_shift_roster', JSON.stringify(data));
         setFeedback({ type: 'success', message: 'Jadwal shift berhasil dimuat ulang!' });
       } else {
         setFeedback({ type: 'success', message: 'Jadwal shift aktif menggunakan konfigurasi tersimpan.' });
@@ -199,12 +190,10 @@ export default function ShiftScheduleView() {
       lastUpdatedAt: new Date().toISOString(),
     };
     try {
-      // Immediate local state commit so user never loses their changes
+      // Immediate local state commit so user never loses their changes (encrypted)
       setRosterConfig(stampedConfig);
       setDraftConfig(JSON.parse(JSON.stringify(stampedConfig)));
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('ticketops_shift_roster', JSON.stringify(stampedConfig));
-      }
+      secureStorage.setItem('ticketops_shift_roster', JSON.stringify(stampedConfig));
 
       // Try syncing to backend API if available (e.g. Node/Docker/Vite)
       const res = await fetch('/api/shift/roster', {
@@ -230,16 +219,16 @@ export default function ShiftScheduleView() {
   // Open Quick Edit Names Modal
   const handleOpenEditNames = () => {
     if (!rosterConfig) return;
-    setEditTeam1Name(rosterConfig.engineers[0]?.name || 'Djomy / Sonda');
-    setEditTeam2Name(rosterConfig.engineers[1]?.name || 'Wisnu / Ismail');
+    setEditTeam1Name(rosterConfig.engineers[0]?.name || 'Regu 1');
+    setEditTeam2Name(rosterConfig.engineers[1]?.name || 'Regu 2');
     setIsEditNamesModalOpen(true);
   };
 
   // Save Edited Names
   const handleSaveNames = async () => {
     if (!rosterConfig) return;
-    const t1 = editTeam1Name.trim() || 'Djomy / Sonda';
-    const t2 = editTeam2Name.trim() || 'Wisnu / Ismail';
+    const t1 = editTeam1Name.trim() || 'Regu 1';
+    const t2 = editTeam2Name.trim() || 'Regu 2';
 
     const updatedEngineers = [...rosterConfig.engineers];
     if (updatedEngineers[0]) {
@@ -599,8 +588,8 @@ export default function ShiftScheduleView() {
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const rows: any[] = [];
 
-    const eng1 = rosterConfig.engineers[0] || { id: 'usr-team-1', name: 'Djomy / Sonda' };
-    const eng2 = rosterConfig.engineers[1] || { id: 'usr-team-2', name: 'Wisnu / Ismail' };
+    const eng1 = rosterConfig.engineers[0] || { id: 'usr-team-1', name: 'Regu 1' };
+    const eng2 = rosterConfig.engineers[1] || { id: 'usr-team-2', name: 'Regu 2' };
 
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(currentYear, currentMonth, day);
@@ -717,8 +706,8 @@ export default function ShiftScheduleView() {
     );
   }
 
-  const eng1 = rosterConfig.engineers[0] || { id: 'usr-team-1', name: 'Djomy / Sonda', username: 'team_1', role: 'Regu 1' };
-  const eng2 = rosterConfig.engineers[1] || { id: 'usr-team-2', name: 'Wisnu / Ismail', username: 'team_2', role: 'Regu 2' };
+  const eng1 = rosterConfig.engineers[0] || { id: 'usr-team-1', name: 'Regu 1', username: 'team_1', role: 'Regu 1' };
+  const eng2 = rosterConfig.engineers[1] || { id: 'usr-team-2', name: 'Regu 2', username: 'team_2', role: 'Regu 2' };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -875,7 +864,7 @@ export default function ShiftScheduleView() {
 
       {/* Summary Cards: Today's Shift Status */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-        {/* Card 1: Ismail's Shift Today */}
+        {/* Card 1: Shift Today */}
         <div style={{
           backgroundColor: 'var(--bg-secondary)', borderRadius: '14px',
           border: '1px solid var(--border-subtle)', padding: '18px 20px',
@@ -1540,7 +1529,7 @@ export default function ShiftScheduleView() {
 
                   {/* Assignments Pills */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {/* Engineer 1 (Ismail) */}
+                    {/* Engineer 1 */}
                     <div style={{
                       padding: '3px 6px', borderRadius: '6px',
                       backgroundColor: assign1?.shift?.bgColor || 'rgba(148, 163, 184, 0.15)',
@@ -2237,7 +2226,7 @@ export default function ShiftScheduleView() {
                     <input
                       type="text"
                       value={draftConfig.engineers[0]?.name || ''}
-                      placeholder="Contoh: Djomy / Sonda"
+                      placeholder="Contoh: Regu 1"
                       onChange={e => {
                         const val = e.target.value;
                         setDraftConfig(prev => {
@@ -2266,7 +2255,7 @@ export default function ShiftScheduleView() {
                     <input
                       type="text"
                       value={draftConfig.engineers[1]?.name || ''}
-                      placeholder="Contoh: Wisnu / Ismail"
+                      placeholder="Contoh: Regu 2"
                       onChange={e => {
                         const val = e.target.value;
                         setDraftConfig(prev => {
@@ -2532,7 +2521,7 @@ export default function ShiftScheduleView() {
                   type="text"
                   value={editTeam1Name}
                   onChange={e => setEditTeam1Name(e.target.value)}
-                  placeholder="Contoh: Djomy / Sonda"
+                  placeholder="Contoh: Regu 1"
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
                     border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-primary)',
@@ -2549,7 +2538,7 @@ export default function ShiftScheduleView() {
                   type="text"
                   value={editTeam2Name}
                   onChange={e => setEditTeam2Name(e.target.value)}
-                  placeholder="Contoh: Wisnu / Ismail"
+                  placeholder="Contoh: Regu 2"
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
                     border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-primary)',

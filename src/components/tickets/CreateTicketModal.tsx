@@ -119,7 +119,7 @@ export default function CreateTicketModal({ isOpen, onClose }: CreateTicketModal
                 type="text"
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
-                placeholder="e.g. Core Switch BGP flapping, Database slow query, DNS CNAME request..."
+                placeholder="Masukkan judul atau deskripsi permohonan tiket..."
                 className="form-control"
                 required
               />

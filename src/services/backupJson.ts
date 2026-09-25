@@ -47,7 +47,7 @@ function downloadJsonFile(content: string, filename: string): void {
 /**
  * Export filtered or selected tickets to clean JSON format
  */
-export function exportTicketsToJson(tickets: Ticket[], filenamePrefix: string = 'tiket_icare_bsi'): void {
+export function exportTicketsToJson(tickets: Ticket[], filenamePrefix: string = 'tiket_export'): void {
   if (!tickets || tickets.length === 0) {
     alert('Tidak ada tiket yang dapat diexport ke JSON.');
     return;
@@ -58,7 +58,7 @@ export function exportTicketsToJson(tickets: Ticket[], filenamePrefix: string = 
   const filename = `${filenamePrefix}_${dateSuffix}.json`;
 
   const payload = {
-    system: 'TicketOps BSI Infoblox & iCare OTRS',
+    system: 'TicketOps Management System',
     version: '1.0',
     exportedAt: now.toISOString(),
     totalCount: tickets.length,
@@ -66,7 +66,7 @@ export function exportTicketsToJson(tickets: Ticket[], filenamePrefix: string = 
       id: t.id,
       ticketNumber: t.ticketNumber,
       externalId: t.externalId,
-      queueCode: t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'OP0899'),
+      queueCode: t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'General'),
       queueName: t.queueName,
       subject: t.subject,
       description: t.description,
@@ -86,7 +86,7 @@ export function exportTicketsToJson(tickets: Ticket[], filenamePrefix: string = 
       closedAt: t.closedAt || null,
       resolvedAt: t.resolvedAt || null,
       resolutionNote: t.resolutionNote || null,
-      otrsUrl: t.otrsUrl || `https://icare.lt-integra.com/otrs/index.pl?Action=AgentTicketZoom;TicketID=${t.id.replace('tkt-otrs-', '')}`,
+      otrsUrl: t.otrsUrl || '',
     })),
   };
 
@@ -111,7 +111,7 @@ export function exportFullSystemBackup(data: {
 
   const payload: FullBackupPayload = {
     version: '1.0.0',
-    system: 'TicketOps BSI Infoblox & iCare OTRS Management System',
+    system: 'TicketOps Management System',
     exportedAt: now.toISOString(),
     metadata: {
       totalTickets: data.tickets?.length || 0,
@@ -124,8 +124,14 @@ export function exportFullSystemBackup(data: {
     worklogs: data.worklogs || [],
     auditLogs: data.auditLogs || [],
     notifications: data.notifications || [],
-    integrationConfig: data.integrationConfig || {},
-    users: data.users || [],
+    integrationConfig: data.integrationConfig ? {
+      ...data.integrationConfig,
+      apiKeyOrToken: data.integrationConfig.apiKeyOrToken ? '***REDACTED***' : '',
+    } : {},
+    users: (data.users || []).map(u => {
+      const { password, ...safeUser } = u;
+      return safeUser as User;
+    }),
   };
 
   downloadJsonFile(JSON.stringify(payload, null, 2), filename);

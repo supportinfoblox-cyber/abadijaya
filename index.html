@@ -14,7 +14,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="no-referrer" />
     <script>
+      // Anti-framing protection (prevent app from being embedded in external iframes)
+      if (window.top !== window.self) {
+        try {
+          window.top.location = window.self.location;
+        } catch {
+          document.documentElement.style.display = 'none';
+        }
+      }
+
       // Immediate Anti-Inspect & Right-Click Disabler
       document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
       document.addEventListener('keydown', function(e) {

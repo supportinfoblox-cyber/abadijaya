@@ -599,7 +599,12 @@ export default defineConfig({
     allowedHosts: true,
     headers: commonSecurityHeaders,
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   build: {
     sourcemap: false,
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 1500,
   },
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Ticket } from '@/types';
 import { exportTicketsToExcel } from '@/services/exportExcel';
 import { exportTicketsToCsv } from '@/services/exportCsv';
@@ -30,7 +31,8 @@ export default function ExportTicketsModal({
   allTickets,
   defaultSelectedIds,
 }: ExportTicketsModalProps) {
-  const [quickRange, setQuickRange] = useState<QuickRange>('1-month');
+  const hasExplicitSelection = Boolean(defaultSelectedIds && defaultSelectedIds.size > 0);
+  const [quickRange, setQuickRange] = useState<QuickRange>(hasExplicitSelection ? 'all' : '1-month');
   const [format, setFormat] = useState<'xlsx' | 'csv'>('xlsx');
   const [selectedKriteria, setSelectedKriteria] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -74,9 +76,9 @@ export default function ExportTicketsModal({
   // Filtered tickets based on modal selections
   const matchingTickets = useMemo(() => {
     return allTickets.filter(ticket => {
-      // 1. If explicit selection passed
+      // 1. If explicit selection passed, prioritize it directly
       if (defaultSelectedIds && defaultSelectedIds.size > 0) {
-        if (!defaultSelectedIds.has(ticket.id)) return false;
+        return defaultSelectedIds.has(ticket.id);
       }
 
       // 2. Date Filtering
@@ -132,7 +134,7 @@ export default function ExportTicketsModal({
           },
         });
       } else {
-        exportTicketsToCsv(matchingTickets, filenamePrefix);
+        await exportTicketsToCsv(matchingTickets, filenamePrefix);
       }
 
       setTimeout(() => {
@@ -153,7 +155,9 @@ export default function ExportTicketsModal({
     setTimeout(() => setCopiedNumbers(false), 2000);
   };
 
-  return (
+  if (!isOpen || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
       <div
         className="modal-content glass-panel"
@@ -547,6 +551,7 @@ export default function ExportTicketsModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

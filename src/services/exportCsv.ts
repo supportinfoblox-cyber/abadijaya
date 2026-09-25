@@ -1,18 +1,23 @@
 import { Ticket } from '@/types';
+import { saveOrShareFile } from './exportExcel';
 
 /**
  * Clean & Formatted CSV Exporter for TicketOps
  * Prepends UTF-8 BOM (\uFEFF) to guarantee seamless formatting in Microsoft Excel
  */
-export function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = 'tiket_icare_bsi'): void {
+export async function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = 'tiket_export'): Promise<boolean> {
   if (!tickets || tickets.length === 0) {
     alert('Tidak ada tiket yang dapat diexport.');
-    return;
+    return false;
   }
 
   const escapeCsv = (val: any): string => {
     if (val === null || val === undefined) return '""';
-    const str = String(val).replace(/"/g, '""').replace(/[\r\n]+/g, ' ').trim();
+    let str = String(val).replace(/"/g, '""').replace(/[\r\n]+/g, ' ').trim();
+    // Neutralize spreadsheet formula injection (CWE-1236 / Data exfiltration)
+    if (/^[=+@\-\t\r]/.test(str)) {
+      str = "'" + str;
+    }
     return `"${str}"`;
   };
 
@@ -49,13 +54,13 @@ export function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = '
     'Tanggal Dibuat',
     'Tanggal Selesai / Ditutup',
     'Catatan Resolusi',
-    'Tautan Portal iCare',
+    'Tautan Portal',
   ];
 
   const rows: string[] = [headers.map(h => `"${h}"`).join(',')];
 
   tickets.forEach(t => {
-    const queue = t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'OP0899');
+    const queue = t.queueCode || (t.queueName ? t.queueName.split(' ')[0] : 'General');
     const row = [
       escapeCsv(t.ticketNumber || t.id),
       escapeCsv(t.externalId || t.id),
@@ -65,14 +70,14 @@ export function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = '
       escapeCsv(t.subKriteria || t.subTipe || t.technicalCategory),
       escapeCsv(t.status),
       escapeCsv(t.priority),
-      escapeCsv(t.requester || t.requesterName || 'Bank Syariah Indonesia'),
+      escapeCsv(t.requester || t.requesterName || 'Pengguna'),
       escapeCsv(t.requesterEmail || '-'),
-      escapeCsv(t.assigneeName || 'Ismail Akbar'),
-      escapeCsv(t.department || 'DNS & DHCP Infoblox Engineering'),
+      escapeCsv(t.assigneeName || 'Petugas'),
+      escapeCsv(t.department || 'Network Operations'),
       escapeCsv(formatDate(t.createdAt)),
       escapeCsv(formatDate(t.closedAt)),
       escapeCsv(t.resolutionNote || '-'),
-      escapeCsv(t.otrsUrl || `https://icare.lt-integra.com/otrs/index.pl?Action=AgentTicketZoom;TicketID=${t.id.replace('tkt-otrs-', '')}`),
+      escapeCsv(t.otrsUrl || ''),
     ];
     rows.push(row.join(','));
   });
@@ -85,23 +90,10 @@ export function exportTicketsToCsv(tickets: Ticket[], filenamePrefix: string = '
   const dateSuffix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   const filename = `${filenamePrefix}_${dateSuffix}.csv`;
 
-  // Dynamically import or call universal file saver
-  import('./exportExcel').then(({ saveOrShareFile }) => {
-    saveOrShareFile({
-      filename,
-      blob,
-      mimeType: 'text/csv;charset=utf-8;',
-    });
-  }).catch(() => {
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return await saveOrShareFile({
+    filename,
+    blob,
+    mimeType: 'text/csv;charset=utf-8;',
   });
 }
 

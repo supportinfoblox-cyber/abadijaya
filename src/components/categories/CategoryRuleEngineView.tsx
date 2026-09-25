@@ -20,8 +20,8 @@ export default function CategoryRuleEngineView() {
   const { tickets } = useTicketOps();
 
   // Test sandbox state
-  const [testSubject, setTestSubject] = useState('Core BGP router peering dropped after fiber cut in DC-2');
-  const [testDescription, setTestDescription] = useState('Interface TenGigE0/1/0/2 down line protocol down. High latency on upstream routes.');
+  const [testSubject, setTestSubject] = useState('');
+  const [testDescription, setTestDescription] = useState('');
 
   const testResult = analyzeTicketWithRuleEngine(testSubject, testDescription);
 
