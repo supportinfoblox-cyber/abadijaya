@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Spesifikasi Arsitektur dan Teknologi TicketOps</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 14mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      font-size: 9pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .header-container {
+      border-bottom: 2.5px solid #4f46e5;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .title-area h1 {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #1e1b4b;
+      letter-spacing: -0.02em;
+      margin-bottom: 3px;
+    }
+
+    .title-area .subtitle {
+      font-size: 9.5pt;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+
+    .badge-meta {
+      text-align: right;
+      font-size: 7.5pt;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      background: #e0e7ff;
+      color: #3730a3;
+      margin-bottom: 3px;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #1e1b4b;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 6px;
+      color: #334155;
+      text-align: justify;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      font-size: 8pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 5px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 7pt;
+      font-weight: 600;
+      margin-right: 3px;
+      margin-bottom: 2px;
+    }
+
+    .tag-blue { background: #e0e7ff; color: #3730a3; }
+    .tag-cyan { background: #cffafe; color: #0e7490; }
+    .tag-green { background: #dcfce7; color: #15803d; }
+    .tag-amber { background: #fef3c7; color: #b45309; }
+    .tag-purple { background: #f3e8ff; color: #6b21a8; }
+    .tag-slate { background: #f1f5f9; color: #334155; }
+
+    .diagram-box {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px 0;
+      color: #f8fafc;
+      page-break-inside: avoid;
+      text-align: center;
+    }
+
+    .diagram-svg {
+      width: 100%;
+      max-height: 250px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .callout {
+      border-left: 3px solid #4f46e5;
+      background: #f5f3ff;
+      padding: 7px 10px;
+      border-radius: 0 4px 4px 0;
+      font-size: 8pt;
+      color: #3730a3;
+      margin-bottom: 8px;
+    }
+
+    ul, ol {
+      margin-left: 16px;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 2px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 7.5pt;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER DOKUMEN -->
+  <div class="header-container">
+    <div class="title-area">
+      <h1>TICKETOPS ENTERPRISE</h1>
+      <div class="subtitle">Spesifikasi Arsitektur Sistem, Topologi, dan Tumpukan Teknologi (Tech Stack)</div>
+    </div>
+    <div class="badge-meta">
+      <div class="badge-pill">VERSI PRODUKSI 1.0</div><br>
+      <strong>Target:</strong> BSI Infoblox & iCare OTRS<br>
+      <strong>Pengembang:</strong> PT Abadi Jaya Solusi<br>
+      <strong>Dokumen Dibuat:</strong> September 2026
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Ringkasan Eksekutif:</strong> TicketOps adalah sistem manajemen operasional tiket enterprise multi-platform (Web SPA & Android Native) dengan arsitektur <em>Hybrid Cloud-First & Local-First Resilient</em>. Sistem mengintegrasikan database relasional real-time cloud, background sync daemon untuk sistem perbankan legacy iCare OTRS, enkripsi data end-to-end, dan pemrosesan otomatis klasifikasi tiket berbasis AI heuristic.
+  </div>
+
+  <!-- SECTION 1: TOPOLOGI ARSITEKTUR -->
+  <h2>1. Topologi Arsitektur Sistem (System Topology)</h2>
+  <p>
+    Topologi TicketOps dirancang menggunakan pola <strong>4-Tier Hybrid Cloud & Edge</strong> yang mengombinasikan ketahanan offline (local-first) dengan sinkronisasi multi-pengguna real-time di cloud:
+  </p>
+
+  <div class="diagram-box">
+    <svg class="diagram-svg" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+      <!-- Tier 1: Client Layer -->
+      <rect x="10" y="20" width="160" height="210" rx="8" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="90" y="42" fill="#818cf8" font-size="11" font-weight="bold" text-anchor="middle">CLIENT TIER</text>
+      
+      <rect x="22" y="55" width="136" height="44" rx="4" fill="#334155"/>
+      <text x="90" y="73" fill="#f8fafc" font-size="9" font-weight="bold" text-anchor="middle">Web SPA (React 19)</text>
+      <text x="90" y="87" fill="#94a3b8" font-size="7.5" text-anchor="middle">Desktop, Tablet, Browser</text>
+
+      <rect x="22" y="108" width="136" height="44" rx="4" fill="#334155"/>
+      <text x="90" y="126" fill="#f8fafc" font-size="9" font-weight="bold" text-anchor="middle">Android APK (Capacitor 8)</text>
+      <text x="90" y="140" fill="#94a3b8" font-size="7.5" text-anchor="middle">Mobile Native App</text>
+
+      <rect x="22" y="162" width="136" height="52" rx="4" fill="#1e1b4b" stroke="#4338ca" stroke-width="1"/>
+      <text x="90" y="180" fill="#a5b4fc" font-size="8.5" font-weight="bold" text-anchor="middle">Local-First Engine</text>
+      <text x="90" y="194" fill="#c7d2fe" font-size="7" text-anchor="middle">JWE 256-bit SecureStorage</text>
+      <text x="90" y="205" fill="#c7d2fe" font-size="7" text-anchor="middle">Inactivity Monitor (30m)</text>
+
+      <!-- Panah 1 -->
+      <path d="M 170 80 L 210 80" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" fill="none"/>
+      <path d="M 170 135 L 210 135" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" fill="none"/>
+
+      <!-- Tier 2: Edge & Gateway -->
+      <rect x="210" y="20" width="150" height="210" rx="8" fill="#1e293b" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="285" y="42" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">EDGE & GATEWAY</text>
+
+      <rect x="220" y="55" width="130" height="52" rx="4" fill="#0369a1"/>
+      <text x="285" y="73" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">Cloudflare Pages</text>
+      <text x="285" y="87" fill="#e0f2fe" font-size="7.5" text-anchor="middle">Global Edge CDN (HTTPS)</text>
+      <text x="285" y="98" fill="#bae6fd" font-size="7" text-anchor="middle">Strict CSP, HSTS, DENY</text>
+
+      <rect x="220" y="120" width="130" height="95" rx="4" fill="#334155"/>
+      <text x="285" y="138" fill="#f8fafc" font-size="8.5" font-weight="bold" text-anchor="middle">API Gateway / Vite</text>
+      <text x="285" y="152" fill="#cbd5e1" font-size="7.5" text-anchor="middle">- CSRF Validation</text>
+      <text x="285" y="166" fill="#cbd5e1" font-size="7.5" text-anchor="middle">- Origin Filtering</text>
+      <text x="285" y="180" fill="#cbd5e1" font-size="7.5" text-anchor="middle">- IP Rate Limiting</text>
+      <text x="285" y="195" fill="#cbd5e1" font-size="7.5" text-anchor="middle">- Docker (Port 8080)</text>
+
+      <!-- Panah 2 -->
+      <path d="M 360 80 L 400 80" stroke="#4ade80" stroke-width="2" fill="none"/>
+      <path d="M 360 170 L 400 170" stroke="#f59e0b" stroke-width="2" fill="none"/>
+
+      <!-- Tier 3: Cloud Database -->
+      <rect x="400" y="20" width="160" height="210" rx="8" fill="#1e293b" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="480" y="42" fill="#4ade80" font-size="11" font-weight="bold" text-anchor="middle">SUPABASE CLOUD</text>
+
+      <rect x="412" y="55" width="136" height="52" rx="4" fill="#15803d"/>
+      <text x="480" y="73" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">PostgreSQL 15+</text>
+      <text x="480" y="87" fill="#dcfce7" font-size="7.5" text-anchor="middle">Relational Engine</text>
+      <text x="480" y="98" fill="#bbf7d0" font-size="7" text-anchor="middle">Row-Level Security (RLS)</text>
+
+      <rect x="412" y="118" width="136" height="44" rx="4" fill="#334155"/>
+      <text x="480" y="136" fill="#f8fafc" font-size="8.5" font-weight="bold" text-anchor="middle">PostgREST API</text>
+      <text x="480" y="149" fill="#cbd5e1" font-size="7.5" text-anchor="middle">Auto REST Endpoints</text>
+
+      <rect x="412" y="170" width="136" height="44" rx="4" fill="#334155"/>
+      <text x="480" y="188" fill="#f8fafc" font-size="8.5" font-weight="bold" text-anchor="middle">Realtime CDC WebSocket</text>
+      <text x="480" y="201" fill="#cbd5e1" font-size="7.5" text-anchor="middle">Push mutasi tiket instan</text>
+
+      <!-- Panah 3 -->
+      <path d="M 560 170 L 600 170" stroke="#f59e0b" stroke-width="2" fill="none"/>
+
+      <!-- Tier 4: Integration Tier -->
+      <rect x="600" y="20" width="150" height="210" rx="8" fill="#1e293b" stroke="#d97706" stroke-width="1.5"/>
+      <text x="675" y="42" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">INTEGRASI OTRS</text>
+
+      <rect x="610" y="55" width="130" height="52" rx="4" fill="#b45309"/>
+      <text x="675" y="73" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle">Sync Daemon Worker</text>
+      <text x="675" y="87" fill="#fef3c7" font-size="7.5" text-anchor="middle">Node.js Polling (180s)</text>
+      <text x="675" y="98" fill="#fde68a" font-size="7" text-anchor="middle">sync_otrs_to_supabase.mjs</text>
+
+      <rect x="610" y="120" width="130" height="44" rx="4" fill="#334155"/>
+      <text x="675" y="138" fill="#f8fafc" font-size="8" font-weight="bold" text-anchor="middle">Python 3 Bridges</text>
+      <text x="675" y="150" fill="#cbd5e1" font-size="7" text-anchor="middle">Login, Close, History Bridge</text>
+
+      <rect x="610" y="174" width="130" height="44" rx="4" fill="#451a03" stroke="#b45309" stroke-width="1"/>
+      <text x="675" y="192" fill="#fed7aa" font-size="8" font-weight="bold" text-anchor="middle">iCare OTRS (BSI)</text>
+      <text x="675" y="204" fill="#fdba74" font-size="7" text-anchor="middle">Bank Syariah Indonesia</text>
+    </svg>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>A. Komponen Edge & Distribusi Global</h3>
+      <ul>
+        <li><strong>Cloudflare Pages (Global Edge Network):</strong> Menyajikan bundle aset statis terkompresi Brotli/Gzip dengan latensi rendah di seluruh region edge server.</li>
+        <li><strong>Domain & TLS:</strong> Otomatisasi enkripsi HTTPS/TLS 1.3 pada <code>ticketops.pages.dev</code>.</li>
+        <li><strong>Pertahanan Header:</strong> Content-Security-Policy (CSP), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, dan Referrer-Policy.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>B. Komponen Database & Sinkronisasi Hybrid</h3>
+      <ul>
+        <li><strong>Cloud Source of Truth:</strong> PostgreSQL di Supabase Cloud mengelola status data secara terpusat untuk kolaborasi antarteknisi.</li>
+        <li><strong>Local-First Resilience:</strong> Jika jaringan internet terputus, aplikasi tetap berfungsi normal membaca cache lokal terenkripsi, lalu menyinkronkan perubahan saat online.</li>
+        <li><strong>Realtime Event Stream:</strong> Notifikasi dan pembaruan tiket didistribusikan via protokol WebSocket Postgres CDC.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 2: BAHASA PEMROGRAMAN -->
+  <h2>2. Bahasa Pemrograman (Programming Languages)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 18%;">Bahasa</th>
+        <th style="width: 16%;">Versi</th>
+        <th style="width: 38%;">Area Implementasi</th>
+        <th style="width: 28%;">Alasan & Karakteristik</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>TypeScript</strong></td>
+        <td><code>5.x</code></td>
+        <td>Seluruh kode frontend SPA, Context API, Service Layer, State Machine, Type Definitions, Router.</td>
+        <td>Menjamin type-safety 100%, mencegah bug runtime, intellisense ketat, dan skalabilitas refactoring.</td>
+      </tr>
+      <tr>
+        <td><strong>JavaScript (ESM)</strong></td>
+        <td><code>Node.js 22 LTS</code></td>
+        <td>Background sync daemon (<code>sync_otrs_to_supabase.mjs</code>), health checker, dan konfigurasi Vite.</td>
+        <td>I/O non-blocking asinkron berperforma tinggi untuk long-running daemon dan scheduled workers.</td>
+      </tr>
+      <tr>
+        <td><strong>Python</strong></td>
+        <td><code>3.10+ / 3.12</code></td>
+        <td>Integrasi legacy iCare OTRS: <code>otrs_login_bridge.py</code>, <code>otrs_close_bridge.py</code>, <code>otrs_history_fetcher.py</code>.</td>
+        <td>Manipulasi session cookie, parsing payload HTML/JSON, dan HTTP requests otomasi yang andal.</td>
+      </tr>
+      <tr>
+        <td><strong>SQL (PostgreSQL)</strong></td>
+        <td><code>15.x / 16.x</code></td>
+        <td>Skema DDL, relasi tabel, indeks, triggers, dan migrasi (<code>supabase_schema.sql</code>, <code>migration_devices.sql</code>).</td>
+        <td>Integritas data ACID relasional, query indexing performan, dan penegakan izin Row Level Security.</td>
+      </tr>
+      <tr>
+        <td><strong>Bash / Shell</strong></td>
+        <td><code>POSIX / Bash 5</code></td>
+        <td>Skrip otomasi APK (<code>build-apk.sh</code>), deploy Cloudflare (<code>deploy-cloudflare.sh</code>), checkpoint git, docker entrypoint.</td>
+        <td>Otomasi pipeline CI/CD lokal, build bundling, dan orkestrasi container lifecycle tanpa dependensi luar.</td>
+      </tr>
+      <tr>
+        <td><strong>CSS3 & HTML5</strong></td>
+        <td><code>Modern Standard</code></td>
+        <td>Desain responsif, CSS Custom Properties (Design Tokens), Glassmorphism, micro-animations, SVG chart rendering.</td>
+        <td>Performa rendering 60fps tanpa runtime CSS overhead; dukungan dark/light theme native.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PAGE BREAK UNTUK HALAMAN 2 -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 3: FRAMEWORKS & BUILD TOOLS -->
+  <h2>3. Framework & Build Tools</h2>
+  <div class="grid-3">
+    <div class="card">
+      <span class="tag tag-blue">FRONTEND FRAMEWORK</span>
+      <h3>React 19 (v19.2.8)</h3>
+      <p style="font-size: 7.8pt;">
+        Framework UI deklaratif terdepan. Menggunakan arsitektur fungsional modern (React Hooks, <code>useCallback</code>, <code>useMemo</code>, <code>useRef</code>, Context API). Dioptimalkan untuk rendering komponen tanpa overhead re-render.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-purple">BUNDLER & DEV SERVER</span>
+      <h3>Vite 8 (v8.2.2)</h3>
+      <p style="font-size: 7.8pt;">
+        Next-generation build tool berbasis ES Modules natif dan Rollup. Menyediakan Hot Module Replacement (HMR) sub-detik, tree-shaking otomatis, code splitting, serta middleware API gateway terintegrasi.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-cyan">MOBILE RUNTIME</span>
+      <h3>Capacitor 8 (v8.5.2)</h3>
+      <p style="font-size: 7.8pt;">
+        Teknologi native bridge modern dari Ionic. Mengonversi Single Page Application web menjadi binary native Android APK murni dengan akses ke native filesystem, secure sharing, dan Android Webview terakselerasi hardware.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="tag tag-amber">CONTAINERIZATION</span>
+      <h3>Docker & Docker Compose</h3>
+      <p style="font-size: 7.8pt;">
+        Multi-runtime container image berbasis <code>node:22-slim</code> yang memadukan Node.js 22 LTS dan Python 3. Dikonfigurasi dengan <code>docker-entrypoint.sh</code> untuk menjalankan web server dan background sync daemon secara simultan di Google Cloud Run atau Compute Engine.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-slate">EDGE DEPLOYMENT</span>
+      <h3>Cloudflare Wrangler 4</h3>
+      <p style="font-size: 7.8pt;">
+        CLI resmi Cloudflare untuk mendeploy build output <code>dist/</code> secara instan ke Cloudflare Pages edge dengan integrasi git branch tracking dan konfigurasi custom HTTP security headers.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 4: DETAIL FRONTEND STACK -->
+  <h2>4. Detail Arsitektur Frontend</h2>
+  <p>
+    Frontend TicketOps dibangun dengan prinsip <strong>Zero-AI-Slop & High-Density Operational UI</strong>, dirancang untuk kecepatan navigasi dan kepadatan data teknis tanpa mengorbankan estetika modern:
+  </p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>A. UI/UX Design System</h3>
+      <ul>
+        <li><strong>Styling:</strong> Pure Vanilla CSS berbasis Design Tokens (CSS Variables) pada <code>src/app/globals.css</code>.</li>
+        <li><strong>Tema Ganda:</strong> Dark mode (default operator NOC) dan Light mode yang harmonis dengan kontras teks bersertifikasi WCAG AA.</li>
+        <li><strong>Glassmorphism & Micro-Interactions:</strong> Efek glass panel transparan, border subtle <code>rgba(255,255,255,0.08)</code>, dan transisi halus.</li>
+        <li><strong>Ikonografi:</strong> <strong>Lucide React</strong> (v1.42.0) — icon set vektor ringan, konsisten, dan scalable.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>B. State Management & Routing</h3>
+      <ul>
+        <li><strong>TicketOpsContext:</strong> Single source of truth mengelola 14 modul operasional, autentikasi pengguna, antrean tiket, sinkronisasi Supabase, dan pencarian global.</li>
+        <li><strong>Client-Side Router:</strong> Custom History API router (<code>src/lib/router.ts</code>) yang mendukung deep-linking, back/forward history browser, dan dynamic page title tanpa reload.</li>
+        <li><strong>Inactivity Timeout Engine:</strong> Deteksi interaksi pengguna (mouse, touch, keydown) dengan auto-logout setelah 30 menit nonaktif.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>C. Cakupan 14 Modul Operasional Frontend</h3>
+    <table style="margin-top: 3px; margin-bottom: 2px;">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Modul Menu</th>
+          <th style="width: 35%;">Komponen Sumber</th>
+          <th style="width: 40%;">Fungsionalitas Utama</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Dashboard</strong></td>
+          <td><code>src/components/dashboard/DashboardView.tsx</code></td>
+          <td>KPI metrics, perbandingan tiket harian, grafik tren bulanan interaktif, dan modal rincian status.</td>
+        </tr>
+        <tr>
+          <td><strong>2. Tiket Operasional</strong></td>
+          <td><code>src/components/tickets/TicketListView.tsx</code></td>
+          <td>Manajemen tiket iCare OTRS, filtering kriteria, quick status transition, dan detail drawer modal.</td>
+        </tr>
+        <tr>
+          <td><strong>3. Jadwal Shift Tim</strong></td>
+          <td><code>src/components/shift/ShiftScheduleView.tsx</code></td>
+          <td>Matrix roster shift teknisi, tracking petugas on-duty hari ini, dan ekspor jadwal ke format Excel.</td>
+        </tr>
+        <tr>
+          <td><strong>4. Preventive Maintenance (PM)</strong></td>
+          <td><code>src/components/pm/PMScheduleView.tsx</code></td>
+          <td>Jadwal pemeliharaan rutin server Infoblox, checklist berkala, status eksekusi, dan laporan histori.</td>
+        </tr>
+        <tr>
+          <td><strong>5. Presensi iCare (Attendance)</strong></td>
+          <td><code>src/components/attendance/IcareAttendanceView.tsx</code></td>
+          <td>Formulir presensi harian terintegrasi dengan template aktivitas operasional dan histori kehadiran.</td>
+        </tr>
+        <tr>
+          <td><strong>6. Manage Services & Devices</strong></td>
+          <td><code>src/components/devices/ManageServicesDevicesView.tsx</code></td>
+          <td>Inventaris perangkat appliance Infoblox (hostname, IP management, serial number, lisensi aktif).</td>
+        </tr>
+        <tr>
+          <td><strong>7. Worklog & Timesheet</strong></td>
+          <td><code>src/components/worklog/WorklogModuleView.tsx</code></td>
+          <td>Pencatatan jam kerja teknisi per tiket, kalkulasi durasi tugas, dan rekonsiliasi aktivitas harian.</td>
+        </tr>
+        <tr>
+          <td><strong>8. Monitoring SLA</strong></td>
+          <td><code>src/components/sla/SLAMonitoringView.tsx</code></td>
+          <td>Live countdown SLA tiket (Critical, High, Medium, Low) dengan indikator breach warning real-time.</td>
+        </tr>
+        <tr>
+          <td><strong>9. Pelaporan (Reporting)</strong></td>
+          <td><code>src/components/reports/ReportingModuleView.tsx</code></td>
+          <td>Generator laporan eksekutif berkala, ringkasan resolusi, dan ekspor spreadsheet terformat.</td>
+        </tr>
+        <tr>
+          <td><strong>10. Manajemen Pengguna (Users)</strong></td>
+          <td><code>src/components/admin/UserManagementView.tsx</code></td>
+          <td>RBAC (Admin, Supervisor, Engineer, Viewer), kontrol akun aktif/nonaktif, dan reset kredensial.</td>
+        </tr>
+        <tr>
+          <td><strong>11. Integrasi API</strong></td>
+          <td><code>src/components/settings/IntegrationView.tsx</code></td>
+          <td>Konfigurasi koneksi iCare OTRS, token autentikasi, status konektivitas, dan manual sync trigger.</td>
+        </tr>
+        <tr>
+          <td><strong>12. Audit Trail (Log Audit)</strong></td>
+          <td><code>src/components/admin/AuditLogView.tsx</code></td>
+          <td>Catatan kronologis mutasi sistem, perbandingan oldValue vs newValue, dan identitas pelaku mutasi.</td>
+        </tr>
+        <tr>
+          <td><strong>13. Pengaturan Sistem</strong></td>
+          <td><code>src/components/settings/SettingsView.tsx</code></td>
+          <td>Backup full system JSON snapshot, restore database, dan toggle visibilitas modul menu.</td>
+        </tr>
+        <tr>
+          <td><strong>14. AI Rule Engine</strong></td>
+          <td><code>src/services/ruleEngine.ts</code></td>
+          <td>Klasifikasi tiket otomatis ke kategori teknis (DNS, DHCP, IPAM, Security) berdasarkan analisis teks.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGE BREAK UNTUK HALAMAN 3 -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 5: DETAIL BACKEND & DATA TIER -->
+  <h2>5. Detail Arsitektur Backend, Database & Integrasi</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>A. Database: Supabase Cloud (PostgreSQL 15+)</h3>
+      <ul>
+        <li><strong>Relational Tables:</strong>
+          <ul>
+            <li><code>tickets</code>: Metadata tiket, nomor OTRS, prioritas, kriteria, requester, due date, status.</li>
+            <li><code>worklogs</code>: Durasi pengerjaan teknisi, deskripsi tugas, foreign key ke tiket.</li>
+            <li><code>audit_logs</code>: Append-only ledger mencatat setiap aksi pengguna dan timestamp.</li>
+            <li><code>users</code>: Akun teknisi, role permissions, PBKDF2 password hash, status aktif.</li>
+            <li><code>ms_devices</code>: Data appliance Infoblox dan status lisensi.</li>
+          </ul>
+        </li>
+        <li><strong>Security & RLS:</strong> Row Level Security memastikan pembatasan akses data antarentitas.</li>
+        <li><strong>Realtime Channels:</strong> Broadcast perubahan data secara instan tanpa perlu polling HTTP dari browser.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>B. Daemon Sinkronisasi & OTRS Bridge</h3>
+      <ul>
+        <li><strong>Node.js Daemon (<code>sync_otrs_to_supabase.mjs</code>):</strong>
+          Worker mandiri yang melakukan query berkala setiap 180 detik ke API iCare OTRS, menormalisasi data tiket ke format standar, dan melakukan <code>upsert</code> ke tabel Supabase.
+        </li>
+        <li><strong>Python 3 Bridge Subsystem:</strong>
+          <ul>
+            <li><code>otrs_login_bridge.py</code>: Menangani otentikasi session cookie iCare OTRS.</li>
+            <li><code>otrs_close_bridge.py</code>: Menutup tiket secara otomatis di sistem iCare OTRS saat tiket di-resolve di TicketOps.</li>
+            <li><code>otrs_history_fetcher.py</code>: Mengambil riwayat arsip tiket historis dari antrean iCare OTRS.</li>
+          </ul>
+        </li>
+        <li><strong>Vite API Gateway Middleware:</strong> Menyediakan endpoint proxy lokal terproteksi (<code>/api/otrs/*</code>) dengan rate limiting dan validasi origin.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 6: ARSITEKTUR MOBILE NATIVE -->
+  <h2>6. Arsitektur Mobile Native (Capacitor Android)</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>A. Native Runtime Bridge</h3>
+      <ul>
+        <li><strong>ID Aplikasi:</strong> <code>com.abadijaya.ticketops</code></li>
+        <li><strong>Nama Paket APK:</strong> <code>TicketOps-v1.0.apk</code> (Ukuran: ~20 MB)</li>
+        <li><strong>Webview Engine:</strong> Chromium Android System Webview terisolasi dengan skema <code>https://</code> untuk performa maksimal.</li>
+        <li><strong>Hardware Acceleration:</strong> Diaktifkan pada <code>AndroidManifest.xml</code> untuk transisi rendering 60 FPS pada smartphone dan tablet.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>B. Native Plugins & Scoped Storage</h3>
+      <ul>
+        <li><strong>@capacitor/filesystem:</strong> Menyimpan file ekspor spreadsheet (Excel/CSV) di direktori internal cache aplikasi tanpa meminta permission berbahaya di Android 13+.</li>
+        <li><strong>@capacitor/share:</strong> Membuka native Android Share Dialog (WhatsApp, Gmail, Drive) untuk mendistribusikan laporan operasional secara instan.</li>
+        <li><strong>Responsive Grid Optimization:</strong> Layout khusus mobile dengan tombol aksi ramah sentuhan (min 44px) dan drawer navigasi samping.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 7: MATRIKS KEAMANAN & COMPLIANCE -->
+  <h2>7. Matriks Keamanan & Kepatuhan Regulasi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Fitur Keamanan</th>
+        <th style="width: 35%;">Spesifikasi Teknis</th>
+        <th style="width: 40%;">Standar Regulasi / Manfaat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Password Hashing</strong></td>
+        <td>PBKDF2-SHA256, 100.000 iterasi, 16-byte random salt, verifikasi constant-time string.</td>
+        <td>NIST SP 800-63B & UU PDP Psl 35 — Kebal terhadap serangan brute-force dan timing attacks.</td>
+      </tr>
+      <tr>
+        <td><strong>Storage Encryption</strong></td>
+        <td>RFC 7516 JWE 256-bit AES-GCM untuk sessionStorage dan localStorage.</td>
+        <td>Anti-DevTools Leak — Menghindari pembacaan data mentah token/sesi melalui konsol browser.</td>
+      </tr>
+      <tr>
+        <td><strong>Inactivity Timeout</strong></td>
+        <td>Auto-logout 30 menit tanpa aktivitas pengguna dengan multi-tab storage sync.</td>
+        <td>SOC 2 Trust Criteria CC6.1 & ISO 27001 A.8.1 — Mencegah pembajakan sesi di perangkat tak terjaga.</td>
+      </tr>
+      <tr>
+        <td><strong>HTTP Security Headers</strong></td>
+        <td>CSP (<code>frame-ancestors 'none'</code>), <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>.</td>
+        <td>OWASP Top 10 — Menutup 100% celah Clickjacking, XSS, dan MIME-sniffing di Cloudflare.</td>
+      </tr>
+      <tr>
+        <td><strong>Anti-Prototype Pollution</strong></td>
+        <td>Sanitasi key objek ketat memblokir <code>__proto__</code>, <code>constructor</code>, <code>prototype</code>.</td>
+        <td>Menjamin stabilitas runtime JavaScript dari injeksi manipulasi prototipe objek.</td>
+      </tr>
+      <tr>
+        <td><strong>Audit Trail Logging</strong></td>
+        <td>Pencatatan kronologis IP address, user, modul, oldValue, dan newValue per mutasi.</td>
+        <td>ISO/IEC 27001:2022 Kontrol A.8.15 & SOC 2 CC7.2 — Jaminan akuntabilitas dan non-repudiation.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 8: MATRIKS DEPENDENSI & LIBRARI LENGKAP -->
+  <h2>8. Matriks Pustaka & Dependensi Proyek (Dependencies)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 28%;">Nama Paket</th>
+        <th style="width: 14%;">Versi</th>
+        <th style="width: 18%;">Kategori</th>
+        <th style="width: 40%;">Peran & Penggunaan dalam Aplikasi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>react</code> / <code>react-dom</code></td>
+        <td><code>19.2.8</code></td>
+        <td>Core Framework</td>
+        <td>Rendering virtual DOM deklaratif dan siklus hidup komponen UI.</td>
+      </tr>
+      <tr>
+        <td><code>@supabase/supabase-js</code></td>
+        <td><code>2.116.0</code></td>
+        <td>BaaS Client SDK</td>
+        <td>Koneksi REST API PostgreSQL, autentikasi, dan channel WebSocket Realtime.</td>
+      </tr>
+      <tr>
+        <td><code>@capacitor/core</code> & <code>android</code></td>
+        <td><code>8.5.2</code></td>
+        <td>Mobile Runtime</td>
+        <td>Engine runtime native Android bridge dan launcher aplikasi mobile.</td>
+      </tr>
+      <tr>
+        <td><code>@capacitor/filesystem</code></td>
+        <td><code>8.1.3</code></td>
+        <td>Native Storage</td>
+        <td>Akses aman ke storage cache Android untuk penulisan file laporan operasional.</td>
+      </tr>
+      <tr>
+        <td><code>@capacitor/share</code></td>
+        <td><code>8.0.2</code></td>
+        <td>Native Intent</td>
+        <td>Membuka native share intent dialog Android untuk transfer file PDF/Excel.</td>
+      </tr>
+      <tr>
+        <td><code>lucide-react</code></td>
+        <td><code>1.42.0</code></td>
+        <td>UI Icons</td>
+        <td>Koleksi ikon SVG performan tinggi untuk visualisasi status dan navigasi menu.</td>
+      </tr>
+      <tr>
+        <td><code>xlsx</code> & <code>xlsx-js-style</code></td>
+        <td><code>0.18.5 / 1.2.0</code></td>
+        <td>Export Engine</td>
+        <td>Pembangkit lembar kerja Excel (XLSX) dengan pewarnaan sel, border, dan font korporat.</td>
+      </tr>
+      <tr>
+        <td><code>vite</code> & <code>@vitejs/plugin-react</code></td>
+        <td><code>8.2.2 / 6.1.1</code></td>
+        <td>Build Tooling</td>
+        <td>Development server HMR supercepat dan bundler produksi berbasis Rollup.</td>
+      </tr>
+      <tr>
+        <td><code>typescript</code></td>
+        <td><code>5.x</code></td>
+        <td>Language Tooling</td>
+        <td>Typecheck kompilasi statis dan definisi kontrak antarmuka data.</td>
+      </tr>
+      <tr>
+        <td><code>wrangler</code></td>
+        <td><code>4.131.0</code></td>
+        <td>Deployment Tooling</td>
+        <td>Automated edge deployment ke Cloudflare Pages network.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- FOOTER -->
+  <div style="margin-top: 18px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 7.5pt; color: #64748b; display: flex; justify-content: space-between;">
+    <div><strong>Dokumen Resmi Spesifikasi Arsitektur TicketOps</strong> — PT Abadi Jaya Solusi</div>
+    <div>Dicetak secara otomatis via Headless Chrome Engine</div>
+  </div>
+
+</body>
+</html>

@@ -20,8 +20,11 @@ import {
   Check,
   RotateCcw,
   ExternalLink,
+  FileSpreadsheet,
+  Loader2,
 } from 'lucide-react';
-
+import { renderMonthlyChartToCanvasImage } from '@/services/chartCanvasRenderer';
+import { exportMonthlyChartToExcel } from '@/services/exportExcel';
 
 type Timeframe = 'all' | '6m' | '3m' | '1m' | 'custom';
 type CustomMode = 'month' | 'range';
@@ -93,6 +96,7 @@ export default function MonthlyTicketChart() {
   const [rosterSearch, setRosterSearch] = useState('');
   const [rosterKriteria, setRosterKriteria] = useState('ALL');
   const [copiedSuccess, setCopiedSuccess] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [rosterPage, setRosterPage] = useState(1);
   const pageSize = 12;
 
@@ -300,6 +304,59 @@ export default function MonthlyTicketChart() {
     setTimeout(() => setCopiedSuccess(false), 2000);
   };
 
+  const handleExportExcelWithChart = async () => {
+    if (isExporting) return;
+    try {
+      setIsExporting(true);
+      let tfLabel = 'Semua Riwayat';
+      let unit: 'bulan' | 'hari' = 'bulan';
+
+      if (timeframe === '1m') {
+        tfLabel = '1 Bulan Terakhir';
+      } else if (timeframe === '3m') {
+        tfLabel = '3 Bulan Terakhir';
+      } else if (timeframe === '6m') {
+        tfLabel = '6 Bulan Terakhir';
+      } else if (timeframe === 'custom') {
+        if (customMode === 'month') {
+          const [yr, mo] = selectedMonth.split('-');
+          tfLabel = `Kustom Bulan ${monthNames[mo] || mo} ${yr} (Rincian Harian)`;
+          unit = 'hari';
+        } else {
+          tfLabel = `Kustom Periode (${customStartDate} s/d ${customEndDate})`;
+        }
+      }
+
+      // 1. Render high-res diagram image via Canvas
+      const chartImgBase64 = await renderMonthlyChartToCanvasImage(chartData, {
+        timeframeLabel: tfLabel,
+        totalTickets: timeframeFilteredTickets.length,
+        averageTickets,
+        peakItem: peakItem,
+        periodUnit: unit,
+        dateGeneratedStr: new Date().toLocaleString('id-ID'),
+      });
+
+      // 2. Export multi-sheet Excel with embedded diagram
+      const peakText = peakItem ? (peakItem.fullLabel || `${peakItem.label} ${peakItem.subLabel || ''}`) : '-';
+      await exportMonthlyChartToExcel(timeframeFilteredTickets, {
+        chartImageBase64: chartImgBase64,
+        chartData,
+        timeframeLabel: tfLabel,
+        peakLabel: peakText,
+        peakTotal: peakItem?.total || 0,
+        averageTickets,
+        periodUnit: unit,
+        filenamePrefix: `tiket_diagram_${timeframe}`,
+      });
+    } catch (err: any) {
+      console.error('Export failed:', err);
+      alert('Gagal mengekspor diagram ke Excel: ' + (err?.message || String(err)));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const activeBarObj = useMemo(() => {
     if (!selectedBarKey) return null;
     return chartData.find(d => d.key === selectedBarKey) || null;
@@ -347,45 +404,83 @@ export default function MonthlyTicketChart() {
           </div>
         </div>
 
-        {/* Timeframe Filter Tabs */}
-        <div className="no-print" style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-elevated)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
-          {[
-            { id: 'all', label: 'Semua Riwayat' },
-            { id: '6m', label: '6 Bulan' },
-            { id: '3m', label: '3 Bulan' },
-            { id: '1m', label: '1 Bulan' },
-            { id: 'custom', label: 'Kustom Periode', icon: <Calendar size={13} /> },
-          ].map(tf => {
-            const isActive = timeframe === tf.id;
-            return (
-              <button
-                key={tf.id}
-                onClick={() => {
-                  setTimeframe(tf.id as Timeframe);
-                  setSelectedBarKey(null);
-                  setRosterPage(1);
-                }}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '7px',
-                  backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
-                  border: 'none',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                  fontSize: '0.76rem',
-                  fontWeight: isActive ? 700 : 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.4)' : 'none',
-                }}
-              >
-                {tf.icon}
-                <span>{tf.label}</span>
-              </button>
-            );
-          })}
+        {/* Timeframe Filter Tabs & Excel Export Button */}
+        <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-elevated)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
+            {[
+              { id: 'all', label: 'Semua Riwayat' },
+              { id: '6m', label: '6 Bulan' },
+              { id: '3m', label: '3 Bulan' },
+              { id: '1m', label: '1 Bulan' },
+              { id: 'custom', label: 'Kustom Periode', icon: <Calendar size={13} /> },
+            ].map(tf => {
+              const isActive = timeframe === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  onClick={() => {
+                    setTimeframe(tf.id as Timeframe);
+                    setSelectedBarKey(null);
+                    setRosterPage(1);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '7px',
+                    backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
+                    border: 'none',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    fontSize: '0.76rem',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.4)' : 'none',
+                  }}
+                >
+                  {tf.icon}
+                  <span>{tf.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Export Excel + Diagram Button */}
+          <button
+            onClick={handleExportExcelWithChart}
+            disabled={isExporting || chartData.length === 0}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '8px',
+              background: isExporting
+                ? 'var(--bg-elevated)'
+                : 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.55)',
+              color: '#34d399',
+              fontSize: '0.76rem',
+              fontWeight: 700,
+              cursor: isExporting || chartData.length === 0 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)',
+            }}
+            title="Tarik seluruh data tiket periode ini ke Microsoft Excel (.xlsx) dengan visualisasi diagram di sheet berbeda"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 size={13} className="spin-animation" />
+                <span>Memproses Excel...</span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet size={14} />
+                <span>Tarik Excel + Diagram</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -950,6 +1045,24 @@ export default function MonthlyTicketChart() {
             >
               {copiedSuccess ? <Check size={13} color="var(--color-success)" /> : <Copy size={13} />}
               <span>{copiedSuccess ? 'Tersalin!' : `Salin ${rosterTickets.length} No. Tiket`}</span>
+            </button>
+
+            <button
+              onClick={handleExportExcelWithChart}
+              disabled={isExporting || rosterTickets.length === 0}
+              className="btn btn-secondary btn-sm"
+              style={{
+                height: '32px',
+                fontSize: '0.74rem',
+                gap: '5px',
+                fontWeight: 600,
+                color: '#34d399',
+                borderColor: 'rgba(16, 185, 129, 0.4)',
+              }}
+              title="Ekspor data dan diagram ke Excel dengan visualisasi di sheet berbeda"
+            >
+              {isExporting ? <Loader2 size={13} className="spin-animation" /> : <FileSpreadsheet size={13} />}
+              <span>{isExporting ? 'Memproses...' : 'Ekspor Excel + Diagram'}</span>
             </button>
           </div>
         </div>
