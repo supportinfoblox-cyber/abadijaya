@@ -661,7 +661,7 @@ export default function MonthlyTicketChart() {
               display: 'flex',
               alignItems: 'flex-end',
               justifyContent: 'space-around',
-              height: '240px',
+              height: '260px',
               paddingTop: '36px',
               paddingBottom: '12px',
               gap: 'clamp(3px, 1.2vw, 16px)',
@@ -673,11 +673,14 @@ export default function MonthlyTicketChart() {
               <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
               <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
 
-              {chartData.map(m => {
+              {chartData.map((m, index) => {
                 const heightPercent = Math.max(Math.round((m.total / maxItemTotal) * 100), 10);
                 const isPeak = peakItem && peakItem.key === m.key;
                 const isHovered = hoveredKey === m.key;
                 const isSelected = selectedBarKey === m.key;
+                const showTooltip = isHovered || (isSelected && hoveredKey === null);
+                // When bar is taller than 32%, position tooltip from top to prevent clipping outside container
+                const isTallBar = heightPercent > 32;
 
                 return (
                   <div
@@ -687,7 +690,7 @@ export default function MonthlyTicketChart() {
                     onMouseLeave={() => setHoveredKey(null)}
                     style={{
                       flex: 1,
-                      minWidth: '28px',
+                      minWidth: '32px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -700,22 +703,27 @@ export default function MonthlyTicketChart() {
                     }}
                     title="Klik bar untuk melihat deretan no. tiket"
                   >
-                    {/* Tooltip on Hover */}
-                    {isHovered && (
+                    {/* Tooltip on Hover or Tap Selection (Never cut off) */}
+                    {showTooltip && (
                       <div style={{
                         position: 'absolute',
-                        bottom: `calc(${heightPercent}% + 28px)`,
-                        zIndex: 20,
+                        top: isTallBar ? '6px' : 'auto',
+                        bottom: isTallBar ? 'auto' : `calc(${heightPercent}% + 28px)`,
+                        left: index === 0 ? '0' : index === chartData.length - 1 ? 'auto' : '50%',
+                        right: index === chartData.length - 1 ? '0' : 'auto',
+                        transform: index === 0 || index === chartData.length - 1 ? 'none' : 'translateX(-50%)',
+                        zIndex: 50,
                         backgroundColor: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-medium)',
+                        border: isPeak ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid var(--border-medium)',
                         borderRadius: '10px',
                         padding: '10px 14px',
-                        boxShadow: 'var(--shadow-lg)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 1px 1px rgba(255, 255, 255, 0.1)',
                         whiteSpace: 'nowrap',
                         fontSize: '0.74rem',
                         color: 'var(--text-primary)',
                         pointerEvents: 'none',
-                        backdropFilter: 'blur(16px)',
+                        backdropFilter: 'blur(20px)',
+                        minWidth: '160px',
                       }}>
                         <div style={{ fontWeight: 800, marginBottom: '6px', color: isPeak ? 'var(--color-warning)' : 'var(--color-purple)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {isPeak && <Award size={13} />}

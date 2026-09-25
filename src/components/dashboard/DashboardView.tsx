@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTicketOps } from '@/context/TicketOpsContext';
 import { Ticket, TicketPriority, TicketStatus } from '@/types';
 import MonthlyTicketChart from './MonthlyTicketChart';
@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Hourglass,
   ArrowUpRight,
+  ArrowDownRight,
   Activity,
   ShieldCheck,
   AlertTriangle,
@@ -22,6 +23,10 @@ import {
   Network,
   Zap,
   MoreHorizontal,
+  CalendarCheck,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
 } from 'lucide-react';
 
 
@@ -102,6 +107,109 @@ export default function DashboardView() {
   };
 
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
+
+  // Pencapaian Harian: Komparasi Tiket Hari Ini vs Kemarin
+  const dailyAchievement = useMemo(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+    const yDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayStr = `${yDate.getFullYear()}-${pad(yDate.getMonth() + 1)}-${pad(yDate.getDate())}`;
+
+    const isTicketOnDate = (t: Ticket, datePrefix: string) => {
+      if (t.createdAt && t.createdAt.substring(0, 10) === datePrefix) return true;
+      if (t.ticketNumber && t.ticketNumber.length >= 8) {
+        const numDate = `${t.ticketNumber.substring(0, 4)}-${t.ticketNumber.substring(4, 6)}-${t.ticketNumber.substring(6, 8)}`;
+        if (numDate === datePrefix) return true;
+      }
+      return false;
+    };
+
+    const isTicketResolvedOnDate = (t: Ticket, datePrefix: string) => {
+      if (t.resolvedAt && t.resolvedAt.substring(0, 10) === datePrefix) return true;
+      if ((t.status === 'RESOLVED' || t.status === 'CLOSED') && isTicketOnDate(t, datePrefix)) return true;
+      return false;
+    };
+
+    let todayCreated = tickets.filter(t => isTicketOnDate(t, todayStr));
+    let yesterdayCreated = tickets.filter(t => isTicketOnDate(t, yesterdayStr));
+    let todayResolved = tickets.filter(t => isTicketResolvedOnDate(t, todayStr));
+    let yesterdayResolved = tickets.filter(t => isTicketResolvedOnDate(t, yesterdayStr));
+
+    let activeDateLabel = todayStr;
+    let prevDateLabel = yesterdayStr;
+    let isHistoricalComparison = false;
+
+    // Fallback: Jika di database lokal belum ada tiket pada tanggal real hari ini,
+    // ambil 2 hari operasional terakhir yang ada dalam database agar komparasi tetap informatif & akurat
+    if (todayCreated.length === 0 && yesterdayCreated.length === 0 && tickets.length > 0) {
+      const allDates = Array.from(new Set(tickets.map(t => {
+        if (t.createdAt && t.createdAt.length >= 10) return t.createdAt.substring(0, 10);
+        if (t.ticketNumber && t.ticketNumber.length >= 8) {
+          return `${t.ticketNumber.substring(0, 4)}-${t.ticketNumber.substring(4, 6)}-${t.ticketNumber.substring(6, 8)}`;
+        }
+        return '';
+      }).filter(Boolean))).sort().reverse();
+
+      if (allDates.length >= 1) {
+        activeDateLabel = allDates[0];
+        prevDateLabel = allDates[1] || allDates[0];
+        isHistoricalComparison = true;
+        todayCreated = tickets.filter(t => isTicketOnDate(t, activeDateLabel));
+        yesterdayCreated = tickets.filter(t => isTicketOnDate(t, prevDateLabel));
+        todayResolved = tickets.filter(t => isTicketResolvedOnDate(t, activeDateLabel));
+        yesterdayResolved = tickets.filter(t => isTicketResolvedOnDate(t, prevDateLabel));
+      }
+    }
+
+    const countToday = todayCreated.length;
+    const countYesterday = yesterdayCreated.length;
+    const diffCreated = countToday - countYesterday;
+    const pctDiffCreated = countYesterday > 0
+      ? Math.round((diffCreated / countYesterday) * 100)
+      : countToday > 0 ? 100 : 0;
+
+    const countResolvedToday = todayResolved.length;
+    const countResolvedYesterday = yesterdayResolved.length;
+    const diffResolved = countResolvedToday - countResolvedYesterday;
+
+    const formatIndoDate = (ds: string) => {
+      if (!ds) return '';
+      const [yr, mo, dy] = ds.split('-');
+      const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const mIdx = parseInt(mo || '1', 10) - 1;
+      return `${parseInt(dy || '1', 10)} ${months[mIdx] || mo} ${yr}`;
+    };
+
+    // Criteria breakdown for today
+    const dnsCount = todayCreated.filter(t => t.kriteria === 'DNS Request' || t.subject.toLowerCase().includes('dns')).length;
+    const reserveCount = todayCreated.filter(t => t.kriteria === 'Reserve IP' || t.subject.toLowerCase().includes('reserve')).length;
+    const ipamCount = todayCreated.filter(t => t.kriteria === 'IPAM' || t.subject.toLowerCase().includes('ipam')).length;
+    const drpCount = todayCreated.filter(t => t.kriteria === 'DRP' || t.subject.toLowerCase().includes('drp')).length;
+
+    return {
+      todayStr,
+      yesterdayStr,
+      activeDateLabel,
+      prevDateLabel,
+      activeFormatted: formatIndoDate(activeDateLabel),
+      prevFormatted: formatIndoDate(prevDateLabel),
+      isHistoricalComparison,
+      countToday,
+      countYesterday,
+      diffCreated,
+      pctDiffCreated,
+      countResolvedToday,
+      countResolvedYesterday,
+      diffResolved,
+      dnsCount,
+      reserveCount,
+      ipamCount,
+      drpCount,
+      todayTickets: todayCreated,
+    };
+  }, [tickets]);
 
   const cardMetrics = [
     { label: 'Total Tickets', count: total, color: 'var(--accent-primary)', glow: 'rgba(99, 102, 241, 0.35)', filter: 'ALL', icon: TicketIcon, trend: '+100% indexed', desc: 'Total seluruh tiket dalam basis data operasional DDI' },
@@ -298,6 +406,7 @@ export default function DashboardView() {
 
         {/* Circular Icons Row */}
         <div
+          className="dashboard-status-icons-row"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -514,6 +623,258 @@ export default function DashboardView() {
         })()}
       </div>
 
+      {/* ============================================================== */}
+      {/* PENCAPAIAN HARIAN & KOMPARASI TIKET (HARI INI VS KEMARIN)     */}
+      {/* ============================================================== */}
+      <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(6, 182, 212, 0.15) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-success)',
+              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.2)',
+            }}>
+              <CalendarCheck size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+                  Pencapaian Harian & Velocity Operasional
+                </h3>
+                <span style={{
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.18)',
+                  color: 'var(--color-success)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}>
+                  <Sparkles size={11} />
+                  <span>Komparasi H-0 vs H-1</span>
+                </span>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '3px 0 0 0' }}>
+                Komparasi performa tiket: <strong>{dailyAchievement.activeFormatted}</strong> dibanding kemarin (<strong>{dailyAchievement.prevFormatted}</strong>)
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              padding: '4px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'var(--bg-elevated)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-subtle)',
+            }}>
+              {dailyAchievement.isHistoricalComparison ? 'Snapshot Hari Operasional Terakhir' : 'Live Real-Time Hari Ini'}
+            </span>
+            <button
+              onClick={() => {
+                setActiveFilterStatus('ALL');
+                setActiveKriteria('ALL');
+                setCurrentView('tickets');
+              }}
+              className="btn btn-outline btn-sm hover-glow"
+              style={{ fontSize: '0.75rem' }}
+            >
+              <span>Lihat Log Tiket Harian</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Cards Grid Daily Stats */}
+        <div className="daily-achievement-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+          {/* 1. Tiket Masuk Hari Ini */}
+          <div style={{
+            padding: '16px 18px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-medium)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Tiket Masuk (Inbound)
+              </span>
+              <div style={{
+                padding: '3px 8px',
+                borderRadius: '6px',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                backgroundColor: dailyAchievement.diffCreated > 0
+                  ? 'rgba(245, 158, 11, 0.15)'
+                  : dailyAchievement.diffCreated < 0
+                  ? 'rgba(16, 185, 129, 0.15)'
+                  : 'var(--bg-elevated)',
+                color: dailyAchievement.diffCreated > 0
+                  ? 'var(--color-warning)'
+                  : dailyAchievement.diffCreated < 0
+                  ? 'var(--color-success)'
+                  : 'var(--text-muted)',
+                border: `1px solid ${
+                  dailyAchievement.diffCreated > 0
+                    ? 'rgba(245, 158, 11, 0.3)'
+                    : dailyAchievement.diffCreated < 0
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'var(--border-subtle)'
+                }`,
+              }}>
+                {dailyAchievement.diffCreated > 0 ? (
+                  <>
+                    <ArrowUpRight size={12} />
+                    <span>+{dailyAchievement.diffCreated} (+{dailyAchievement.pctDiffCreated}%)</span>
+                  </>
+                ) : dailyAchievement.diffCreated < 0 ? (
+                  <>
+                    <ArrowDownRight size={12} />
+                    <span>{dailyAchievement.diffCreated} ({dailyAchievement.pctDiffCreated}%)</span>
+                  </>
+                ) : (
+                  <span>Stabil (=)</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
+                {dailyAchievement.countToday} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Tiket</span>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Kemarin: {dailyAchievement.countYesterday} tiket tercatat
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Tiket Selesai / Resolved Hari Ini */}
+          <div style={{
+            padding: '16px 18px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-medium)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Terselesaikan (Resolved)
+              </span>
+              <div style={{
+                padding: '3px 8px',
+                borderRadius: '6px',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                color: 'var(--color-success)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+              }}>
+                <CheckCircle2 size={12} />
+                <span>{dailyAchievement.diffResolved >= 0 ? `+${dailyAchievement.diffResolved}` : dailyAchievement.diffResolved} vs kemarin</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--color-success)', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
+                {dailyAchievement.countResolvedToday} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Tiket Selesai</span>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Kemarin: {dailyAchievement.countResolvedYesterday} tiket terselesaikan
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Efisiensi & Velocity Penyelesaian */}
+          <div style={{
+            padding: '16px 18px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-medium)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Velocity Penyelesaian
+              </span>
+              <span style={{
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                color: 'var(--accent-primary)',
+              }}>
+                {dailyAchievement.countToday > 0 && dailyAchievement.countResolvedToday >= dailyAchievement.countToday ? 'Target Tercapai' : 'Proses Berjalan'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--accent-primary)', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
+                {dailyAchievement.countToday > 0 ? Math.round((dailyAchievement.countResolvedToday / dailyAchievement.countToday) * 100) : 100}%
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Rasio tuntas: {dailyAchievement.countResolvedToday}/{dailyAchievement.countToday || 1} tiket hari ini
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Distribusi Kriteria Hari Ini */}
+          <div style={{
+            padding: '16px 18px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-medium)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Kriteria Hari Ini
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+              <div style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+                <Globe size={11} color="var(--color-info)" />
+                <span>DNS: <strong style={{ color: 'var(--color-info)' }}>{dailyAchievement.dnsCount}</strong></span>
+              </div>
+              <div style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+                <Server size={11} color="var(--color-success)" />
+                <span>Reserve: <strong style={{ color: 'var(--color-success)' }}>{dailyAchievement.reserveCount}</strong></span>
+              </div>
+              <div style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+                <Network size={11} color="var(--color-warning)" />
+                <span>IPAM: <strong style={{ color: 'var(--color-warning)' }}>{dailyAchievement.ipamCount}</strong></span>
+              </div>
+              <div style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+                <Shield size={11} color="var(--color-purple)" />
+                <span>DRP: <strong style={{ color: 'var(--color-purple)' }}>{dailyAchievement.drpCount}</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Kriteria Tiket Portal Breakdown Section */}
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
@@ -566,7 +927,7 @@ export default function DashboardView() {
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+        <div className="kriteria-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
           {/* DNS Request Card */}
           <div
             onClick={() => {
