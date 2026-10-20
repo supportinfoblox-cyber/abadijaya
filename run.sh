@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script Menjalankan Portal Abadi Jaya - BSI Infoblox & iCare OTRS Management System
+# Script Menjalankan Portal Abadi Jaya - OTRS Management System
 # ==============================================================================
 
 set -e
